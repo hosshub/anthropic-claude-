@@ -31,7 +31,7 @@
 علاج أي مرض. غير مخصّص لمن هم دون 18 عاماً.
 
 ## التواصل
-لأي استفسار حول الخصوصية: **[ضع بريد الدعم هنا]**
+لأي استفسار حول الخصوصية: **app@tayyibat.ai**
 
 ---
 
@@ -68,4 +68,4 @@ The app is a tracking tool for a user-chosen diet. It does not provide medical
 advice or claim to treat any condition, and is not intended for users under 18.
 
 ## Contact
-Privacy questions: **[your support email]**
+Privacy questions: **app@tayyibat.ai**
