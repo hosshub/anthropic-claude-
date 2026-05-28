@@ -53,9 +53,9 @@ condition, pregnancy/nursing, or if under 18.
 ```
 
 ## روابط / URLs
-- **Support URL:** صفحة بسيطة (يمكن أن تكون نفس صفحة الخصوصية) / a simple page.
-- **Privacy Policy URL:** استضِف `PRIVACY.md` (GitHub Pages أو Netlify) وضع الرابط هنا.
-- **Marketing URL (اختياري):** —
+- **Support URL:** `https://tayyibat.ai`
+- **Privacy Policy URL:** `https://tayyibat.ai/privacy.html`
+- **Marketing URL (اختياري):** `https://tayyibat.ai`
 
 ## App Privacy (إجابات نموذج الخصوصية)
 - Data collected: **Photos** → استخدام: *App Functionality* → **Not linked to identity**, **not used for tracking**.
