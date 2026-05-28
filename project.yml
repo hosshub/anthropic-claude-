@@ -1,0 +1,55 @@
+name: Tayyibat
+options:
+  bundleIdPrefix: com.tayyibat
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: ar
+  createIntermediateGroups: true
+  groupSortPosition: top
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    GENERATE_INFOPLIST_FILE: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+targets:
+  Tayyibat:
+    type: application
+    platform: iOS
+    sources:
+      - path: Tayyibat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tayyibat.app
+        INFOPLIST_KEY_CFBundleDisplayName: "الطيبات"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_NSCameraUsageDescription: "نستخدم الكاميرا لتصوير وجباتك وتحليل مدى توافقها مع نظام الطيبات."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "نطلب الوصول إلى صورك لاختيار صورة وجبة وتحليلها."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_ipad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+  TayyibatTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: TayyibatTests
+    dependencies:
+      - target: Tayyibat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tayyibat.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Tayyibat:
+    build:
+      targets:
+        Tayyibat: all
+        TayyibatTests: [test]
+    test:
+      targets:
+        - TayyibatTests

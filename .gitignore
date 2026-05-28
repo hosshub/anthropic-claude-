@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Xcode workspace user data
+*.xcworkspace/xcuserdata/
+Tayyibat.xcodeproj/xcuserdata/
+Tayyibat.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods / Carthage (unused, just in case)
+Pods/
+Carthage/Build/
+
+# Secrets — the Claude API key is stored in Keychain at runtime, never in repo
+*.env
+secrets.plist
