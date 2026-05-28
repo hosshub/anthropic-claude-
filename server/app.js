@@ -1,5 +1,8 @@
-import { createServer } from "node:http";
-import { readFileSync } from "node:fs";
+// خادم وسيط بلا تبعيات (CommonJS) — متوافق مع cPanel/Passenger و VPS و Docker.
+// يحتاج Node 18+ (لتوفّر fetch عالمياً).
+const http = require("node:http");
+const rules = require("./tayyibat_rules.json");
+const rulesJSON = JSON.stringify(rules);
 
 const PORT = Number(process.env.PORT || 8787);
 const APP_TOKEN = process.env.APP_TOKEN || "";
@@ -7,8 +10,6 @@ const API_KEY = process.env.ANTHROPIC_API_KEY || "";
 const MODEL = "claude-opus-4-7";
 const ANTHROPIC_VERSION = "2023-06-01";
 const MAX_BODY = 20 * 1024 * 1024; // 20MB
-
-const rulesJSON = readFileSync(new URL("./tayyibat_rules.json", import.meta.url), "utf8");
 
 function buildPrompt() {
   return `أنت محلل صور طعام متخصص في نظام "الطيبات" الغذائي للدكتور ضياء العوضي.
@@ -56,17 +57,16 @@ function stripFences(text) {
 }
 
 function send(res, status, obj) {
-  const payload = JSON.stringify(obj);
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "access-control-allow-origin": "*",
     "access-control-allow-headers": "content-type,x-app-token",
     "access-control-allow-methods": "POST,GET,OPTIONS",
   });
-  res.end(payload);
+  res.end(JSON.stringify(obj));
 }
 
-const server = createServer((req, res) => {
+const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, {});
   if (req.method === "GET" && req.url === "/health") return send(res, 200, { ok: true });
 
@@ -149,4 +149,5 @@ const server = createServer((req, res) => {
   });
 });
 
+// تحت Passenger (cPanel) يُمرَّر PORT تلقائياً ويُربط بالمقبس الصحيح.
 server.listen(PORT, () => console.log(`Tayyibat proxy listening on :${PORT}`));
