@@ -13,7 +13,13 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if AppConfig.authEnabled && !auth.isAuthenticated {
+            if AppConfig.authEnabled && !auth.isAuthenticated && !didAttemptRestore {
+                // أثناء محاولة استعادة الجلسة المحفوظة — نتجنّب وميض شاشة الدخول.
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.background.ignoresSafeArea())
+            } else if AppConfig.authEnabled && !auth.isAuthenticated {
                 AuthView()
             } else if let profile, profile.disclaimerAcceptedAt != nil {
                 MainTabView(profile: profile)
@@ -24,8 +30,8 @@ struct RootView: View {
         .environment(\.layoutDirection, .rightToLeft)
         .task {
             guard AppConfig.authEnabled, !didAttemptRestore else { return }
-            didAttemptRestore = true
             await auth.restoreIfPossible()
+            didAttemptRestore = true
         }
     }
 }
