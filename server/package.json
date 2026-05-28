@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Backend proxy that holds the Anthropic API key and forwards meal-image analysis requests for the Tayyibat iOS app.",
+  "description": "Zero-dependency Node proxy that holds the Anthropic API key and forwards meal-image analysis for the Tayyibat iOS app.",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
   "engines": {
     "node": ">=18"
   }

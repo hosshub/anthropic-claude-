@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>الطيبات — تتبّع غذائك بوعي</title>
+    <meta name="description" content="الطيبات: صوّر وجبتك واعرف مدى توافقها مع نظام الطيبات الغذائي، مع متابعة يومية ودليل كامل وتذكيرات." />
+    <style>
+      :root{
+        --green:#0F5132; --green-2:#15795A; --gold:#C9A35B;
+        --ink:#1C1A16; --muted:#6B6457; --bg:#FAF7F2; --surface:#FFFFFF;
+      }
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,system-ui,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.8}
+      a{color:var(--green);text-decoration:none}
+      .wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+
+      .hero{background:linear-gradient(160deg,var(--green-2),var(--green));color:#fff;padding:72px 0 84px;text-align:center}
+      .hero img{width:120px;height:120px;border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.25);margin-bottom:22px}
+      .hero h1{font-size:44px;margin-bottom:6px}
+      .hero .tag{color:var(--gold);font-size:20px;font-weight:600;margin-bottom:18px}
+      .hero p{max-width:560px;margin:0 auto 26px;color:rgba(255,255,255,.92);font-size:17px}
+      .badge{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);
+             color:#fff;padding:12px 22px;border-radius:14px;font-weight:600}
+
+      section{padding:64px 0}
+      h2{color:var(--green);font-size:28px;text-align:center;margin-bottom:36px}
+      .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+      .card{background:var(--surface);border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+      .card .ic{width:46px;height:46px;border-radius:12px;background:rgba(15,81,50,.1);color:var(--green);
+               display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+      .card h3{font-size:18px;margin-bottom:6px}
+      .card p{color:var(--muted);font-size:15px}
+
+      .disclaimer{background:#fff5f5;border-top:1px solid #f0d6d6;border-bottom:1px solid #f0d6d6}
+      .disclaimer .wrap{max-width:760px;text-align:center;color:#7a2a2a}
+      .disclaimer h2{color:#9B2C2C}
+
+      footer{background:#0c3f27;color:rgba(255,255,255,.85);padding:36px 0;text-align:center;font-size:14px}
+      footer a{color:var(--gold)}
+      footer .links{margin-bottom:10px}
+      footer .links a{margin:0 10px}
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <img src="logo.png" alt="شعار الطيبات" />
+        <h1>الطيبات</h1>
+        <div class="tag">تتبّع غذائك بوعي</div>
+        <p>صوّر وجبتك فيحلّلها التطبيق ويعرض مدى توافقها مع نظام الطيبات الغذائي — مع متابعة يومية، ودليل كامل، وتذكيرات مرنة، ونصائح.</p>
+        <span class="badge">قريباً على App Store</span>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <h2>ماذا يقدّم التطبيق</h2>
+        <div class="grid">
+          <div class="card"><div class="ic">📸</div><h3>تحليل بالصورة</h3><p>صوّر طبقك واحصل على نسبة الالتزام مع حكم لكل عنصر: طيّب أو خبيث أو مشروط.</p></div>
+          <div class="card"><div class="ic">📊</div><h3>متابعة يومية</h3><p>حلقة الالتزام، عدّاد الأيام المتتالية، وسجلّ وجباتك مع رسوم بيانية أسبوعية وشهرية.</p></div>
+          <div class="card"><div class="ic">📖</div><h3>دليل النظام</h3><p>قوائم المسموح والممنوع وبحث سريع: «هل هذا الطعام مسموح؟».</p></div>
+          <div class="card"><div class="ic">🌙</div><h3>الصيام</h3><p>متتبّع لأيام الإثنين والخميس والأيام البيض مع تذكيرات قبل الصيام.</p></div>
+          <div class="card"><div class="ic">🔔</div><h3>تذكيرات ونصائح</h3><p>تذكيرات مرنة ونصائح يومية متنوّعة، كلها اختيارية وقابلة للضبط.</p></div>
+          <div class="card"><div class="ic">🔒</div><h3>خصوصية</h3><p>بياناتك تُخزَّن على جهازك، ولا نبيعها ولا نستخدم أدوات تتبّع.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="disclaimer">
+      <div class="wrap">
+        <h2>تنبيه طبي</h2>
+        <p>هذا التطبيق أداة لتتبّع نظام غذائي تختاره بنفسك. لا يقدّم استشارة طبية ولا يدّعي علاج أي مرض. استشر طبيبك أو أخصائي تغذية قبل اتباع أي نظام غذائي، خاصةً إن كنت تعاني مرضاً مزمناً أو كنت حاملاً أو مرضعاً أو دون 18 عاماً.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <div class="links">
+          <a href="privacy.html">سياسة الخصوصية</a> ·
+          <a href="mailto:[ضع بريد الدعم هنا]">الدعم</a>
+        </div>
+        <div>© 2026 الطيبات — جميع الحقوق محفوظة</div>
+      </div>
+    </footer>
+  </body>
+</html>

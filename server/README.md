@@ -1,53 +1,70 @@
-# الطيبات — الوسيط الخلفي (Backend Proxy)
+# الطيبات — وسيط التحليل (api.tayyibat.ai)
 
-دالة بلا خادم (serverless) تحتفظ بمفتاح **Anthropic** على الخادم، فيرسل التطبيق
-الصورة إلى هذا الوسيط بدل استدعاء `api.anthropic.com` مباشرةً. هذا يمنع تسريب
-المفتاح من جهاز المستخدم، ويجعل ميزة التحليل تعمل لمراجِعي App Store دون أي إعداد.
+خدمة **Node بلا أي تبعيات** (تعتمد فقط على Node 18+) تحتفظ بمفتاح **Anthropic**
+على الخادم، فيرسل التطبيق الصورة إليها بدل استدعاء `api.anthropic.com` مباشرةً.
+هذا يمنع تسريب المفتاح من الجهاز، ويجعل التحليل يعمل لمراجِعي App Store بلا إعداد.
 
 ```
-التطبيق  ──(صورة base64)──▶  /analyze  ──(+ مفتاحك)──▶  Anthropic  ──▶  JSON النتيجة
+التطبيق ──(صورة base64)──▶ https://api.tayyibat.ai/analyze ──(+مفتاحك)──▶ Anthropic ──▶ JSON
 ```
 
-## النقطة الفعّالة
-`POST /analyze`
+## النقاط الفعّالة
+- `POST /analyze` — الجسم: `{ "image_base64": "...", "media_type": "image/jpeg" }`،
+  وترويسة اختيارية `x-app-token`. الرد: JSON النتيجة مباشرةً أو `{ "error": "..." }`.
+- `GET /health` — فحص صحة بسيط.
 
-الطلب:
-```json
-{ "image_base64": "...", "media_type": "image/jpeg" }
+## النشر على خادمك (موصى به)
+بافتراض VPS فيه Node 18+ وnginx وHTTPS:
+
+```bash
+# 1) ضع الكود
+sudo mkdir -p /opt/tayyibat && sudo chown -R $USER /opt/tayyibat
+git clone <repo> /opt/tayyibat   # أو ارفع مجلد server/ فقط
+cd /opt/tayyibat/server
+
+# 2) الأسرار (لا تُلتزم في git أبداً)
+sudo tee /etc/tayyibat-proxy.env >/dev/null <<'EOF'
+ANTHROPIC_API_KEY=sk-ant-المفتاح-الجديد
+APP_TOKEN=اختياري-سلسلة-سرية
+EOF
+sudo chmod 600 /etc/tayyibat-proxy.env
+
+# 3) خدمة systemd
+sudo cp deploy/tayyibat-proxy.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now tayyibat-proxy
+curl localhost:8787/health      # => {"ok":true}
+
+# 4) nginx + شهادة للنطاق الفرعي
+sudo cp deploy/nginx-api.tayyibat.ai.conf /etc/nginx/sites-available/api.tayyibat.ai
+sudo ln -s /etc/nginx/sites-available/api.tayyibat.ai /etc/nginx/sites-enabled/
+sudo certbot --nginx -d api.tayyibat.ai
+sudo nginx -t && sudo systemctl reload nginx
+
+# 5) تحقّق من الخارج
+curl https://api.tayyibat.ai/health    # => {"ok":true}
 ```
-الترويسات: `content-type: application/json` و(اختياري) `x-app-token: <APP_TOKEN>`.
+> تأكد أن سجل DNS لـ `api.tayyibat.ai` (A/AAAA) يشير إلى خادمك قبل إصدار الشهادة.
 
-الرد: نفس بنية `AnalysisResult` التي يتوقعها التطبيق (JSON النتيجة مباشرةً)، أو
-`{ "error": "..." }` مع رمز حالة مناسب.
-
-## النشر على Netlify (موصى به — مجاني وسريع)
-1. ادفع المستودع إلى GitHub (تم).
-2. في Netlify: **Add new site → Import from GitHub** واختر هذا المستودع.
-3. **Base directory:** `server`  •  Build command: (اتركه فارغاً)  •  Publish: `public`.
-4. **Site settings → Environment variables**، أضِف:
-   - `ANTHROPIC_API_KEY` = مفتاحك الجديد من `console.anthropic.com` (الذي أنشأته بعد إلغاء المُسرَّب).
-   - (اختياري) `APP_TOKEN` = أي سلسلة سرّية؛ ضع نفسها في `AppConfig.appToken` بالتطبيق.
-5. Deploy. سيصبح الرابط: `https://YOUR-SITE.netlify.app/analyze`.
-
-### بديل: Netlify CLI
+## بديل: Docker
 ```bash
 cd server
-npm i -g netlify-cli
-netlify deploy --prod
-# ثم اضبط متغيّرات البيئة من لوحة التحكم
+docker build -t tayyibat-proxy .
+docker run -d --restart always -p 8787:8787 \
+  -e ANTHROPIC_API_KEY=sk-ant-... -e APP_TOKEN=... tayyibat-proxy
+# ثم وجّه nginx لـ api.tayyibat.ai إلى 127.0.0.1:8787 كما في ملف الإعداد.
 ```
 
-## ربط التطبيق بالوسيط
-في `Tayyibat/Services/AppConfig.swift`:
+## ربط التطبيق
+في `Tayyibat/Services/AppConfig.swift` تم الضبط مسبقاً على:
 ```swift
-static let proxyURL = "https://YOUR-SITE.netlify.app/analyze"
-static let appToken = ""   // إن استخدمت APP_TOKEN على الخادم ضع القيمة نفسها
+static let proxyURL = "https://api.tayyibat.ai/analyze"
+static let appToken = ""   // إن استخدمت APP_TOKEN ضع القيمة نفسها
 ```
-عند ضبط `proxyURL`، يتوقف التطبيق عن طلب مفتاح من المستخدم تلقائياً (يختفي قسم
-المفتاح في الإعدادات) ويستخدم الوسيط.
+بمجرد أن يعمل `/health` من الخارج، أعد بناء التطبيق — سيعمل التحليل بلا مفتاح من
+المستخدم (يختفي قسم المفتاح في الإعدادات تلقائياً).
 
-## ملاحظات أمان/تكلفة
-- `APP_TOKEN` يقلّل العبث لكنه قابل للاستخراج من الثنائية؛ للحماية القوية استخدم
-  **App Attest** لاحقاً.
-- فعّل حدّ معدّل (rate limiting) على الدالة ومراقبة فواتير Anthropic.
-- المفتاح يبقى في متغيّرات بيئة Netlify فقط — لا يُلتزم في المستودع أبداً.
+## ملاحظات
+- حدّث `tayyibat_rules.json` هنا عند تحديث القواعد في التطبيق ليبقيا متطابقين.
+- فعّل حدّ معدّل (rate limiting) ومراقبة فواتير Anthropic. `APP_TOKEN` يقلّل العبث
+  لكنه قابل للاستخراج؛ للحماية القوية استخدم App Attest لاحقاً.
