@@ -5,6 +5,7 @@ import SwiftData
 struct SettingsView: View {
     @Bindable var profile: UserProfile
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var auth: AuthService
 
     @AppStorage("preferredLanguage") private var preferredLanguage = "ar"
     @State private var shareURL: URL?
@@ -56,6 +57,23 @@ struct SettingsView: View {
                     Button(role: .destructive) {
                         showDeleteConfirm = true
                     } label: { Label("حذف كل بيانات المتابعة", systemImage: "trash") }
+                }
+
+                if AppConfig.authEnabled {
+                    Section("الحساب") {
+                        if let email = auth.userEmail {
+                            HStack {
+                                Text("الحساب")
+                                Spacer()
+                                Text(email).foregroundStyle(Theme.textSecondary)
+                            }
+                        }
+                        Button(role: .destructive) {
+                            auth.signOut()
+                        } label: {
+                            Label("تسجيل الخروج", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    }
                 }
 
                 Section("معلومات") {

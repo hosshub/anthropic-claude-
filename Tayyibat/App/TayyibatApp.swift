@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct TayyibatApp: App {
     let modelContainer: ModelContainer
+    @StateObject private var auth = AuthService()
 
     init() {
         do {
@@ -19,6 +20,7 @@ struct TayyibatApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environmentObject(auth)
                 .environment(\.locale, Locale(identifier: "ar"))
                 .environment(\.layoutDirection, .rightToLeft)
                 .tint(Theme.primary)

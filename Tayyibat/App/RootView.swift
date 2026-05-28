@@ -6,17 +6,26 @@ import SwiftData
 struct RootView: View {
     @Environment(\.modelContext) private var context
     @Query private var profiles: [UserProfile]
+    @EnvironmentObject private var auth: AuthService
+    @State private var didAttemptRestore = false
 
     private var profile: UserProfile? { profiles.first }
 
     var body: some View {
         Group {
-            if let profile, profile.disclaimerAcceptedAt != nil {
+            if AppConfig.authEnabled && !auth.isAuthenticated {
+                AuthView()
+            } else if let profile, profile.disclaimerAcceptedAt != nil {
                 MainTabView(profile: profile)
             } else {
                 OnboardingFlowView(existingProfile: profile)
             }
         }
         .environment(\.layoutDirection, .rightToLeft)
+        .task {
+            guard AppConfig.authEnabled, !didAttemptRestore else { return }
+            didAttemptRestore = true
+            await auth.restoreIfPossible()
+        }
     }
 }

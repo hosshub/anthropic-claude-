@@ -52,3 +52,52 @@ static let proxyURL = "https://<ref>.supabase.co/functions/v1/analyze"
 - بعد نجاح كل شيء، **دوّر مفتاح Anthropic** (لأنه ظهر سابقاً في لقطات الشاشة) وحدّث السرّ.
 - صفحة الموقع تبقى على cPanel (`tayyibat.ai`)؛ Supabase تستضيف الـ API فقط.
 - لم نعد بحاجة لتطبيق Python على cPanel ولا لسجل `api.tayyibat.ai` (يمكن حذفهما).
+
+---
+
+# تسجيل الدخول (Supabase Auth) — Google و Apple
+
+أُضيفت مصادقة كاملة للتطبيق عبر Supabase (بلا أي مكتبة خارجية). تبقى **معطّلة**
+حتى تضع المفتاح العام، فلا تكسر البناء الحالي.
+
+## ما عليك فعله (مرة واحدة)
+
+### 1) المفتاح العام في التطبيق
+Supabase ← **Project Settings ← API** ← انسخ **anon public** key، ثم ضعه في
+`Tayyibat/Services/AppConfig.swift`:
+```swift
+static let supabaseAnonKey = "ضع-anon-public-key-هنا"
+```
+بمجرد وضعه، يطلب التطبيق تسجيل الدخول عند الإقلاع. (آمن في التطبيق — مفتاح عام.)
+
+### 2) رابط إعادة التوجيه
+Supabase ← **Authentication ← URL Configuration ← Redirect URLs** ← أضِف:
+```
+tayyibat://login-callback
+```
+
+### 3) مزوّد Google
+1. [Google Cloud Console](https://console.cloud.google.com) ← أنشئ مشروعاً ←
+   **APIs & Services ← Credentials ← Create OAuth client ID ← Web application**.
+2. في **Authorized redirect URIs** ضع:
+   `https://cvznuwvwhnujdgfojmsb.supabase.co/auth/v1/callback`
+3. انسخ **Client ID** و**Client Secret**.
+4. Supabase ← **Authentication ← Providers ← Google** ← فعّله والصق المفتاحين ← احفظ.
+
+> يعمل تسجيل Google فوراً (لا يحتاج عضوية Apple) — مناسب لاختبار الأصدقاء عبر TestFlight لاحقاً.
+
+### 4) مزوّد Apple (بعد عضوية Apple Developer)
+1. في Xcode: target ← **Signing & Capabilities ← + Capability ← Sign in with Apple**.
+2. Supabase ← **Authentication ← Providers ← Apple** ← فعّله وأضف **Client ID** =
+   `com.tayyibat.app` (وبيانات الـ Services ID/المفتاح حسب دليل Supabase).
+3. في `AppConfig.swift` بدّل:
+   ```swift
+   static let appleSignInEnabled = true
+   ```
+> آبل تشترط وجود "Sign in with Apple" متى وُجد تسجيل دخول اجتماعي آخر (Google)،
+> لذا فعّله **قبل** رفع التطبيق للمتجر.
+
+## كيف تعمل (للمرجع)
+- Google: `ASWebAuthenticationSession` + PKCE ← `/auth/v1/authorize?provider=google`.
+- Apple: زر Sign in with Apple الأصلي ← تبادل `id_token` عبر `/auth/v1/token`.
+- تُحفظ الجلسة في Keychain وتُجدَّد تلقائياً عند الإقلاع. زر "تسجيل الخروج" في الإعدادات.
