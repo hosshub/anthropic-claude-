@@ -87,9 +87,11 @@ tayyibat://login-callback
 > يعمل تسجيل Google فوراً (لا يحتاج عضوية Apple) — مناسب لاختبار الأصدقاء عبر TestFlight لاحقاً.
 
 ### 4) مزوّد Apple (بعد عضوية Apple Developer)
-1. في Xcode: target ← **Signing & Capabilities ← + Capability ← Sign in with Apple**.
-2. Supabase ← **Authentication ← Providers ← Apple** ← فعّله وأضف **Client ID** =
-   `com.tayyibat.app` (وبيانات الـ Services ID/المفتاح حسب دليل Supabase).
+الكود يستخدم تسجيل Apple **الأصلي** (id_token)، فالإعداد بسيط ولا يحتاج مفتاحاً سرّياً:
+1. Xcode: target ← **Signing & Capabilities ← + Capability ← Sign in with Apple**
+   (يتطلب عضوية Apple Developer — يسجّل القدرة على App ID = `com.tayyibat.app`).
+2. Supabase ← **Authentication ← Providers ← Apple** ← فعّله، وفي حقل **Client IDs**
+   أضِف معرّف الحزمة: `com.tayyibat.app` (لا حاجة لـ Services ID/مفتاح للتدفّق الأصلي).
 3. في `AppConfig.swift` بدّل:
    ```swift
    static let appleSignInEnabled = true
