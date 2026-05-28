@@ -34,11 +34,13 @@ struct SettingsView: View {
                     } label: { Label("الإشعارات", systemImage: "bell.fill") }
                 }
 
-                Section("اللغة") {
+                Section {
                     Picker("اللغة", selection: $preferredLanguage) {
                         Text("العربية").tag("ar")
                         Text("English").tag("en")
                     }
+                } header: {
+                    Text("اللغة")
                 } footer: {
                     Text("العربية هي اللغة الأساسية. قد يتطلب تغيير اللغة إعادة تشغيل التطبيق.")
                 }
