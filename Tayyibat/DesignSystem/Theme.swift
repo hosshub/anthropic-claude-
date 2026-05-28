@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// لوحة الألوان والقيم البصرية المشتركة للتطبيق.
 enum Theme {

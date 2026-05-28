@@ -13,10 +13,10 @@ struct TodayView: View {
         self.profile = profile
         let start = Calendar.current.startOfDay(for: .now)
         let end = Calendar.current.date(byAdding: .day, value: 1, to: start) ?? start
-        _todayMeals = Query(
-            filter: #Predicate<Meal> { $0.capturedAt >= start && $0.capturedAt < end },
-            sort: [SortDescriptor(\.capturedAt, order: .reverse)]
-        )
+        _todayMeals = Query(FetchDescriptor<Meal>(
+            predicate: #Predicate<Meal> { $0.capturedAt >= start && $0.capturedAt < end },
+            sortBy: [SortDescriptor(\.capturedAt, order: .reverse)]
+        ), animation: .default)
     }
 
     private var todayScore: Int {

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// بطاقة وجبة مصغّرة تُعرض في سجل اليوم.
 struct MealCard: View {

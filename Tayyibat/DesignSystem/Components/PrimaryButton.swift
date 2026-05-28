@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// زر أساسي بارز بنمط التطبيق.
 struct PrimaryButton: View {

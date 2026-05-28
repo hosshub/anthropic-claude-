@@ -43,7 +43,6 @@ struct RulesData: Codable {
 }
 
 /// يحمّل ملف القواعد ويوفّره للواجهات وللـ prompt.
-@Observable
 final class RulesService {
     static let shared = RulesService()
 

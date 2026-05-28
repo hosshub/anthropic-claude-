@@ -83,8 +83,8 @@ final class UserProfile {
         self.dailyTipsIntensityRaw = NotificationIntensity.medium.rawValue
         // افتراضي: لا تزعج من 11 مساءً حتى 7 صباحاً.
         let cal = Calendar.current
-        self.quietHoursStart = cal.date(from: DateComponents(hour: 23, minute: 0)) ?? .now
-        self.quietHoursEnd = cal.date(from: DateComponents(hour: 7, minute: 0)) ?? .now
+        self.quietHoursStart = cal.date(bySettingHour: 23, minute: 0, second: 0, of: .now) ?? .now
+        self.quietHoursEnd = cal.date(bySettingHour: 7, minute: 0, second: 0, of: .now) ?? .now
         self.reminderHours = [11, 16, 20]
     }
 }

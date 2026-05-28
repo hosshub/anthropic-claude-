@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// تفاصيل وجبة محفوظة (للقراءة).
 struct MealDetailView: View {

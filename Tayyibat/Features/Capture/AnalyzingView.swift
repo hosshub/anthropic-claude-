@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// شاشة التحميل أثناء تحليل الوجبة، بتأثير لمعان.
 struct AnalyzingView: View {
