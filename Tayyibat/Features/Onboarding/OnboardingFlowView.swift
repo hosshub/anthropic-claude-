@@ -37,7 +37,12 @@ struct OnboardingFlowView: View {
         case .philosophy:
             PhilosophyView { advance() }
         case .profile:
-            ProfileSetupView(name: $name, ageText: $ageText, goal: $goal) { advance() }
+            ProfileSetupView(name: name, ageText: ageText, goal: goal) { newName, newAge, newGoal in
+                name = newName
+                ageText = newAge
+                goal = newGoal
+                advance()
+            }
         case .notifications:
             NotificationPermissionView { granted, hours in
                 finish(notificationsEnabled: granted, reminderHours: hours)

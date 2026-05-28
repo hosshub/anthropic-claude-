@@ -1,13 +1,26 @@
 import SwiftUI
 
 struct ProfileSetupView: View {
-    @Binding var name: String
-    @Binding var ageText: String
-    @Binding var goal: UserGoal
-    let onContinue: () -> Void
+    /// يُبلّغ بالقيم النهائية عند المتابعة (الحقول تُدار محلياً لتفادي مشاكل التحديث).
+    let onContinue: (_ name: String, _ ageText: String, _ goal: UserGoal) -> Void
 
+    @State private var name: String
+    @State private var ageText: String
+    @State private var goal: UserGoal
     @FocusState private var focusedField: Field?
     private enum Field { case name, age }
+
+    init(
+        name: String,
+        ageText: String,
+        goal: UserGoal,
+        onContinue: @escaping (String, String, UserGoal) -> Void
+    ) {
+        _name = State(initialValue: name)
+        _ageText = State(initialValue: ageText)
+        _goal = State(initialValue: goal)
+        self.onContinue = onContinue
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -55,7 +68,7 @@ struct ProfileSetupView: View {
                 isEnabled: !name.trimmingCharacters(in: .whitespaces).isEmpty,
                 action: {
                     focusedField = nil
-                    onContinue()
+                    onContinue(name, ageText, goal)
                 }
             )
             .padding(20)
