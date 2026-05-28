@@ -12,6 +12,7 @@ final class AuthService: ObservableObject {
     @Published private(set) var userEmail: String?
     @Published private(set) var isWorking = false
     @Published var lastError: String?
+    @Published var infoMessage: String?
 
     private var accessToken: String?
     private var refreshToken: String?
@@ -29,6 +30,46 @@ final class AuthService: ObservableObject {
         let ok = await postToken(path: "token?grant_type=refresh_token",
                                  body: ["refresh_token": stored.refreshToken])
         if !ok { signOut() }
+    }
+
+    // MARK: - البريد وكلمة المرور
+
+    func signIn(email: String, password: String) async {
+        guard isEnabled else { lastError = "لم تُضبط مصادقة Supabase بعد."; return }
+        infoMessage = nil
+        await postToken(path: "token?grant_type=password",
+                        body: ["email": email, "password": password])
+    }
+
+    func signUp(email: String, password: String) async {
+        guard isEnabled else { lastError = "لم تُضبط مصادقة Supabase بعد."; return }
+        guard let url = URL(string: "\(AppConfig.supabaseURL)/auth/v1/signup") else {
+            lastError = "إعداد Supabase غير صالح."; return
+        }
+        infoMessage = nil
+        isWorking = true
+        defer { isWorking = false }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue(AppConfig.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: ["email": email, "password": password])
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                lastError = Self.errorMessage(from: data) ?? "تعذّر إنشاء الحساب."
+                return
+            }
+            if let tr = try? JSONDecoder().decode(TokenResponse.self, from: data) {
+                // التأكيد معطّل → جلسة مباشرة.
+                setSession(access: tr.access_token, refresh: tr.refresh_token, email: tr.user?.email)
+            } else {
+                // التأكيد مفعّل → يلزم تأكيد البريد قبل الدخول.
+                infoMessage = "أنشأنا حسابك. تحقّق من بريدك لتأكيد الحساب، ثم سجّل الدخول."
+            }
+        } catch {
+            lastError = "تعذّر الاتصال: \(error.localizedDescription)"
+        }
     }
 
     // MARK: - Apple
@@ -120,6 +161,7 @@ final class AuthService: ObservableObject {
         userEmail = nil
         isAuthenticated = false
         lastError = nil
+        infoMessage = nil
         AuthSessionStore.clear()
     }
 
@@ -164,6 +206,7 @@ final class AuthService: ObservableObject {
                                             email: email ?? userEmail))
         isAuthenticated = true
         lastError = nil
+        infoMessage = nil
     }
 
     // MARK: - نماذج الاستجابة
