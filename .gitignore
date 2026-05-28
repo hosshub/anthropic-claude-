@@ -26,6 +26,10 @@ Tayyibat.xcodeproj/project.xcworkspace/xcuserdata/
 Pods/
 Carthage/Build/
 
+# Python (server proxy bytecode)
+__pycache__/
+*.pyc
+
 # Secrets — the Claude API key is stored in Keychain at runtime, never in repo
 *.env
 secrets.plist
