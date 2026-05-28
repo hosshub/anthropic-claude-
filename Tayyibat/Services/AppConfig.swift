@@ -20,7 +20,7 @@ enum AppConfig {
 
     /// المفتاح العام (anon public) من: Supabase ← Project Settings ← API.
     /// آمن لتضمينه في التطبيق. اتركه فارغاً لتعطيل المصادقة (يعمل التطبيق كما هو بلا تسجيل دخول).
-    static let supabaseAnonKey = ""
+    static let supabaseAnonKey = "sb_publishable_LecfzCczF2tn3w_x7mtbyQ_Ug-Dee-X"
 
     /// فعّل زر "المتابعة عبر Apple" بعد:
     /// 1) تفعيل قدرة Sign in with Apple في Xcode (تتطلب عضوية Apple Developer)،
