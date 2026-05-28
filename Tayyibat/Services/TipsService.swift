@@ -29,7 +29,9 @@ enum TipsService {
 
     /// نصيحة اليوم للرئيسية — ثابتة خلال اليوم وتتغيّر يومياً.
     static func tipOfTheDay(context: ModelContext) -> String {
+        // ترتيب ثابت (بحسب المعرّف) كي لا تتغيّر نصيحة اليوم بين عمليات التشغيل.
         let pool = fetch(categories: [.morning, .general], context: context)
+            .sorted { $0.id.uuidString < $1.id.uuidString }
         guard !pool.isEmpty else { return "تذكّر: كُل عند الجوع الحقيقي، واختر من الطيبات." }
         let dayIndex = Calendar.current.ordinality(of: .day, in: .year, for: .now) ?? 0
         return pool[dayIndex % pool.count].textAr

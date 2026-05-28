@@ -1,6 +1,7 @@
 import Foundation
 
 /// نتيجة تحليل الوجبة كما تصل من Claude (DTO قابل للترميز).
+/// فك الترميز متسامح: المفاتيح الناقصة تأخذ قيماً افتراضية بدل أن يفشل التحليل.
 struct AnalysisResult: Codable {
     var identifiedItems: [Item]
     var overallScore: Int
@@ -28,6 +29,18 @@ struct AnalysisResult: Codable {
             case reasoningAr = "reasoning_ar"
             case ruleViolated = "rule_violated"
         }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = UUID()
+            nameAr = try c.decodeIfPresent(String.self, forKey: .nameAr) ?? "غير معروف"
+            confidence = try c.decodeIfPresent(Double.self, forKey: .confidence) ?? 0.5
+            estimatedPortion = try c.decodeIfPresent(String.self, forKey: .estimatedPortion) ?? "متوسطة"
+            verdict = try c.decodeIfPresent(String.self, forKey: .verdict) ?? "conditional"
+            category = try c.decodeIfPresent(String.self, forKey: .category) ?? "عام"
+            reasoningAr = try c.decodeIfPresent(String.self, forKey: .reasoningAr) ?? ""
+            ruleViolated = try c.decodeIfPresent(String.self, forKey: .ruleViolated)
+        }
     }
 
     enum CodingKeys: String, CodingKey {
@@ -37,6 +50,16 @@ struct AnalysisResult: Codable {
         case scoreExplanationAr = "score_explanation_ar"
         case improvementSuggestionsAr = "improvement_suggestions_ar"
         case warnings
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        identifiedItems = try c.decodeIfPresent([Item].self, forKey: .identifiedItems) ?? []
+        overallScore = try c.decodeIfPresent(Int.self, forKey: .overallScore) ?? 0
+        scoreLabelAr = try c.decodeIfPresent(String.self, forKey: .scoreLabelAr) ?? ""
+        scoreExplanationAr = try c.decodeIfPresent(String.self, forKey: .scoreExplanationAr) ?? ""
+        improvementSuggestionsAr = try c.decodeIfPresent([String].self, forKey: .improvementSuggestionsAr) ?? []
+        warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
     }
 }
 

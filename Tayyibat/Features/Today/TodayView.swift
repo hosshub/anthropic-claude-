@@ -71,7 +71,7 @@ struct TodayView: View {
     private var greetingText: String {
         let name = profile.name.isEmpty ? "" : "، \(profile.name)"
         let hour = Calendar.current.component(.hour, from: .now)
-        let part = hour < 12 ? "صباح الخير" : (hour < 18 ? "مساء الخير" : "مساء الخير")
+        let part = hour < 12 ? "صباح الخير" : "مساء الخير"
         return "\(part)\(name)"
     }
 

@@ -70,7 +70,8 @@ struct CalendarMonthView: View {
         let firstDay = interval.start
         let daysInMonth = calendar.range(of: .day, in: .month, for: month)?.count ?? 30
         let firstWeekday = calendar.component(.weekday, from: firstDay) // 1=أحد
-        let leading = (firstWeekday - calendar.firstWeekday + 7) % 7
+        // الترويسة ثابتة تبدأ بالأحد، لذا نحسب الفراغات بناءً على الأحد=1.
+        let leading = firstWeekday - 1
 
         var result: [Date?] = Array(repeating: nil, count: leading)
         for offset in 0..<daysInMonth {

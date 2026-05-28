@@ -15,7 +15,7 @@ struct ResultView: View {
         self.imageData = imageData
         self.onSave = onSave
         self.onRetake = onRetake
-        _items = State(initialValue: result.identifiedItems.map(EditableItem.init))
+        _items = State(initialValue: result.identifiedItems.map { EditableItem(from: $0) })
     }
 
     /// النتيجة المعروضة: تُعاد حسابتها محلياً إذا عدّل المستخدم عنصراً.

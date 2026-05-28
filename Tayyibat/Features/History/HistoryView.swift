@@ -87,7 +87,8 @@ struct HistoryView: View {
     private func topFood(_ verdict: Verdict) -> String? {
         let names = meals.flatMap { $0.items }.filter { $0.verdict == verdict }.map(\.nameAr)
         let counts = Dictionary(grouping: names, by: { $0 }).mapValues(\.count)
-        return counts.max(by: { $0.value < $1.value })?.key
+        // فاصل تعادل ثابت بالاسم كي لا تتغيّر النتيجة بين عمليات التشغيل.
+        return counts.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.first?.key
     }
 
     private var fastingDaysCompleted: Int {

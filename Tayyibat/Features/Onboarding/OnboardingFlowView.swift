@@ -57,7 +57,7 @@ struct OnboardingFlowView: View {
         profile.age = Int(ageText)
         profile.goal = goal
         profile.notificationsEnabled = notificationsEnabled
-        if !reminderHours.isEmpty { profile.reminderHours = reminderHours }
+        profile.reminderHours = reminderHours
         profile.disclaimerAcceptedAt = .now
         if existingProfile == nil {
             context.insert(profile)
