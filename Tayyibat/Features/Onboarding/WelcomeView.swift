@@ -6,9 +6,12 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "leaf.circle.fill")
-                .font(.system(size: 90))
-                .foregroundStyle(Theme.primary)
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 150, height: 150)
+                .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+                .shadow(color: Theme.cardShadow, radius: 12, y: 6)
             Text("الطيبات")
                 .font(.displayTitle)
                 .foregroundStyle(Theme.textPrimary)
