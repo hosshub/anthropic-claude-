@@ -1,0 +1,10 @@
+{
+  "name": "tayyibat-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend proxy that holds the Anthropic API key and forwards meal-image analysis requests for the Tayyibat iOS app.",
+  "engines": {
+    "node": ">=18"
+  }
+}

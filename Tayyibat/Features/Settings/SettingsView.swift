@@ -25,9 +25,11 @@ struct SettingsView: View {
                 }
 
                 Section("النظام") {
-                    NavigationLink {
-                        APIKeySettingsView()
-                    } label: { Label("مفتاح Claude API", systemImage: "key.fill") }
+                    if !AppConfig.usesProxy {
+                        NavigationLink {
+                            APIKeySettingsView()
+                        } label: { Label("مفتاح Claude API", systemImage: "key.fill") }
+                    }
 
                     NavigationLink {
                         NotificationSettingsView(profile: profile)

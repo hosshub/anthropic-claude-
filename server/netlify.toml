@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+  publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+  # تأكد من نشر ملف القواعد بجانب الدالة كي تقرأه عبر fs.
+  included_files = ["netlify/functions/tayyibat_rules.json"]

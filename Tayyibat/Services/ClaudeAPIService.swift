@@ -33,12 +33,61 @@ struct ClaudeAPIService {
     private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     private static let anthropicVersion = "2023-06-01"
 
+    /// يحلل الصورة: عبر الوسيط (proxy) إن كان مُعدّاً، وإلا مباشرةً بمفتاح المستخدم.
     func analyze(imageData: Data) async throws -> AnalysisResult {
-        guard let apiKey = KeychainService.loadAPIKey(), !apiKey.isEmpty else {
-            throw ClaudeAPIError.missingKey
-        }
         guard let jpeg = Self.prepareJPEG(from: imageData) else {
             throw ClaudeAPIError.invalidImage
+        }
+        if !AppConfig.proxyURL.isEmpty, let url = URL(string: AppConfig.proxyURL) {
+            return try await analyzeViaProxy(jpeg: jpeg, url: url)
+        }
+        return try await analyzeDirect(jpeg: jpeg)
+    }
+
+    // MARK: - Proxy mode (المفتاح على الخادم — مناسب للنشر)
+
+    private func analyzeViaProxy(jpeg: Data, url: URL) async throws -> AnalysisResult {
+        let payload: [String: Any] = [
+            "image_base64": jpeg.base64EncodedString(),
+            "media_type": "image/jpeg"
+        ]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        if !AppConfig.appToken.isEmpty {
+            request.setValue(AppConfig.appToken, forHTTPHeaderField: "x-app-token")
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        request.timeoutInterval = 60
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw ClaudeAPIError.network(error.localizedDescription)
+        }
+        guard let http = response as? HTTPURLResponse else { throw ClaudeAPIError.emptyResponse }
+        guard (200...299).contains(http.statusCode) else {
+            throw ClaudeAPIError.http(http.statusCode, Self.extractAPIError(from: data) ?? "حدث خطأ غير متوقع")
+        }
+        // الوسيط يُرجع JSON النتيجة مباشرةً.
+        if let result = try? JSONDecoder().decode(AnalysisResult.self, from: data) {
+            return result
+        }
+        let json = Self.stripFences(String(data: data, encoding: .utf8) ?? "")
+        guard let jsonData = json.data(using: .utf8),
+              let result = try? JSONDecoder().decode(AnalysisResult.self, from: jsonData) else {
+            throw ClaudeAPIError.decoding("رد غير متوقع من الوسيط")
+        }
+        return result
+    }
+
+    // MARK: - Direct mode (مفتاح المستخدم في Keychain — للتطوير/الاستخدام الشخصي)
+
+    private func analyzeDirect(jpeg: Data) async throws -> AnalysisResult {
+        guard let apiKey = KeychainService.loadAPIKey(), !apiKey.isEmpty else {
+            throw ClaudeAPIError.missingKey
         }
 
         let body: [String: Any] = [
@@ -112,12 +161,14 @@ struct ClaudeAPIService {
     }
 
     private static func extractAPIError(from data: Data) -> String? {
-        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let err = obj["error"] as? [String: Any],
-              let message = err["message"] as? String else {
-            return nil
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        if let err = obj["error"] as? [String: Any], let message = err["message"] as? String {
+            return message  // شكل Anthropic
         }
-        return message
+        if let message = obj["error"] as? String {
+            return message  // شكل الوسيط
+        }
+        return nil
     }
 
     /// يزيل أسوار markdown (```json ... ```) إن وُجدت ويعزل كائن JSON.
