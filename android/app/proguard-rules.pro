@@ -32,6 +32,9 @@
 -dontwarn com.google.errorprone.annotations.**
 -dontwarn javax.annotation.**
 -dontwarn javax.annotation.concurrent.**
+# Tink's optional remote-keyset downloader pulls google-http-client/Joda-Time (غير مستخدمة هنا).
+-dontwarn com.google.api.client.**
+-dontwarn org.joda.time.**
 -keep class com.google.crypto.tink.** { *; }
 
 # ----- متفرقات -----
