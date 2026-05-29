@@ -95,9 +95,9 @@ fun SettingsScreen(
         CardContainer {
             Text("النظام", style = AppType.cardTitle, color = Theme.colors.textPrimary)
             if (!AppConfig.usesProxy) {
-                SettingRow(Icons.Filled.Key, "مفتاح Gemini API", onApiKey)
+                SettingRow(Icons.Filled.Key, "مفتاح Gemini API", onClick = onApiKey)
             }
-            SettingRow(Icons.Filled.Notifications, "الإشعارات", onNotifications)
+            SettingRow(Icons.Filled.Notifications, "الإشعارات", onClick = onNotifications)
         }
 
         // البيانات
