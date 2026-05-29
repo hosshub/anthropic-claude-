@@ -42,10 +42,12 @@ struct ProfileSetupView: View {
                         TextField("العمر", text: $ageText)
                             .keyboardType(.numberPad)
                             .textFieldStyle(.roundedBorder)
+                            .multilineTextAlignment(.leading)
+                            .environment(\.layoutDirection, .leftToRight)
                             .focused($focusedField, equals: .age)
                             .onChange(of: ageText) { _, newValue in
-                                let digits = newValue.filter(\.isNumber)
-                                if digits != newValue { ageText = digits }
+                                let normalized = Self.normalizeDigits(newValue)
+                                if normalized != newValue { ageText = normalized }
                             }
                     }
 
@@ -80,6 +82,17 @@ struct ProfileSetupView: View {
                 Button("تم") { focusedField = nil }
             }
         }
+    }
+
+    /// يحوّل أي أرقام (هندية عربية ٠-٩ أو فارسية ۰-۹ أو لاتينية) إلى لاتينية ويُبقي الأرقام فقط (٣ خانات).
+    static func normalizeDigits(_ input: String) -> String {
+        var out = ""
+        for ch in input where ch.isNumber {
+            if let value = ch.wholeNumberValue, (0...9).contains(value) {
+                out.append(Character("\(value)"))
+            }
+        }
+        return String(out.prefix(3))
     }
 
     private func field<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {

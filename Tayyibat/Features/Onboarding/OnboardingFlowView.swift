@@ -59,7 +59,7 @@ struct OnboardingFlowView: View {
     private func finish(notificationsEnabled: Bool, reminderHours: [Int]) {
         let profile = existingProfile ?? UserProfile()
         profile.name = name.trimmingCharacters(in: .whitespaces)
-        profile.age = Int(ageText)
+        profile.age = Int(ProfileSetupView.normalizeDigits(ageText))
         profile.goal = goal
         profile.notificationsEnabled = notificationsEnabled
         profile.reminderHours = reminderHours
