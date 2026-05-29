@@ -153,6 +153,43 @@ final class AuthService: ObservableObject {
         }
     }
 
+    // MARK: - حذف الحساب
+
+    /// يحذف حساب المستخدم وبياناته من الخادم، ثم يسجّل الخروج محلياً.
+    func deleteAccount() async -> Bool {
+        guard isEnabled else { lastError = "المصادقة غير مفعّلة."; return false }
+        // جدّد التوكن أولاً لضمان صلاحيته.
+        if let rt = refreshToken ?? AuthSessionStore.load()?.refreshToken {
+            await postToken(path: "token?grant_type=refresh_token", body: ["refresh_token": rt])
+        }
+        guard let token = accessToken ?? AuthSessionStore.load()?.accessToken, !token.isEmpty else {
+            lastError = "لا توجد جلسة صالحة."
+            return false
+        }
+        guard let url = URL(string: "\(AppConfig.supabaseURL)/functions/v1/delete-account") else {
+            lastError = "إعداد Supabase غير صالح."
+            return false
+        }
+        isWorking = true
+        defer { isWorking = false }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue(AppConfig.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                lastError = Self.errorMessage(from: data) ?? "تعذّر حذف الحساب."
+                return false
+            }
+            signOut()
+            return true
+        } catch {
+            lastError = "تعذّر الاتصال: \(error.localizedDescription)"
+            return false
+        }
+    }
+
     // MARK: - تسجيل الخروج
 
     func signOut() {

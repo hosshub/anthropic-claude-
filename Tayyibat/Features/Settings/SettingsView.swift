@@ -11,6 +11,8 @@ struct SettingsView: View {
     @State private var shareURL: URL?
     @State private var showShare = false
     @State private var showDeleteConfirm = false
+    @State private var showDeleteAccountConfirm = false
+    @State private var deleteAccountError: String?
 
     var body: some View {
         NavigationStack {
@@ -73,6 +75,13 @@ struct SettingsView: View {
                         } label: {
                             Label("تسجيل الخروج", systemImage: "rectangle.portrait.and.arrow.right")
                         }
+                        Button(role: .destructive) {
+                            showDeleteAccountConfirm = true
+                        } label: {
+                            Label("حذف الحساب", systemImage: "person.crop.circle.badge.xmark")
+                                .foregroundStyle(Theme.khabith)
+                        }
+                        .disabled(auth.isWorking)
                     }
                 }
 
@@ -101,6 +110,32 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("سيتم حذف جميع الوجبات والملخصات وأيام الصيام نهائياً. لا يمكن التراجع.")
+            }
+            .alert("حذف الحساب نهائياً؟", isPresented: $showDeleteAccountConfirm) {
+                Button("إلغاء", role: .cancel) {}
+                Button("حذف الحساب", role: .destructive) {
+                    Task {
+                        let ok = await auth.deleteAccount()
+                        if ok {
+                            DataExportService.deleteAllTrackingData(context: context)
+                        } else {
+                            deleteAccountError = auth.lastError ?? "تعذّر حذف الحساب."
+                        }
+                    }
+                }
+            } message: {
+                Text("سيُحذف حسابك وبياناته من الخادم، وكذلك كل بيانات المتابعة على هذا الجهاز. لا يمكن التراجع.")
+            }
+            .alert(
+                "تعذّر حذف الحساب",
+                isPresented: Binding(
+                    get: { deleteAccountError != nil },
+                    set: { if !$0 { deleteAccountError = nil } }
+                )
+            ) {
+                Button("حسناً", role: .cancel) {}
+            } message: {
+                Text(deleteAccountError ?? "")
             }
         }
     }
