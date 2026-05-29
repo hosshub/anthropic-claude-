@@ -27,6 +27,13 @@
 -keep @androidx.room.Dao interface * { *; }
 -dontwarn androidx.room.paging.**
 
+# ----- التخزين الآمن: Tink (عبر EncryptedSharedPreferences) -----
+# يشير Tink إلى تعليقات توضيحية للترجمة فقط غير موجودة وقت التشغيل؛ نتجاهل تحذيراتها.
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn javax.annotation.concurrent.**
+-keep class com.google.crypto.tink.** { *; }
+
 # ----- متفرقات -----
 # Compose و AndroidX يأتيان بقواعد consumer خاصة بهما؛ لا حاجة لإضافات.
 -dontwarn org.jetbrains.annotations.**
