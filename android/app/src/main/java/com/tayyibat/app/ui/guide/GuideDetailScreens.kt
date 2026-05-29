@@ -16,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -105,7 +105,7 @@ fun FastingGuideScreen(onBack: () -> Unit) {
                             Text(DateUtils.abbreviatedDate(entry.date), style = AppType.bodyText, color = Theme.colors.textPrimary)
                             Text(entry.types.joinToString(" و") { it.labelAr }, style = AppType.caption, color = Gold)
                         }
-                        Divider(color = Theme.colors.textSecondary.copy(alpha = 0.15f))
+                        HorizontalDivider(color = Theme.colors.textSecondary.copy(alpha = 0.15f))
                     }
                 }
             }
@@ -148,7 +148,7 @@ private fun ItemList(title: String, items: List<String>, verdict: Verdict) {
                 Icon(verdictIcon(verdict), contentDescription = null, tint = verdict.color, modifier = Modifier.size(16.dp))
                 Text(item, style = AppType.bodyText, color = Theme.colors.textPrimary)
             }
-            Divider(color = Theme.colors.textSecondary.copy(alpha = 0.12f), modifier = Modifier.padding(top = 8.dp))
+            HorizontalDivider(color = Theme.colors.textSecondary.copy(alpha = 0.12f), modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
