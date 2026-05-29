@@ -13,6 +13,12 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
 const APP_TOKEN = Deno.env.get("APP_TOKEN") ?? "";
 
+// حدّ يومي لكل مستخدم (حماية من التكلفة). يُفرَض فقط عند إرسال التطبيق توكن المستخدم.
+// SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY يحقنهما Supabase تلقائياً في الدوال.
+const DAILY_LIMIT = 7;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
 const RULES = {
   "version": "1.0",
   "system_name": "نظام الطيبات",
@@ -107,6 +113,47 @@ function json(status: number, obj: unknown): Response {
   });
 }
 
+// يقرأ معرّف المستخدم (sub) من توكن Supabase دون التحقق من التوقيع — يكفي لعدّ الحصص.
+function userIdFromJWT(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  const parts = match[1].split(".");
+  if (parts.length < 2) return null;
+  try {
+    let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4 !== 0) b64 += "=";
+    const payload = JSON.parse(atob(b64));
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
+// يزيد عدّاد اليوم ذرّياً عبر دالة Postgres. يُعيد:
+//   عدد موجب = مسموح (رقم التحليل اليوم بعد الزيادة)،
+//   عدد سالب = تجاوز الحدّ، أو null إذا تعذّر العدّ (نسمح حينها — fail open).
+async function bumpDailyUsage(userId: string): Promise<number | null> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_usage`, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_KEY,
+        authorization: `Bearer ${SERVICE_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ p_user: userId, p_limit: DAILY_LIMIT }),
+    });
+    if (!res.ok) return null;
+    const value = await res.json();
+    const n = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method === "GET") return json(200, { ok: true });
@@ -128,6 +175,17 @@ Deno.serve(async (req: Request) => {
   const imageBase64 = payload.image_base64;
   const mediaType = payload.media_type ?? "image/jpeg";
   if (!imageBase64) return json(400, { error: "image_base64 مطلوب" });
+
+  // الحدّ اليومي لكل مستخدم (إن أرسل التطبيق التوكن).
+  const userId = userIdFromJWT(req.headers.get("authorization"));
+  if (userId) {
+    const used = await bumpDailyUsage(userId);
+    if (used !== null && used < 0) {
+      return json(429, {
+        error: `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
+      });
+    }
+  }
 
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;

@@ -6,6 +6,7 @@ enum ClaudeAPIError: LocalizedError {
     case invalidImage
     case network(String)
     case http(Int, String)
+    case rateLimited(String)
     case emptyResponse
     case decoding(String)
 
@@ -19,6 +20,8 @@ enum ClaudeAPIError: LocalizedError {
             return "تعذّر الاتصال بالخادم: \(m)"
         case .http(let code, let m):
             return "خطأ من الخادم (\(code)): \(m)"
+        case .rateLimited(let m):
+            return m
         case .emptyResponse:
             return "وصل رد فارغ من الخادم."
         case .decoding(let m):
@@ -57,6 +60,10 @@ struct ClaudeAPIService {
         if !AppConfig.appToken.isEmpty {
             request.setValue(AppConfig.appToken, forHTTPHeaderField: "x-app-token")
         }
+        // توكن المستخدم: يتيح للوسيط فرض الحدّ اليومي لكل مستخدم.
+        if let token = AuthSessionStore.load()?.accessToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         request.timeoutInterval = 60
 
@@ -69,7 +76,9 @@ struct ClaudeAPIService {
         }
         guard let http = response as? HTTPURLResponse else { throw ClaudeAPIError.emptyResponse }
         guard (200...299).contains(http.statusCode) else {
-            throw ClaudeAPIError.http(http.statusCode, Self.extractAPIError(from: data) ?? "حدث خطأ غير متوقع")
+            let msg = Self.extractAPIError(from: data) ?? "حدث خطأ غير متوقع"
+            if http.statusCode == 429 { throw ClaudeAPIError.rateLimited(msg) }
+            throw ClaudeAPIError.http(http.statusCode, msg)
         }
         // الوسيط يُرجع JSON النتيجة مباشرةً.
         if let result = try? JSONDecoder().decode(AnalysisResult.self, from: data) {
