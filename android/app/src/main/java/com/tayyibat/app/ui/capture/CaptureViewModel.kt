@@ -39,7 +39,7 @@ class CaptureViewModel(app: Application) : AndroidViewModel(app) {
         _step.value = CaptureStep.Analyzing(prepared)
         viewModelScope.launch {
             try {
-                val result = claude.analyze(prepared)
+                val result = gemini.analyze(prepared)
                 _step.value = CaptureStep.Result(result, prepared)
             } catch (e: Exception) {
                 _step.value = CaptureStep.Error(e.message ?: "حدث خطأ غير متوقع", prepared)

@@ -6,7 +6,7 @@ import kotlin.math.roundToInt
 
 /**
  * إعادة حساب نسبة الالتزام محلياً بعد تعديل المستخدم لعناصر الوجبة.
- * (التحليل الأصلي يأتي من Claude؛ هذا يُستخدم فقط عند التعديل اليدوي.)
+ * (التحليل الأصلي يأتي من Gemini؛ هذا يُستخدم فقط عند التعديل اليدوي.)
  */
 object ScoringHelper {
     private fun portionWeight(portion: String): Double = when {

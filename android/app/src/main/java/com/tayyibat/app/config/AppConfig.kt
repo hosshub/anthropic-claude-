@@ -2,7 +2,7 @@ package com.tayyibat.app.config
 
 /** إعدادات التطبيق العامة (مطابقة لنظيرتها في تطبيق iOS). */
 object AppConfig {
-    /** عنوان الوسيط (proxy) الذي يحتفظ بمفتاح Anthropic على الخادم.
+    /** عنوان الوسيط (proxy) الذي يحتفظ بمفتاح Gemini على الخادم.
      *  - إن تُرك فارغاً: يعمل التطبيق بوضع المفتاح المباشر (يُدخله المستخدم في الإعدادات).
      *  - للنشر: ضع هنا رابط الوسيط المنشور (دالة Supabase Edge). */
     const val PROXY_URL = "https://cvznuwvwhnujdgfojmsb.supabase.co/functions/v1/analyze"

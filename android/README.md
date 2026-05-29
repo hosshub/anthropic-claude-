@@ -39,7 +39,7 @@ app/src/main/java/com/tayyibat/app/
   data/model/      كيانات Room + التعدادات + AnalysisResult (DTO)
   data/db/         AppDatabase · DAOs · Converters
   data/SecureStore تخزين مشفّر لمفتاح API وجلسة المصادقة (بديل Keychain)
-  service/         Claude API · المصادقة · الإشعارات · النصائح · القواعد · الصيام · النقاط · التصدير
+  service/         Gemini API · المصادقة · الإشعارات · النصائح · القواعد · الصيام · النقاط · التصدير
   ui/theme/        الألوان والثيم (RTL + الوضع الليلي) والخطوط
   ui/components/   مكوّنات مشتركة (الأزرار، حلقة النتيجة، الشارات، البطاقات)
   ui/navigation/   AppNavHost + شريط التبويب السفلي

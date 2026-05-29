@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 /**
- * نتيجة تحليل الوجبة كما تصل من Claude.
+ * نتيجة تحليل الوجبة كما تصل من Gemini.
  * فك الترميز متسامح: المفاتيح الناقصة تأخذ قيماً افتراضية بدل أن يفشل التحليل
  * (تُضبط القيم الافتراضية على مستوى الخصائص، ويُفعَّل ignoreUnknownKeys في الـ Json).
  */
