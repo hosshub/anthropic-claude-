@@ -46,5 +46,19 @@ $$;
 
 grant execute on function public.bump_usage(uuid, int) to service_role;
 
+-- يسترجع حصّة واحدة عند فشل التحليل (لا ينزل تحت صفر).
+create or replace function public.refund_usage(p_user uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.usage_daily
+  set count = greatest(count - 1, 0)
+  where user_id = p_user and day = current_date;
+$$;
+
+grant execute on function public.refund_usage(uuid) to service_role;
+
 -- تنظيف اختياري للصفوف القديمة (شغّله يدوياً وقتما شئت):
 --   delete from public.usage_daily where day < current_date - interval '7 days';

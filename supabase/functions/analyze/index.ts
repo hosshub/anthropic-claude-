@@ -154,6 +154,24 @@ async function bumpDailyUsage(userId: string): Promise<number | null> {
   }
 }
 
+// يسترجع حصّة واحدة عند فشل التحليل. أفضل جهد — يتجاهل الأخطاء.
+async function refundDailyUsage(userId: string): Promise<void> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/refund_usage`, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_KEY,
+        authorization: `Bearer ${SERVICE_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ p_user: userId }),
+    });
+  } catch {
+    // تجاهل
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method === "GET") return json(200, { ok: true });
@@ -178,6 +196,7 @@ Deno.serve(async (req: Request) => {
 
   // الحدّ اليومي لكل مستخدم (إن أرسل التطبيق التوكن).
   const userId = userIdFromJWT(req.headers.get("authorization"));
+  let counted = false;
   if (userId) {
     const used = await bumpDailyUsage(userId);
     if (used !== null && used < 0) {
@@ -185,7 +204,13 @@ Deno.serve(async (req: Request) => {
         error: `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
       });
     }
+    counted = used !== null && used > 0;
   }
+
+  // يُعيد الحصّة المحجوزة إذا فشل التحليل لاحقاً.
+  const refundIfCounted = async () => {
+    if (counted && userId) await refundDailyUsage(userId);
+  };
 
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
@@ -216,10 +241,12 @@ Deno.serve(async (req: Request) => {
     });
     raw = await upstream.text();
   } catch (e) {
+    await refundIfCounted();
     return json(502, { error: `تعذّر الاتصال بـ Gemini: ${(e as Error).message}` });
   }
 
   if (!upstream.ok) {
+    await refundIfCounted();
     let msg = `خطأ من Gemini (${upstream.status})`;
     try { msg = JSON.parse(raw)?.error?.message ?? msg; } catch { /* keep default */ }
     return json(upstream.status, { error: msg });
@@ -232,12 +259,14 @@ Deno.serve(async (req: Request) => {
       .map((p: { text?: string }) => p.text ?? "")
       .join("");
     if (!text) {
+      await refundIfCounted();
       const reason = candidate?.finishReason ?? data.promptFeedback?.blockReason;
       return json(502, { error: `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}` });
     }
     const result = JSON.parse(stripFences(text));
     return json(200, result);
   } catch {
+    await refundIfCounted();
     return json(502, { error: "تعذّر تحليل نتيجة النموذج" });
   }
 });
