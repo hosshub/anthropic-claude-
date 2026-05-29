@@ -9,3 +9,8 @@
 .cxx/
 local.properties
 app/build/
+
+# توقيع الإصدار — لا تُرفع المفاتيح ولا كلمات المرور أبداً إلى git.
+keystore.properties
+*.jks
+*.keystore
