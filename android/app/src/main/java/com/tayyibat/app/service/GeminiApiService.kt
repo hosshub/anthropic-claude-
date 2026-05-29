@@ -10,8 +10,6 @@ import com.tayyibat.app.data.model.AnalysisResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -24,20 +22,20 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /** أخطاء تحليل الوجبة برسائل عربية مفهومة. */
-class ClaudeApiException(override val message: String) : Exception(message)
+class GeminiApiException(override val message: String) : Exception(message)
 
-/** عميل Claude API لتحليل صور الوجبات وفق نظام الطيبات. */
-class ClaudeApiService(private val appContext: Context) {
+/** عميل تحليل صور الوجبات وفق نظام الطيبات عبر Google Gemini (مباشرةً أو عبر الوسيط). */
+class GeminiApiService(private val appContext: Context) {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     /** يحلل الصورة: عبر الوسيط (proxy) إن كان مُعدّاً، وإلا مباشرةً بمفتاح المستخدم. */
     suspend fun analyze(imageBytes: ByteArray): AnalysisResult = withContext(Dispatchers.IO) {
-        val jpeg = prepareJpeg(imageBytes) ?: throw ClaudeApiException("تعذّر تجهيز الصورة للتحليل.")
+        val jpeg = prepareJpeg(imageBytes) ?: throw GeminiApiException("تعذّر تجهيز الصورة للتحليل.")
         if (AppConfig.PROXY_URL.isNotEmpty()) analyzeViaProxy(jpeg) else analyzeDirect(jpeg)
     }
 
-    // وضع الوسيط (المفتاح على الخادم — مناسب للنشر)
+    // وضع الوسيط (المفتاح على الخادم — مناسب للنشر). الحمولة لا تتغيّر؛ الخادم يخاطب Gemini.
     private fun analyzeViaProxy(jpeg: ByteArray): AnalysisResult {
         val payload = buildJsonObject {
             put("image_base64", Base64.encodeToString(jpeg, Base64.NO_WRAP))
@@ -49,59 +47,56 @@ class ClaudeApiService(private val appContext: Context) {
         }
         val (code, body) = post(AppConfig.PROXY_URL, headers, payload.toString())
         if (code !in 200..299) {
-            throw ClaudeApiException("خطأ من الخادم ($code): ${extractApiError(body) ?: "حدث خطأ غير متوقع"}")
+            throw GeminiApiException("خطأ من الخادم ($code): ${extractApiError(body) ?: "حدث خطأ غير متوقع"}")
         }
         // الوسيط يُرجع JSON النتيجة مباشرةً.
         return runCatching { json.decodeFromString(AnalysisResult.serializer(), body) }
             .getOrElse {
                 val stripped = stripFences(body)
                 runCatching { json.decodeFromString(AnalysisResult.serializer(), stripped) }
-                    .getOrElse { throw ClaudeApiException("تعذّر فهم نتيجة التحليل: رد غير متوقع من الوسيط") }
+                    .getOrElse { throw GeminiApiException("تعذّر فهم نتيجة التحليل: رد غير متوقع من الوسيط") }
             }
     }
 
     // الوضع المباشر (مفتاح المستخدم في التخزين الآمن — للتطوير/الاستخدام الشخصي)
     private fun analyzeDirect(jpeg: ByteArray): AnalysisResult {
         val apiKey = SecureStore.loadApiKey(appContext)
-            ?: throw ClaudeApiException("لم يتم إدخال مفتاح Claude API. أضِفه من الإعدادات.")
+            ?: throw GeminiApiException("لم يتم إدخال مفتاح Gemini API. أضِفه من الإعدادات.")
+
+        val endpoint = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"
 
         val body = buildJsonObject {
-            put("model", MODEL)
-            put("max_tokens", 2000)
-            putJsonArray("messages") {
+            putJsonArray("contents") {
                 add(buildJsonObject {
-                    put("role", "user")
-                    putJsonArray("content") {
+                    putJsonArray("parts") {
                         add(buildJsonObject {
-                            put("type", "image")
-                            put("source", buildJsonObject {
-                                put("type", "base64")
-                                put("media_type", "image/jpeg")
+                            put("inline_data", buildJsonObject {
+                                put("mime_type", "image/jpeg")
                                 put("data", Base64.encodeToString(jpeg, Base64.NO_WRAP))
                             })
                         })
-                        add(buildJsonObject {
-                            put("type", "text")
-                            put("text", prompt())
-                        })
+                        add(buildJsonObject { put("text", prompt()) })
                     }
                 })
             }
+            put("generationConfig", buildJsonObject {
+                put("temperature", 0.2)
+                put("responseMimeType", "application/json")
+            })
         }
 
         val headers = mapOf(
-            "x-api-key" to apiKey,
-            "anthropic-version" to ANTHROPIC_VERSION,
             "content-type" to "application/json",
+            "x-goog-api-key" to apiKey,
         )
-        val (code, resp) = post(ENDPOINT, headers, body.toString())
+        val (code, resp) = post(endpoint, headers, body.toString())
         if (code !in 200..299) {
-            throw ClaudeApiException("خطأ من الخادم ($code): ${extractApiError(resp) ?: "حدث خطأ غير متوقع"}")
+            throw GeminiApiException("خطأ من الخادم ($code): ${extractApiError(resp) ?: "حدث خطأ غير متوقع"}")
         }
-        val text = extractText(resp) ?: throw ClaudeApiException("وصل رد فارغ من الخادم.")
+        val text = extractText(resp) ?: throw GeminiApiException("وصل رد فارغ من الخادم.")
         val stripped = stripFences(text)
         return runCatching { json.decodeFromString(AnalysisResult.serializer(), stripped) }
-            .getOrElse { throw ClaudeApiException("تعذّر فهم نتيجة التحليل: ${it.message}") }
+            .getOrElse { throw GeminiApiException("تعذّر فهم نتيجة التحليل: ${it.message}") }
     }
 
     // أدوات الشبكة
@@ -120,31 +115,32 @@ class ClaudeApiService(private val appContext: Context) {
             val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
             code to text
         } catch (e: Exception) {
-            throw ClaudeApiException("تعذّر الاتصال بالخادم: ${e.message}")
+            throw GeminiApiException("تعذّر الاتصال بالخادم: ${e.message}")
         } finally {
             conn.disconnect()
         }
     }
 
+    /** يستخرج نص الرد من بنية ردّ Gemini: candidates[0].content.parts[*].text */
     private fun extractText(data: String): String? = runCatching {
         val obj = json.parseToJsonElement(data).jsonObject
-        val content = obj["content"]?.jsonArray ?: return null
-        content.joinToString("") { el ->
-            val o = el.jsonObject
-            if (o["type"]?.jsonPrimitive?.content == "text") o["text"]?.jsonPrimitive?.content ?: "" else ""
+        val candidates = obj["candidates"]?.jsonArray ?: return null
+        val first = candidates.firstOrNull()?.jsonObject ?: return null
+        val parts = first["content"]?.jsonObject?.get("parts")?.jsonArray ?: return null
+        parts.joinToString("") { el ->
+            el.jsonObject["text"]?.jsonPrimitive?.content ?: ""
         }.ifEmpty { null }
     }.getOrNull()
 
+    /** شكل خطأ Gemini: { "error": { "message": "..." } } */
     private fun extractApiError(data: String): String? = runCatching {
         val obj = json.parseToJsonElement(data).jsonObject
-        (obj["error"] as? JsonObject)?.get("message")?.jsonPrimitive?.content
+        obj["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content
             ?: obj["error"]?.jsonPrimitive?.content
     }.getOrNull()
 
     companion object {
-        const val MODEL = "claude-opus-4-7"
-        private const val ENDPOINT = "https://api.anthropic.com/v1/messages"
-        private const val ANTHROPIC_VERSION = "2023-06-01"
+        const val MODEL = "gemini-2.5-flash"
 
         /** يزيل أسوار markdown (```json ... ```) إن وُجدت ويعزل كائن JSON. */
         fun stripFences(text: String): String {

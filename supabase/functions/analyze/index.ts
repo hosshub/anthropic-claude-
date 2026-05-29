@@ -1,17 +1,17 @@
-// Supabase Edge Function: analyze
-// Holds the Anthropic API key as a Supabase secret and forwards meal-image
+// Supabase Edge Function: analyze (Google Gemini)
+// Holds the Gemini API key as a Supabase secret and forwards meal-image
 // analysis for the Tayyibat iOS app, so the key never ships in the app.
 //
 // Deploy (CLI):   supabase functions deploy analyze --no-verify-jwt
-// Secret:         supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Secret:         supabase secrets set GEMINI_API_KEY=...      (from Google AI Studio)
+// Optional:       supabase secrets set GEMINI_MODEL=gemini-2.5-flash-lite
 // Endpoint:       https://<project-ref>.supabase.co/functions/v1/analyze
 //   GET  -> { "ok": true }
 //   POST -> { "image_base64": "...", "media_type": "image/jpeg" } -> result JSON
 
-const API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
 const APP_TOKEN = Deno.env.get("APP_TOKEN") ?? "";
-const MODEL = "claude-opus-4-7";
-const ANTHROPIC_VERSION = "2023-06-01";
 
 const RULES = {
   "version": "1.0",
@@ -115,8 +115,8 @@ Deno.serve(async (req: Request) => {
   if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
     return json(401, { error: "غير مصرّح" });
   }
-  if (!API_KEY) {
-    return json(500, { error: "الخادم غير مهيّأ: متغيّر ANTHROPIC_API_KEY مفقود" });
+  if (!GEMINI_API_KEY) {
+    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
   }
 
   let payload: { image_base64?: string; media_type?: string };
@@ -129,45 +129,54 @@ Deno.serve(async (req: Request) => {
   const mediaType = payload.media_type ?? "image/jpeg";
   if (!imageBase64) return json(400, { error: "image_base64 مطلوب" });
 
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
   let upstream: Response;
   let raw: string;
   try {
-    upstream = await fetch("https://api.anthropic.com/v1/messages", {
+    upstream = await fetch(endpoint, {
       method: "POST",
       headers: {
-        "x-api-key": API_KEY,
-        "anthropic-version": ANTHROPIC_VERSION,
+        "x-goog-api-key": GEMINI_API_KEY,
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 2000,
-        messages: [{
+        contents: [{
           role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
-            { type: "text", text: buildPrompt() },
+          parts: [
+            { inlineData: { mimeType: mediaType, data: imageBase64 } },
+            { text: buildPrompt() },
           ],
         }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json",
+        },
       }),
     });
     raw = await upstream.text();
   } catch (e) {
-    return json(502, { error: `تعذّر الاتصال بـ Anthropic: ${(e as Error).message}` });
+    return json(502, { error: `تعذّر الاتصال بـ Gemini: ${(e as Error).message}` });
   }
 
   if (!upstream.ok) {
-    let msg = `خطأ من Anthropic (${upstream.status})`;
+    let msg = `خطأ من Gemini (${upstream.status})`;
     try { msg = JSON.parse(raw)?.error?.message ?? msg; } catch { /* keep default */ }
     return json(upstream.status, { error: msg });
   }
 
   try {
     const data = JSON.parse(raw);
-    const text = (data.content ?? [])
-      .filter((b: { type: string }) => b.type === "text")
-      .map((b: { text: string }) => b.text)
+    const candidate = data.candidates?.[0];
+    const text = (candidate?.content?.parts ?? [])
+      .map((p: { text?: string }) => p.text ?? "")
       .join("");
+    if (!text) {
+      const reason = candidate?.finishReason ?? data.promptFeedback?.blockReason;
+      return json(502, { error: `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}` });
+    }
     const result = JSON.parse(stripFences(text));
     return json(200, result);
   } catch {

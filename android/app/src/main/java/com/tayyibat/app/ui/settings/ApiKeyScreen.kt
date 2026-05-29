@@ -40,7 +40,7 @@ fun ApiKeyScreen(onBack: () -> Unit) {
     var keyInput by remember { mutableStateOf("") }
     var hasKey by remember { mutableStateOf(SecureStore.hasApiKey(context)) }
 
-    DetailScaffold("مفتاح Claude API", onBack) { modifier ->
+    DetailScaffold("مفتاح Gemini API", onBack) { modifier ->
         Column(
             modifier.verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -62,7 +62,7 @@ fun ApiKeyScreen(onBack: () -> Unit) {
                 OutlinedTextField(
                     value = keyInput,
                     onValueChange = { keyInput = it },
-                    placeholder = { Text("sk-ant-...") },
+                    placeholder = { Text("AIza...") },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -86,7 +86,7 @@ fun ApiKeyScreen(onBack: () -> Unit) {
             }
 
             Text(
-                "يُخزَّن المفتاح بأمان ومشفّراً على جهازك فقط، ولا يُرسل لأي خادم غير Anthropic أثناء تحليل الصور.",
+                "يُخزَّن المفتاح بأمان ومشفّراً على جهازك فقط، ولا يُرسل لأي خادم غير Google (Gemini) أثناء تحليل الصور. احصل على مفتاحك من https://aistudio.google.com/apikey",
                 style = AppType.caption, color = Theme.colors.textSecondary,
             )
         }

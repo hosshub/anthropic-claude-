@@ -6,11 +6,11 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 /**
- * تخزين آمن مشفّر (بديل Keychain في iOS) لمفتاح Claude API وجلسة Supabase.
+ * تخزين آمن مشفّر (بديل Keychain في iOS) لمفتاح Gemini API وجلسة Supabase.
  */
 object SecureStore {
     private const val PREFS_NAME = "tayyibat_secure_prefs"
-    private const val KEY_API = "claude_api_key"
+    private const val KEY_API = "gemini_api_key"
     private const val KEY_SESSION = "supabase_session"
 
     @Volatile private var prefs: SharedPreferences? = null
@@ -31,7 +31,7 @@ object SecureStore {
             }
         }
 
-    // مفتاح Claude API
+    // مفتاح Gemini API
     fun saveApiKey(context: Context, key: String) {
         prefs(context).edit().putString(KEY_API, key).apply()
     }

@@ -8,7 +8,7 @@ import com.tayyibat.app.data.model.AnalysisResult
 import com.tayyibat.app.data.model.EditableItem
 import com.tayyibat.app.data.model.FoodItem
 import com.tayyibat.app.data.model.Meal
-import com.tayyibat.app.service.ClaudeApiService
+import com.tayyibat.app.service.GeminiApiService
 import com.tayyibat.app.service.ScoringHelper
 import com.tayyibat.app.service.SummaryService
 import com.tayyibat.app.util.DateUtils
@@ -27,7 +27,7 @@ sealed interface CaptureStep {
 
 class CaptureViewModel(app: Application) : AndroidViewModel(app) {
     private val db = AppGraph.db
-    private val claude = AppGraph.claude
+    private val gemini = AppGraph.gemini
 
     private val _step = MutableStateFlow<CaptureStep>(CaptureStep.Camera)
     val step: StateFlow<CaptureStep> = _step
@@ -35,7 +35,7 @@ class CaptureViewModel(app: Application) : AndroidViewModel(app) {
     fun reset() { _step.value = CaptureStep.Camera }
 
     fun beginAnalysis(rawData: ByteArray) {
-        val prepared = ClaudeApiService.prepareJpeg(rawData) ?: rawData
+        val prepared = GeminiApiService.prepareJpeg(rawData) ?: rawData
         _step.value = CaptureStep.Analyzing(prepared)
         viewModelScope.launch {
             try {

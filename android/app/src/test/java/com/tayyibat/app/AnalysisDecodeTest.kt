@@ -1,7 +1,7 @@
 package com.tayyibat.app
 
 import com.tayyibat.app.data.model.AnalysisResult
-import com.tayyibat.app.service.ClaudeApiService
+import com.tayyibat.app.service.GeminiApiService
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -38,7 +38,7 @@ class AnalysisDecodeTest {
 
     @Test fun stripsMarkdownFences() {
         val fenced = "```json\n{\"overall_score\": 70}\n```"
-        val stripped = ClaudeApiService.stripFences(fenced)
+        val stripped = GeminiApiService.stripFences(fenced)
         val result = json.decodeFromString(AnalysisResult.serializer(), stripped)
         assertEquals(70, result.overallScore)
     }

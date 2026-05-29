@@ -1,11 +1,11 @@
 # الطيبات — وسيط التحليل على Supabase (Edge Function)
 
-دالة **Supabase Edge Function** باسم `analyze` تحتفظ بمفتاح **Anthropic** كسرٍّ على
-Supabase، فيرسل التطبيق الصورة إليها بدل استدعاء `api.anthropic.com` مباشرةً.
+دالة **Supabase Edge Function** باسم `analyze` تحتفظ بمفتاح **Google Gemini** كسرٍّ على
+Supabase، فيرسل التطبيق الصورة إليها بدل استدعاء واجهة Gemini مباشرةً.
 HTTPS جاهز تلقائياً، بلا خادم ولا DNS ولا Passenger.
 
 ```
-التطبيق ──(صورة base64)──▶ https://<ref>.supabase.co/functions/v1/analyze ──(+المفتاح)──▶ Anthropic ──▶ JSON
+التطبيق ──(صورة base64)──▶ https://<ref>.supabase.co/functions/v1/analyze ──(+المفتاح)──▶ Gemini ──▶ JSON
 ```
 
 النقاط: `GET` ⇒ `{"ok":true}` (فحص)، و`POST` بجسم
@@ -21,7 +21,8 @@ HTTPS جاهز تلقائياً، بلا خادم ولا DNS ولا Passenger.
 2. من القائمة → **Edge Functions** → **Create a function** → الاسم: `analyze`.
 3. الصق كامل محتوى `functions/analyze/index.ts` في المحرّر → **Deploy**.
 4. **السرّ:** Project Settings → **Edge Functions** (أو Functions → Secrets) → أضف:
-   - `ANTHROPIC_API_KEY` = مفتاحك الجديد من console.anthropic.com
+   - `GEMINI_API_KEY` = مفتاحك من https://aistudio.google.com/apikey
+   - (اختياري) `GEMINI_MODEL` = `gemini-2.5-flash-lite` (الافتراضي؛ يمكن تغييره لـ `gemini-2.5-flash`)
    - (اختياري) `APP_TOKEN` = سلسلة سرّية.
 5. **عطّل التحقق من JWT** لهذه الدالة: في إعدادات الدالة، أوقف **Verify JWT**
    (حتى يستطيع التطبيق استدعاءها مباشرةً بلا توكن Supabase).
@@ -35,7 +36,7 @@ npm i -g supabase            # أو brew install supabase/tap/supabase
 supabase login               # يفتح المتصفح
 cd ~/anthropic-claude-
 supabase link --project-ref <ref>
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   # و APP_TOKEN اختياري
+supabase secrets set GEMINI_API_KEY=...   # من Google AI Studio (و APP_TOKEN اختياري)
 supabase functions deploy analyze --no-verify-jwt
 ```
 
@@ -49,7 +50,8 @@ static let proxyURL = "https://<ref>.supabase.co/functions/v1/analyze"
 (أرسل لي الـ ref وسأحدّثه وأدفعه.) بعدها أعد بناء التطبيق فيعمل التحليل بلا مفتاح من المستخدم.
 
 ## ملاحظات
-- بعد نجاح كل شيء، **دوّر مفتاح Anthropic** (لأنه ظهر سابقاً في لقطات الشاشة) وحدّث السرّ.
+- يستخدم الوسيط الآن **Google Gemini** (أوفر بكثير من Anthropic). يمكن حذف سرّ
+  `ANTHROPIC_API_KEY` القديم من Supabase، ودوّر مفتاح Anthropic القديم لأنه ظهر سابقاً في لقطات الشاشة.
 - صفحة الموقع تبقى على cPanel (`tayyibat.ai`)؛ Supabase تستضيف الـ API فقط.
 - لم نعد بحاجة لتطبيق Python على cPanel ولا لسجل `api.tayyibat.ai` (يمكن حذفهما).
 

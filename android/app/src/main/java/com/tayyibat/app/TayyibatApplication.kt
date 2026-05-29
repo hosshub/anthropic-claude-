@@ -4,13 +4,13 @@ import android.app.Application
 import android.content.Context
 import com.tayyibat.app.data.db.AppDatabase
 import com.tayyibat.app.service.AuthService
-import com.tayyibat.app.service.ClaudeApiService
+import com.tayyibat.app.service.GeminiApiService
 import com.tayyibat.app.service.NotificationScheduler
 import com.tayyibat.app.service.RulesService
 
 /**
  * نقطة دخول التطبيق — تهيّئ الخدمات المشتركة (قاعدة البيانات، القواعد،
- * المصادقة، عميل Claude) عبر حاوية اعتماديات بسيطة.
+ * المصادقة، عميل Gemini) عبر حاوية اعتماديات بسيطة.
  */
 class TayyibatApplication : Application() {
     override fun onCreate() {
@@ -27,7 +27,7 @@ object AppGraph {
         private set
     lateinit var auth: AuthService
         private set
-    lateinit var claude: ClaudeApiService
+    lateinit var gemini: GeminiApiService
         private set
 
     fun init(context: Context) {
@@ -35,6 +35,6 @@ object AppGraph {
         val app = context.applicationContext
         db = AppDatabase.get(app)
         auth = AuthService(app)
-        claude = ClaudeApiService(app)
+        gemini = GeminiApiService(app)
     }
 }
