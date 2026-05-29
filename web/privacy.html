@@ -22,15 +22,16 @@
   <body>
     <div class="wrap">
       <h1>سياسة الخصوصية — تطبيق الطيبات</h1>
-      <p class="date">آخر تحديث: 2026-05-28</p>
+      <p class="date">آخر تحديث: 2026-05-29</p>
 
       <p>نحترم خصوصيتك. توضّح هذه الصفحة البيانات التي يتعامل معها تطبيق <strong>الطيبات</strong>.</p>
 
       <h2>البيانات التي نتعامل معها</h2>
       <ul>
-        <li><strong>صور الوجبات:</strong> عند طلبك تحليل وجبة، تُرسَل صورتها إلى خادمنا الوسيط ومنه إلى خدمة <strong>Anthropic (Claude)</strong> لإجراء التحليل، ثم تعود النتيجة إليك. لا نحتفظ بالصور على خوادمنا بعد التحليل.</li>
+        <li><strong>الحساب وتسجيل الدخول:</strong> عند إنشاء حساب أو تسجيل الدخول عبر <strong>Google</strong> أو <strong>Apple</strong> أو البريد الإلكتروني، نستخدم خدمة <strong>Supabase</strong> للمصادقة. نخزّن معرّف حسابك وبريدك الإلكتروني لتسجيل دخولك ولتطبيق حدّ الاستخدام اليومي. لا نطّلع على كلمة مرورك (تُدار عبر مزوّد الدخول أو Supabase).</li>
+        <li><strong>صور الوجبات:</strong> عند طلبك تحليل وجبة، تُرسَل صورتها إلى خادمنا الوسيط (المُستضاف على <strong>Supabase</strong>) ومنه إلى خدمة <strong>Google (Gemini)</strong> لإجراء التحليل، ثم تعود النتيجة إليك. لا نحتفظ بالصور على خوادمنا بعد التحليل.</li>
         <li><strong>بياناتك على الجهاز:</strong> الاسم والعمر (اختياري) والوجبات ونتائجها وصورها والملخصات اليومية وأيام الصيام — تُخزَّن محلياً على جهازك فقط ولا تُرفع إلى خوادمنا.</li>
-        <li><strong>مفتاح API (وضع الاستخدام الشخصي فقط):</strong> إن أدخلت مفتاح Anthropic بنفسك، يُحفظ في Keychain الآمن على جهازك ولا يُرسل إلا إلى Anthropic.</li>
+        <li><strong>بيانات الاستخدام:</strong> نحتفظ بعدّاد بسيط على خادمنا (معرّف الحساب + التاريخ + عدد التحليلات) لغرض واحد هو تطبيق الحدّ اليومي. لا يتضمّن صورك ولا تفاصيل وجباتك.</li>
       </ul>
 
       <h2>ما لا نفعله</h2>
@@ -40,11 +41,11 @@
         <li>جميع الإشعارات محلية على جهازك.</li>
       </ul>
 
-      <h2>الطرف الثالث</h2>
-      <p>تُعالَج الصور المُرسَلة للتحليل عبر <strong>Anthropic</strong>. راجع سياسة خصوصية Anthropic لمعرفة كيفية تعاملها مع البيانات.</p>
+      <h2>مزوّدو الخدمة (الطرف الثالث)</h2>
+      <p>نعتمد على <strong>Supabase</strong> (استضافة الخادم والمصادقة) و<strong>Google</strong> (تحليل صور الوجبات عبر Gemini). تُعالَج الصور المُرسَلة للتحليل لدى Google ولا تُستخدم لتدريب نماذجها وفق شروط واجهة Gemini للمطوّرين. راجع سياستَي خصوصية Supabase وGoogle لمزيد من التفاصيل.</p>
 
       <h2>حذف بياناتك</h2>
-      <p>يمكنك حذف كل بيانات المتابعة من <strong>الإعدادات ← حذف كل بيانات المتابعة</strong>. وحذف التطبيق يزيل كل البيانات المخزّنة محلياً.</p>
+      <p>يمكنك حذف كل بيانات المتابعة المحلية من <strong>الإعدادات ← حذف كل بيانات المتابعة</strong>، وحذف التطبيق يزيل كل البيانات المخزّنة محلياً. لحذف حسابك وبياناته من خادمنا، راسلنا على <strong>app@tayyibat.ai</strong> وسننفّذ الطلب.</p>
 
       <h2>تنبيه طبي</h2>
       <p>التطبيق أداة لتتبّع نظام غذائي يختاره المستخدم، ولا يقدّم استشارة طبية ولا يدّعي علاج أي مرض. غير مخصّص لمن هم دون 18 عاماً.</p>
@@ -56,14 +57,15 @@
 
       <div class="ltr">
         <h1>Privacy Policy — Tayyibat</h1>
-        <p class="date">Last updated: 2026-05-28</p>
+        <p class="date">Last updated: 2026-05-29</p>
         <p>We respect your privacy. This page explains how the <strong>Tayyibat</strong> app handles data.</p>
 
         <h2>Data we handle</h2>
         <ul>
-          <li><strong>Meal photos:</strong> when you request an analysis, the photo is sent to our backend proxy and on to <strong>Anthropic (Claude)</strong> for processing, and the result is returned to you. We do not retain photos after processing.</li>
+          <li><strong>Account &amp; sign-in:</strong> when you create an account or sign in with <strong>Google</strong>, <strong>Apple</strong>, or email, we use <strong>Supabase</strong> for authentication. We store your account identifier and email to sign you in and to enforce the daily usage limit. We never see your password (it is handled by the sign-in provider or Supabase).</li>
+          <li><strong>Meal photos:</strong> when you request an analysis, the photo is sent to our backend proxy (hosted on <strong>Supabase</strong>) and on to <strong>Google (Gemini)</strong> for processing, and the result is returned to you. We do not retain photos after processing.</li>
           <li><strong>On-device data:</strong> your name, optional age, meals/results/images, daily summaries, and fasting days are stored only on your device and are not uploaded to our servers.</li>
-          <li><strong>API key (personal-use mode only):</strong> if you enter your own Anthropic key, it is stored in your device’s secure Keychain and sent only to Anthropic.</li>
+          <li><strong>Usage data:</strong> we keep a small server-side counter (account id + date + number of analyses) for the sole purpose of enforcing the daily limit. It contains no photos or meal details.</li>
         </ul>
 
         <h2>What we don’t do</h2>
@@ -73,11 +75,11 @@
           <li>All notifications are local to your device.</li>
         </ul>
 
-        <h2>Third party</h2>
-        <p>Photos submitted for analysis are processed by <strong>Anthropic</strong>. See Anthropic’s privacy policy for details.</p>
+        <h2>Service providers (third parties)</h2>
+        <p>We rely on <strong>Supabase</strong> (backend hosting &amp; authentication) and <strong>Google</strong> (meal-image analysis via Gemini). Photos sent for analysis are processed by Google and, under the Gemini developer API terms, are not used to train its models. See the Supabase and Google privacy policies for details.</p>
 
         <h2>Deleting your data</h2>
-        <p>Delete all tracking data via <strong>Settings → Delete all tracking data</strong>. Deleting the app removes all locally stored data.</p>
+        <p>Delete all local tracking data via <strong>Settings → Delete all tracking data</strong>; deleting the app removes all locally stored data. To delete your account and its server-side data, email <strong>app@tayyibat.ai</strong> and we will action it.</p>
 
         <h2>Medical disclaimer</h2>
         <p>The app is a tracking tool for a user-chosen diet. It does not provide medical advice or claim to treat any condition, and is not intended for users under 18.</p>
