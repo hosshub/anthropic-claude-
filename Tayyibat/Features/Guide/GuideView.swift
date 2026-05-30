@@ -1,127 +1,142 @@
 import SwiftUI
 
+/// تبويب الدليل — الفهرس الذكي ٣×٣ (نسخة 2).
 struct GuideView: View {
-    private let rules = RulesService.shared.rules
-    @State private var query = ""
-
-    private var searchResults: [(category: RulesData.Category, term: String, allowed: Bool)] {
-        RulesService.shared.lookup(query)
-    }
+    private let sections = GuideSection.allCases
+    private let columns = [GridItem(.flexible(), spacing: 12),
+                           GridItem(.flexible(), spacing: 12),
+                           GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 18) {
-                    searchSection
-
-                    if query.isEmpty {
-                        rulesLinks
-                        categoriesGrid
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("الفهرس الذكي")
+                            .font(.screenTitle)
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("الدليل في ٩ أقسام")
+                            .font(.bodyText)
+                            .foregroundStyle(Theme.textSecondary)
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(sections) { section in
+                            NavigationLink {
+                                section.destination
+                            } label: {
+                                GuideIndexCard(section: section)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 16)
 
                     MedicalDisclaimerFooter()
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
                 }
-                .padding(20)
+                .padding(.vertical, 16)
             }
             .background(Theme.background)
-            .navigationTitle("دليل النظام")
+            .navigationTitle("الدليل")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+/// أقسام الفهرس التسعة، بترتيب الدليل.
+enum GuideSection: String, CaseIterable, Identifiable {
+    case philosophy, goldenRules, eatingMap, forbidden, plate, program15, mealBanks, weeklyPrep, mistakes
+
+    var id: String { rawValue }
+
+    var number: String {
+        switch self {
+        case .philosophy: return "٠١"
+        case .goldenRules: return "٠٢"
+        case .eatingMap: return "٠٣"
+        case .forbidden: return "٠٤"
+        case .plate: return "٠٥"
+        case .program15: return "٠٦"
+        case .mealBanks: return "٠٧"
+        case .weeklyPrep: return "٠٨"
+        case .mistakes: return "٠٩"
         }
     }
 
-    private var searchSection: some View {
-        VStack(spacing: 12) {
+    var titleAr: String {
+        switch self {
+        case .philosophy: return "فلسفة النظام"
+        case .goldenRules: return "القواعد الذهبية"
+        case .eatingMap: return "خريطة الأكل"
+        case .forbidden: return "الممنوعات الصريحة"
+        case .plate: return "طبق الطيبات"
+        case .program15: return "برنامج ١٥ يوم"
+        case .mealBanks: return "بنك الوجبات"
+        case .weeklyPrep: return "التحضير الأسبوعي"
+        case .mistakes: return "الأخطاء الشائعة"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .philosophy: return "lightbulb.fill"
+        case .goldenRules: return "star.fill"
+        case .eatingMap: return "map.fill"
+        case .forbidden: return "xmark.octagon.fill"
+        case .plate: return "fork.knife"
+        case .program15: return "calendar"
+        case .mealBanks: return "tray.full.fill"
+        case .weeklyPrep: return "checklist"
+        case .mistakes: return "exclamationmark.triangle.fill"
+        }
+    }
+
+    @ViewBuilder
+    var destination: some View {
+        switch self {
+        case .philosophy: GuidePhilosophyView()
+        case .goldenRules: GuideGoldenRulesView()
+        case .eatingMap: GuideEatingMapView()
+        case .forbidden: GuideForbiddenView()
+        case .plate: GuideTayyibatPlateView()
+        case .program15: GuideProgramFifteenDayView()
+        case .mealBanks: GuideMealBanksView()
+        case .weeklyPrep: GuideWeeklyPrepView()
+        case .mistakes: GuideCommonMistakesView()
+        }
+    }
+}
+
+/// بطاقة خضراء داكنة في الشبكة.
+struct GuideIndexCard: View {
+    let section: GuideSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "magnifyingglass").foregroundStyle(Theme.textSecondary)
-                TextField("هل (اسم الطعام) مسموح؟", text: $query)
-                if !query.isEmpty {
-                    Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textSecondary) }
-                }
-            }
-            .padding(12)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            if !query.isEmpty {
-                if searchResults.isEmpty {
-                    Text("لم نجد \"\(query)\" في قوائم النظام. جرّب اسماً آخر.")
-                        .font(.bodyText).foregroundStyle(Theme.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    ForEach(Array(searchResults.enumerated()), id: \.offset) { _, result in
-                        searchResultRow(result)
-                    }
-                }
-            }
-        }
-    }
-
-    private func searchResultRow(_ result: (category: RulesData.Category, term: String, allowed: Bool)) -> some View {
-        CardContainer {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(result.term).font(.cardTitle).foregroundStyle(Theme.textPrimary)
-                    Text(result.category.nameAr).font(.caption).foregroundStyle(Theme.textSecondary)
-                }
+                Text(section.number)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.white.opacity(0.55))
                 Spacer()
-                VerdictBadge(verdict: result.allowed ? .tayyib : .khabith)
+                Image(systemName: section.icon)
+                    .font(.body)
+                    .foregroundStyle(Color.white.opacity(0.85))
             }
-        }
-    }
-
-    private var rulesLinks: some View {
-        VStack(spacing: 12) {
-            NavigationLink { BehavioralRulesView() } label: {
-                guideLinkRow("list.number", "القواعد السلوكية الثمانية")
-            }
-            NavigationLink { FastingGuideView() } label: {
-                guideLinkRow("moon.stars.fill", "الصيام المستحب")
-            }
-        }
-    }
-
-    private func guideLinkRow(_ icon: String, _ title: String) -> some View {
-        CardContainer {
-            HStack(spacing: 12) {
-                Image(systemName: icon).foregroundStyle(Theme.primary).frame(width: 28)
-                Text(title).font(.cardTitle).foregroundStyle(Theme.textPrimary)
-                Spacer()
-                Image(systemName: "chevron.left").foregroundStyle(Theme.textSecondary)
-            }
-        }
-    }
-
-    private var categoriesGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("فئات الطعام")
-                .font(.sectionTitle).foregroundStyle(Theme.textPrimary)
+            Spacer(minLength: 0)
+            Text(section.titleAr)
+                .font(.bodyText.weight(.semibold))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            ForEach(rules.categories) { category in
-                NavigationLink { GuideCategoryDetailView(category: category) } label: {
-                    categoryRow(category)
-                }
-                .buttonStyle(.plain)
-            }
+                .lineLimit(2)
         }
-    }
-
-    private func categoryRow(_ category: RulesData.Category) -> some View {
-        CardContainer {
-            HStack(spacing: 12) {
-                Image(systemName: category.icon)
-                    .foregroundStyle(Theme.primary).frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(category.nameAr).font(.cardTitle).foregroundStyle(Theme.textPrimary)
-                    HStack(spacing: 10) {
-                        if !category.allowed.isEmpty {
-                            Text("\(category.allowed.count) مسموح").font(.caption).foregroundStyle(Theme.primary)
-                        }
-                        if !category.forbidden.isEmpty {
-                            Text("\(category.forbidden.count) ممنوع").font(.caption).foregroundStyle(Theme.khabith)
-                        }
-                    }
-                }
-                Spacer()
-                Image(systemName: "chevron.left").foregroundStyle(Theme.textSecondary)
-            }
-        }
+        .padding(12)
+        .frame(height: 112)
+        .background(Theme.primary, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: Theme.cardShadow, radius: 6, y: 3)
     }
 }

@@ -1,29 +1,26 @@
 import SwiftUI
 
-/// نبذة محايدة عن فلسفة النظام (بدون ادعاءات صحية).
+/// نبذة محايدة عن فلسفة النظام — ٣ بطاقات من الدليل (نسخة 2).
 struct PhilosophyView: View {
     let onContinue: () -> Void
+    private let cards = RulesService.shared.rules.philosophyCards
 
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     Text("عن نظام الطيبات")
                         .font(.screenTitle)
                         .foregroundStyle(Theme.textPrimary)
 
-                    Text("نظام الطيبات تصنيف للأطعمة إلى \"طيّبات\" مسموحة و\"خبائث\" متجنَّبة، مع جملة من القواعد السلوكية حول توقيت الأكل والصيام.")
-                        .arabicBody()
+                    ForEach(cards) { card in
+                        cardView(card)
+                    }
 
-                    feature("fork.knife", "تصنيف الأطعمة", "كل طعام يُصنَّف طيّباً أو خبيثاً أو مشروطاً وفق قوائم النظام.")
-                    feature("clock", "الإصغاء للجوع", "الأكل عند الجوع الحقيقي والتوقف قبل الشبع الكامل، دون مواعيد ثابتة.")
-                    feature("moon.stars", "الصيام", "صيام الإثنين والخميس والأيام البيض إضافةً للصيام المتقطع.")
-                    feature("camera", "المتابعة بالصورة", "تصوّر وجبتك فيحلّلها التطبيق ويعرض مدى توافقها مع النظام.")
-
-                    Text("هذا التطبيق لا يتبنّى موقفاً طبياً من النظام؛ هو أداة محايدة لمن اختار اتباعه.")
+                    Text("هذا التطبيق أداة محايدة لمن اختار اتباع النظام، ولا يتبنّى موقفاً طبياً منه.")
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
-                        .padding(.top, 4)
+                        .padding(.top, 6)
                 }
                 .padding(20)
             }
@@ -33,16 +30,19 @@ struct PhilosophyView: View {
         .background(Theme.background)
     }
 
-    private func feature(_ icon: String, _ title: String, _ body: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: icon)
-                .font(.title2)
+    private func cardView(_ card: RulesData.PhilosophyCard) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(card.titleAr)
+                .font(.cardTitle.weight(.bold))
                 .foregroundStyle(Theme.primary)
-                .frame(width: 34)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.cardTitle).foregroundStyle(Theme.textPrimary)
-                Text(body).font(.bodyText).foregroundStyle(Theme.textSecondary).lineSpacing(4)
-            }
+            Text(card.bodyAr)
+                .font(.bodyText)
+                .foregroundStyle(Theme.textPrimary)
+                .lineSpacing(5)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Theme.cardShadow, radius: 6, y: 3)
     }
 }

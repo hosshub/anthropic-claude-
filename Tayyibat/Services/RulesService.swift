@@ -1,43 +1,115 @@
 import Foundation
 
-/// نموذج بيانات ملف القواعد المرفق.
+/// نموذج بيانات ملف القواعد (نسخة 2 — إشارات ثلاثية).
 struct RulesData: Codable {
     var version: String
     var systemName: String
-    var categories: [Category]
-    var behavioralRules: [String]
-    var fasting: Fasting
+    var zones: ZonesContainer
+    var goldenRules: [GoldenRule]
+    var philosophyCards: [PhilosophyCard]
+    var weeklyPrep: [WeeklyPrepTask]
+    var commonMistakes: [CommonMistake]
     var medicalDisclaimer: String
 
-    struct Category: Codable, Identifiable {
-        var id: String
-        var nameAr: String
-        var icon: String
-        var note: String?
-        var allowed: [String]
-        var forbidden: [String]
+    struct ZonesContainer: Codable {
+        var green: Zone
+        var yellow: Zone
+        var red: Zone
+    }
+
+    struct Zone: Codable {
+        var labelAr: String
+        var subtitleAr: String
+        var watchwordAr: String?
+        var groups: [ZoneGroup]
 
         enum CodingKeys: String, CodingKey {
-            case id, icon, note, allowed, forbidden
-            case nameAr = "name_ar"
+            case labelAr = "label_ar"
+            case subtitleAr = "subtitle_ar"
+            case watchwordAr = "watchword_ar"
+            case groups
         }
     }
 
-    struct Fasting: Codable {
-        var weekly: [String]
-        var whiteDaysHijri: [Int]
-        var notes: String
+    /// مجموعة داخل منطقة. خضراء/حمراء تستخدم `categoryAr` + `items`،
+    /// والصفراء تستخدم `itemAr` + `examplesAr` + `guidanceAr`.
+    struct ZoneGroup: Codable, Identifiable {
+        var id = UUID()
+        var categoryAr: String?
+        var items: [String]?
+        var itemAr: String?
+        var examplesAr: String?
+        var guidanceAr: String?
 
         enum CodingKeys: String, CodingKey {
-            case weekly, notes
-            case whiteDaysHijri = "white_days_hijri"
+            case categoryAr = "category_ar"
+            case items
+            case itemAr = "item_ar"
+            case examplesAr = "examples_ar"
+            case guidanceAr = "guidance_ar"
+        }
+    }
+
+    struct GoldenRule: Codable, Identifiable {
+        var id: Int
+        var ruleAr: String
+        var applicationAr: String
+        var icon: String
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case ruleAr = "rule_ar"
+            case applicationAr = "application_ar"
+            case icon
+        }
+    }
+
+    struct PhilosophyCard: Codable, Identifiable {
+        var id: Int
+        var titleAr: String
+        var bodyAr: String
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case titleAr = "title_ar"
+            case bodyAr = "body_ar"
+        }
+    }
+
+    struct WeeklyPrepTask: Codable, Identifiable {
+        var id: String
+        var titleAr: String
+        var estimatedMinutes: Int?
+        var validDays: Int
+        var category: String
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case titleAr = "title_ar"
+            case estimatedMinutes = "estimated_minutes"
+            case validDays = "valid_days"
+            case category
+        }
+    }
+
+    struct CommonMistake: Codable, Identifiable {
+        var id = UUID()
+        var mistakeAr: String
+        var correctionAr: String
+
+        enum CodingKeys: String, CodingKey {
+            case mistakeAr = "mistake_ar"
+            case correctionAr = "correction_ar"
         }
     }
 
     enum CodingKeys: String, CodingKey {
-        case version, categories, fasting
+        case version, zones
         case systemName = "system_name"
-        case behavioralRules = "behavioral_rules"
+        case goldenRules = "golden_rules"
+        case philosophyCards = "philosophy_cards"
+        case weeklyPrep = "weekly_prep"
+        case commonMistakes = "common_mistakes"
         case medicalDisclaimer = "medical_disclaimer"
     }
 }
@@ -48,7 +120,7 @@ final class RulesService {
 
     private(set) var rules: RulesData
 
-    /// النص الكامل لقواعد JSON كي يُضمَّن في الـ prompt المرسل لـ Claude.
+    /// النص الكامل لقواعد JSON كي يُضمَّن في الـ prompt المرسل للنموذج.
     let rawJSON: String
 
     private init() {
@@ -62,21 +134,5 @@ final class RulesService {
         } catch {
             fatalError("تعذّر فك ترميز ملف القواعد: \(error)")
         }
-    }
-
-    /// بحث بسيط: هل هذا الطعام مسموح؟ يرجع الفئة والحكم إن وُجد.
-    func lookup(_ query: String) -> [(category: RulesData.Category, term: String, allowed: Bool)] {
-        let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return [] }
-        var results: [(RulesData.Category, String, Bool)] = []
-        for category in rules.categories {
-            for term in category.allowed where term.contains(q) {
-                results.append((category, term, true))
-            }
-            for term in category.forbidden where term.contains(q) {
-                results.append((category, term, false))
-            }
-        }
-        return results
     }
 }
