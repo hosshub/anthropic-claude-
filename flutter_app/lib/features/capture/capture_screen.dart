@@ -2,13 +2,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/meal_repository.dart';
 import '../../services/analyze_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
 import 'result_screen.dart';
 
-/// التقاط صورة (كاميرا أو معرض) ثم استدعاء دالة التحليل.
+/// التقاط صورة → تحليل عبر الوسيط → حفظ الوجبة → شاشة النتيجة.
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
 
@@ -40,9 +42,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
       final Uint8List bytes = await picked.readAsBytes();
       final result = await _analyzer.analyze(bytes);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
+      // احفظ الوجبة محلياً قبل الانتقال للنتيجة.
+      final saved = await context
+          .read<MealRepository>()
+          .saveFromAnalysis(result, bytes);
+      if (!mounted) return;
+      await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => ResultScreen(result: result, imageBytes: bytes),
+          builder: (_) => ResultScreen(mealId: saved.id),
         ),
       );
     } on AnalyzeException catch (e) {

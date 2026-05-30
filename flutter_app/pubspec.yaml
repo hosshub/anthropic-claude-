@@ -20,6 +20,12 @@ dependencies:
   # التقاط الصور
   image_picker: ^1.1.1
 
+  # التخزين المحلي
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  uuid: ^4.4.0
+
   # إدارة الحالة
   provider: ^6.1.2
 

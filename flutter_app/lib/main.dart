@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'data/meal_repository.dart';
+import 'services/account_service.dart';
 import 'services/auth_service.dart';
 import 'theme/theme.dart';
 
@@ -32,8 +34,15 @@ class TayyibatApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => MealRepository()),
+        // AccountService يعتمد على MealRepository (لمسح البيانات المحلية بعد الحذف).
+        ProxyProvider<MealRepository, AccountService>(
+          update: (_, repo, __) => AccountService(repo),
+        ),
+      ],
       child: MaterialApp(
         title: 'الطيبات',
         debugShowCheckedModeBanner: false,

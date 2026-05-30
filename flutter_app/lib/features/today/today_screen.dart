@@ -1,139 +1,245 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/meal_repository.dart';
+import '../../models/meal.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
+import '../history/meal_detail_screen.dart';
 
-/// شاشة اليوم (F1: مبسّطة — تكتمل في مرحلة F2 مع السجل ومتابعة الجسم).
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
 
-  String _greetingFor(AuthService auth) {
+  String _greeting(AuthService auth) {
     final hour = DateTime.now().hour;
     final period = hour < 12 ? 'صباح الخير' : 'مساء الخير';
     final email = auth.email;
     if (email == null || email.isEmpty) return period;
-    final name = email.split('@').first;
-    return '$period، $name';
+    return '$period، ${email.split('@').first}';
   }
 
-  Future<void> _signOut(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    await context.read<AuthService>().signOut();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('تم تسجيل الخروج.')),
-    );
+  DateTime get _dayStart {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
+    final repo = context.watch<MealRepository>();
+    final dayStart = _dayStart;
+    final dayEnd = dayStart.add(const Duration(days: 1));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('اليوم'),
-        actions: [
-          IconButton(
-            onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout),
-            tooltip: 'تسجيل الخروج',
-          ),
-        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _greetingFor(auth),
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 20),
-              CardContainer(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 168,
+        child: FutureBuilder<List<Meal>>(
+          key: ValueKey(repo.hashCode),
+          future: repo.loadBetween(dayStart, dayEnd),
+          builder: (context, snap) {
+            final meals = snap.data ?? const <Meal>[];
+            final loading = snap.connectionState == ConnectionState.waiting;
+            final score = _averageScore(meals);
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _greeting(auth),
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 20),
+                  CardContainer(
+                    child: _scoreRing(
+                      score: score,
+                      hasMeals: meals.isNotEmpty,
+                      loading: loading,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  PrimaryButton(
+                    label: 'صوّر وجبتك',
+                    icon: Icons.camera_alt,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CaptureScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (meals.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      'سجل اليوم',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
                       height: 168,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: TColors.khabith.withOpacity(0.28),
-                          width: 11,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '0%',
-                            style: TextStyle(
-                              fontSize: 46,
-                              fontWeight: FontWeight.w800,
-                              color: TColors.khabith,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'طيب اليوم',
-                            style: TextStyle(
-                              color: TColors.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'لم تسجّل وجبات اليوم بعد',
-                      style: TextStyle(
-                        color: TColors.textSecondary,
-                        fontSize: 13,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (_, i) => _MealThumb(meal: meals[i]),
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemCount: meals.length,
                       ),
                     ),
                   ],
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  int _averageScore(List<Meal> meals) {
+    if (meals.isEmpty) return 0;
+    final sum = meals.fold<int>(0, (a, m) => a + m.overallScore);
+    return (sum / meals.length).round();
+  }
+
+  Widget _scoreRing({
+    required int score,
+    required bool hasMeals,
+    required bool loading,
+  }) {
+    final color = TColors.scoreColor(score);
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 168,
+              height: 168,
+              child: CircularProgressIndicator(
+                value: score / 100,
+                strokeWidth: 11,
+                backgroundColor: color.withOpacity(0.18),
+                color: color,
+                strokeCap: StrokeCap.round,
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$score%',
+                  style: TextStyle(
+                    fontSize: 46,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              PrimaryButton(
-                label: 'صوّر وجبتك',
-                icon: Icons.camera_alt,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const CaptureScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 18),
-              const CardContainer(
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: TColors.gold),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'نسخة Flutter — Phase F1 (شريحة عمودية). '
-                        'السجل والملاحظات والدليل والبرنامج تأتي في المراحل التالية.',
-                        style: TextStyle(
-                          color: TColors.textSecondary,
-                          fontSize: 12,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 2),
+                const Text(
+                  'طيب اليوم',
+                  style: TextStyle(
+                    color: TColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          loading
+              ? '…'
+              : (hasMeals ? '${_pluralMeals(score)} اليوم' : 'لم تسجّل وجبات اليوم بعد'),
+          style: const TextStyle(
+            color: TColors.textSecondary,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _pluralMeals(int avg) => 'متوسط $avg٪';
+}
+
+class _MealThumb extends StatelessWidget {
+  final Meal meal;
+  const _MealThumb({required this.meal});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = TColors.scoreColor(meal.overallScore);
+    return SizedBox(
+      width: 140,
+      child: Material(
+        color: TColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MealDetailScreen(mealId: meal.id),
               ),
-            ],
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    height: 84,
+                    width: double.infinity,
+                    child: meal.imagePath == null
+                        ? Container(
+                            color: TColors.background,
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.image,
+                                color: TColors.textSecondary),
+                          )
+                        : Image.file(
+                            File(meal.imagePath!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: TColors.background,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.broken_image,
+                                  color: TColors.textSecondary),
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  meal.primaryLabel,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  '${meal.overallScore}%',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

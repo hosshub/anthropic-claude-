@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'features/auth/auth_screen.dart';
-import 'features/today/today_screen.dart';
 import 'services/auth_service.dart';
+import 'shell/main_shell.dart';
 
-/// نقطة تفرّع التطبيق: شاشة الدخول أو الشاشة الرئيسية حسب حالة المصادقة.
+/// نقطة التفرّع: شاشة الدخول أو الإطار الرئيسي حسب حالة المصادقة.
 class AppRoot extends StatelessWidget {
   const AppRoot({super.key});
 
@@ -19,10 +19,7 @@ class AppRoot extends StatelessWidget {
       );
     }
 
-    if (!auth.isAuthenticated) {
-      return const AuthScreen();
-    }
-
-    return const TodayScreen();
+    if (!auth.isAuthenticated) return const AuthScreen();
+    return const MainShell();
   }
 }
