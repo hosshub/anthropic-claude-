@@ -36,6 +36,7 @@ struct HistoryView: View {
                             selectedDate = calendar.startOfDay(for: date)
                         }
                         statsSection
+                        BodyIntelligenceSection(meals: meals)
                         MedicalDisclaimerFooter()
                     }
                     .padding(20)
