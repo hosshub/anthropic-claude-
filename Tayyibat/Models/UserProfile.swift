@@ -55,6 +55,10 @@ final class UserProfile {
     /// النوافذ الزمنية المختارة للتذكيرات المرنة (ساعات اليوم 0-23).
     var reminderHours: [Int]
 
+    /// تاريخ بدء برنامج ١٥ يوم (nil = غير مشترك). الحالة الحالية تُحسب من
+    /// `UserProfile.programStatus` في وحدة البرنامج.
+    var programStartedAt: Date?
+
     var goal: UserGoal {
         get { UserGoal(rawValue: goalRaw) ?? .adherence }
         set { goalRaw = newValue.rawValue }
@@ -86,5 +90,6 @@ final class UserProfile {
         self.quietHoursStart = cal.date(bySettingHour: 23, minute: 0, second: 0, of: .now) ?? .now
         self.quietHoursEnd = cal.date(bySettingHour: 7, minute: 0, second: 0, of: .now) ?? .now
         self.reminderHours = [11, 16, 20]
+        self.programStartedAt = nil
     }
 }
