@@ -108,7 +108,13 @@ struct ResultView: View {
                             .font(.caption).foregroundStyle(Theme.textSecondary)
                     }
                     Spacer()
-                    VerdictBadge(verdict: item.verdict)
+                    VerdictBadge(zone: item.zone)
+                }
+
+                if item.zone == .yellow, let caution = item.cautionAr, !caution.isEmpty {
+                    Label(caution, systemImage: "eye.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.gold)
                 }
 
                 if item.isLowConfidence {

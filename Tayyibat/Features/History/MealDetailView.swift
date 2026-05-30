@@ -49,7 +49,12 @@ struct MealDetailView: View {
                                 HStack {
                                     Text(item.nameAr).font(.cardTitle).foregroundStyle(Theme.textPrimary)
                                     Spacer()
-                                    VerdictBadge(verdict: item.verdict)
+                                    VerdictBadge(zone: item.zone)
+                                }
+                                if item.zone == .yellow, let caution = item.cautionAr, !caution.isEmpty {
+                                    Label(caution, systemImage: "eye.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.gold)
                                 }
                                 Text(item.reasoning)
                                     .font(.bodyText).foregroundStyle(Theme.textSecondary).lineSpacing(4)

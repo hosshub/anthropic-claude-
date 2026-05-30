@@ -66,7 +66,9 @@ struct CaptureFlowView: View {
                 reasoning: item.reasoning,
                 confidence: item.confidence,
                 estimatedPortion: item.estimatedPortion,
-                ruleViolated: item.ruleViolated
+                ruleViolated: item.ruleViolated,
+                zone: item.zone,
+                cautionAr: item.cautionAr
             )
         }
         let edited = items.contains { $0.wasEdited }
