@@ -7,6 +7,8 @@ import android.util.Base64
 import com.tayyibat.app.config.AppConfig
 import com.tayyibat.app.data.SecureStore
 import com.tayyibat.app.data.model.AnalysisResult
+import com.tayyibat.app.data.model.MealSuggestion
+import com.tayyibat.app.data.model.WeeklyPlan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -33,6 +35,37 @@ class GeminiApiService(private val appContext: Context) {
     suspend fun analyze(imageBytes: ByteArray): AnalysisResult = withContext(Dispatchers.IO) {
         val jpeg = prepareJpeg(imageBytes) ?: throw GeminiApiException("تعذّر تجهيز الصورة للتحليل.")
         if (AppConfig.PROXY_URL.isNotEmpty()) analyzeViaProxy(jpeg) else analyzeDirect(jpeg)
+    }
+
+    /** يقترح وجبة طيبة عبر الوسيط (يتطلب اتصال الخادم في وضع الوسيط). */
+    suspend fun suggestMeal(): MealSuggestion = withContext(Dispatchers.IO) {
+        val body = json.decodeFromString(
+            MealSuggestion.serializer(),
+            requestTask("suggest"),
+        )
+        body
+    }
+
+    /** يولّد خطة وجبات أسبوعية عبر الوسيط. */
+    suspend fun generateWeeklyPlan(): WeeklyPlan = withContext(Dispatchers.IO) {
+        json.decodeFromString(WeeklyPlan.serializer(), requestTask("plan"))
+    }
+
+    /** يرسل مهمة نصية (suggest/plan) إلى الوسيط ويُعيد جسم الرد كنص JSON. */
+    private fun requestTask(task: String): String {
+        if (AppConfig.PROXY_URL.isEmpty()) {
+            throw GeminiApiException("هذه الميزة تتطلب اتصال الخادم.")
+        }
+        val payload = buildJsonObject { put("task", task) }
+        val headers = buildMap {
+            put("content-type", "application/json")
+            if (AppConfig.APP_TOKEN.isNotEmpty()) put("x-app-token", AppConfig.APP_TOKEN)
+        }
+        val (code, respBody) = post(AppConfig.PROXY_URL, headers, payload.toString())
+        if (code !in 200..299) {
+            throw GeminiApiException(extractApiError(respBody) ?: "تعذّر إكمال الطلب ($code)")
+        }
+        return stripFences(respBody)
     }
 
     // وضع الوسيط (المفتاح على الخادم — مناسب للنشر). الحمولة لا تتغيّر؛ الخادم يخاطب Gemini.

@@ -16,10 +16,12 @@ import com.tayyibat.app.ui.history.MealDetailScreen
 import com.tayyibat.app.ui.settings.ApiKeyScreen
 import com.tayyibat.app.ui.settings.DisclaimerScreen
 import com.tayyibat.app.ui.settings.NotificationSettingsScreen
+import com.tayyibat.app.ui.suggestions.SuggestionsScreen
 
 object Routes {
     const val MAIN = "main"
     const val CAPTURE = "capture"
+    const val SUGGESTIONS = "suggestions"
     const val MEAL_DETAIL = "mealDetail/{mealId}"
     const val DAY_DETAIL = "dayDetail/{dayMillis}"
     const val GUIDE_BEHAVIORAL = "guide/behavioral"
@@ -43,6 +45,9 @@ fun AppNavHost(profile: UserProfile) {
         }
         composable(Routes.CAPTURE) {
             CaptureScreen(onDone = { nav.popBackStack() })
+        }
+        composable(Routes.SUGGESTIONS) {
+            SuggestionsScreen(onBack = { nav.popBackStack() })
         }
         composable(
             Routes.MEAL_DETAIL,

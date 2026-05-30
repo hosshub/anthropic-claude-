@@ -1,13 +1,18 @@
 // Supabase Edge Function: analyze (Google Gemini)
-// Holds the Gemini API key as a Supabase secret and forwards meal-image
-// analysis for the Tayyibat iOS app, so the key never ships in the app.
+// Holds the Gemini API key as a Supabase secret and serves the Tayyibat app:
+//   - meal-image analysis (image_base64)
+//   - tayyib meal suggestion (task: "suggest")
+//   - weekly meal plan (task: "plan")
+// so the key never ships in the app.
 //
 // Deploy (CLI):   supabase functions deploy analyze --no-verify-jwt
 // Secret:         supabase secrets set GEMINI_API_KEY=...      (from Google AI Studio)
 // Optional:       supabase secrets set GEMINI_MODEL=gemini-2.5-flash-lite
 // Endpoint:       https://<project-ref>.supabase.co/functions/v1/analyze
 //   GET  -> { "ok": true }
-//   POST -> { "image_base64": "...", "media_type": "image/jpeg" } -> result JSON
+//   POST { "image_base64": "...", "media_type": "image/jpeg" } -> analysis JSON
+//   POST { "task": "suggest" }                                 -> meal suggestion JSON
+//   POST { "task": "plan" }                                    -> weekly plan JSON
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
@@ -49,6 +54,10 @@ const RULES = {
 
 const RULES_JSON = JSON.stringify(RULES);
 
+// قاعدة مشتركة لكل المهام: لا ادعاءات طبية إطلاقاً.
+const SAFETY_PREAMBLE =
+  `لا تذكر أي ادعاءات صحية أو علاجية، ولا تدّعِ أن النظام يعالج أو يشفي أي مرض، ولا تذكر الأدوية إطلاقاً. التزم بقوائم النظام فقط.`;
+
 function buildPrompt(): string {
   return `أنت محلل صور طعام متخصص في نظام "الطيبات" الغذائي للدكتور ضياء العوضي.
 
@@ -82,7 +91,47 @@ ${RULES_JSON}
 - كل عنصر خبيث: صفر + خصم بنسبة ظهوره
 - لو فيه أي عنصر ممنوع صراحة (دجاج، بيض، بقوليات، خضروات ورقية) ظاهر بوضوح، الحد الأقصى للنتيجة = 60
 
+${SAFETY_PREAMBLE}
 كن متحفظاً — إذا كنت غير متأكد من عنصر، ضع confidence أقل من 0.7 ونبّه المستخدم للمراجعة في warnings.`;
+}
+
+function buildSuggestPrompt(): string {
+  return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام:
+${RULES_JSON}
+
+اقترح وجبة طيبة واحدة متكاملة من الأطعمة المسموحة (allowed) فقط، وتجنّب تماماً أي طعام ممنوع (forbidden). راعِ القواعد السلوكية (صنف فاكهة واحد، تفضيل المطبوخ، خل القصب بعد الوجبة).
+
+أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
+{
+  "name_ar": "اسم مختصر للوجبة المقترحة",
+  "components_ar": ["مكوّن 1", "مكوّن 2", "مكوّن 3"],
+  "reasoning_ar": "جملة أو جملتان عن سبب كون الوجبة طيبة وفق النظام",
+  "best_time_ar": "وقت مناسب للوجبة (مثلاً: فطور، غداء، عشاء خفيف)"
+}
+
+${SAFETY_PREAMBLE}`;
+}
+
+function buildPlanPrompt(): string {
+  return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام:
+${RULES_JSON}
+
+ولّد خطة وجبات لأسبوع كامل (٧ أيام تبدأ بالسبت وتنتهي بالجمعة) من الأطعمة المسموحة (allowed) فقط، مع تجنّب كل الممنوعات (forbidden). راعِ: البروتين يوماً بعد يوم، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ، وأيام الصيام المستحبة (الإثنين والخميس) بإفطار على طعام طيّب.
+
+لكل يوم اقترح فطوراً وغداءً وعشاءً من الطيبات. أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
+{
+  "intro_ar": "جملة تمهيدية قصيرة",
+  "days": [
+    {
+      "day_ar": "السبت",
+      "meals_ar": ["فطور: ...", "غداء: ...", "عشاء: ..."],
+      "note_ar": "ملاحظة قصيرة اختيارية أو نص فارغ"
+    }
+  ]
+}
+يجب أن تحتوي days على ٧ عناصر بالضبط بالترتيب: السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة.
+
+${SAFETY_PREAMBLE}`;
 }
 
 function stripFences(text: string): string {
@@ -107,51 +156,21 @@ function json(status: number, obj: unknown): Response {
   });
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method === "GET") return json(200, { ok: true });
-  if (req.method !== "POST") return json(404, { error: "غير موجود" });
-
-  if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
-    return json(401, { error: "غير مصرّح" });
-  }
-  if (!GEMINI_API_KEY) {
-    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
-  }
-
-  let payload: { image_base64?: string; media_type?: string };
-  try {
-    payload = await req.json();
-  } catch {
-    return json(400, { error: "جسم الطلب غير صالح" });
-  }
-  const imageBase64 = payload.image_base64;
-  const mediaType = payload.media_type ?? "image/jpeg";
-  if (!imageBase64) return json(400, { error: "image_base64 مطلوب" });
-
+// نداء Gemini موحّد: يستقبل أجزاء المحتوى ويُرجع كائن JSON المُحلَّل أو خطأ.
+async function callGemini(parts: unknown[], maxTokens: number): Promise<Response> {
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
   let upstream: Response;
   let raw: string;
   try {
     upstream = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "x-goog-api-key": GEMINI_API_KEY,
-        "content-type": "application/json",
-      },
+      headers: { "x-goog-api-key": GEMINI_API_KEY, "content-type": "application/json" },
       body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [
-            { inlineData: { mimeType: mediaType, data: imageBase64 } },
-            { text: buildPrompt() },
-          ],
-        }],
+        contents: [{ role: "user", parts }],
         generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048,
+          temperature: 0.4,
+          maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
         },
       }),
@@ -175,11 +194,53 @@ Deno.serve(async (req: Request) => {
       .join("");
     if (!text) {
       const reason = candidate?.finishReason ?? data.promptFeedback?.blockReason;
+      // رسالة ألطف عند رفض مرشّح الأمان لصورة طعام.
+      if (reason === "SAFETY") {
+        return json(502, { error: "تعذّر تحليل الصورة. حاول من زاوية أو إضاءة مختلفة." });
+      }
       return json(502, { error: `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}` });
     }
-    const result = JSON.parse(stripFences(text));
-    return json(200, result);
+    return json(200, JSON.parse(stripFences(text)));
   } catch {
     return json(502, { error: "تعذّر تحليل نتيجة النموذج" });
   }
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method === "GET") return json(200, { ok: true });
+  if (req.method !== "POST") return json(404, { error: "غير موجود" });
+
+  if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
+    return json(401, { error: "غير مصرّح" });
+  }
+  if (!GEMINI_API_KEY) {
+    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
+  }
+
+  let payload: { image_base64?: string; media_type?: string; task?: string };
+  try {
+    payload = await req.json();
+  } catch {
+    return json(400, { error: "جسم الطلب غير صالح" });
+  }
+
+  // 1) اقتراح وجبة
+  if (payload.task === "suggest") {
+    return await callGemini([{ text: buildSuggestPrompt() }], 1024);
+  }
+  // 2) خطة أسبوعية
+  if (payload.task === "plan") {
+    return await callGemini([{ text: buildPlanPrompt() }], 4096);
+  }
+
+  // 3) تحليل صورة (الافتراضي)
+  const imageBase64 = payload.image_base64;
+  const mediaType = payload.media_type ?? "image/jpeg";
+  if (!imageBase64) return json(400, { error: "image_base64 مطلوب" });
+
+  return await callGemini([
+    { inlineData: { mimeType: mediaType, data: imageBase64 } },
+    { text: buildPrompt() },
+  ], 2048);
 });

@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -40,6 +41,7 @@ import com.tayyibat.app.ui.components.CardContainer
 import com.tayyibat.app.ui.components.MedicalDisclaimerFooter
 import com.tayyibat.app.ui.components.PrimaryButton
 import com.tayyibat.app.ui.components.ScoreRing
+import com.tayyibat.app.ui.components.SecondaryButton
 import com.tayyibat.app.ui.components.TipCard
 import com.tayyibat.app.ui.components.clickableNoRipple
 import com.tayyibat.app.ui.components.rememberImageBitmap
@@ -57,6 +59,7 @@ fun TodayScreen(
     modifier: Modifier = Modifier,
     onCapture: () -> Unit,
     onMealClick: (String) -> Unit,
+    onSuggestions: () -> Unit = {},
     vm: TodayViewModel = viewModel(),
 ) {
     val meals by vm.todayMeals.collectAsStateWithLifecycle()
@@ -97,6 +100,8 @@ fun TodayScreen(
         }
 
         PrimaryButton("صوّر وجبتك", icon = Icons.Filled.CameraAlt, onClick = onCapture)
+
+        SecondaryButton("اقتراحات ذكية", icon = Icons.Filled.AutoAwesome, onClick = onSuggestions)
 
         if (meals.isNotEmpty()) {
             CardContainer {

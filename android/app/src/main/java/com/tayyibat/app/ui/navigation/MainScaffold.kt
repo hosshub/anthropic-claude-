@@ -67,6 +67,7 @@ fun MainScaffold(profile: UserProfile, rootNav: NavController) {
                 modifier = content,
                 onCapture = { rootNav.navigate(Routes.CAPTURE) },
                 onMealClick = { id -> rootNav.navigate(Routes.mealDetail(id)) },
+                onSuggestions = { rootNav.navigate(Routes.SUGGESTIONS) },
             )
             1 -> HistoryScreen(
                 modifier = content,
