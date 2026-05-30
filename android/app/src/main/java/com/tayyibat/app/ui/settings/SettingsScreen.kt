@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
@@ -123,13 +124,17 @@ fun SettingsScreen(
         if (AppConfig.authEnabled) {
             CardContainer {
                 Text("الحساب", style = AppType.cardTitle, color = Theme.colors.textPrimary)
-                authState.userEmail?.let { email ->
+                val email = authState.userEmail
+                if (email != null) {
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("الحساب", style = AppType.bodyText, color = Theme.colors.textPrimary)
                         Text(email, style = AppType.bodyText, color = Theme.colors.textSecondary)
                     }
+                    SettingRow(Icons.AutoMirrored.Filled.Logout, "تسجيل الخروج", tint = Khabith) { vm.signOut() }
+                } else {
+                    // ضيف: إتاحة تسجيل الدخول / إنشاء حساب.
+                    SettingRow(Icons.AutoMirrored.Filled.Login, "تسجيل الدخول أو إنشاء حساب") { vm.signIn() }
                 }
-                SettingRow(Icons.AutoMirrored.Filled.Logout, "تسجيل الخروج", tint = Khabith) { vm.signOut() }
             }
         }
 

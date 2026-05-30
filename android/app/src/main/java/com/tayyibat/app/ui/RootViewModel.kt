@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tayyibat.app.AppGraph
 import com.tayyibat.app.config.AppConfig
+import com.tayyibat.app.data.GuestSession
 import com.tayyibat.app.data.model.UserGoal
 import com.tayyibat.app.data.model.UserProfile
 import com.tayyibat.app.service.NotificationScheduler
@@ -26,6 +27,11 @@ class RootViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _didAttemptRestore = kotlinx.coroutines.flow.MutableStateFlow(!AppConfig.authEnabled)
     val didAttemptRestore: StateFlow<Boolean> = _didAttemptRestore
+
+    /** "المتابعة كضيف" — يسمح باستخدام التطبيق دون تسجيل. */
+    val guestMode: StateFlow<Boolean> = GuestSession.guestMode
+
+    fun continueAsGuest() = GuestSession.setGuest(true)
 
     init {
         viewModelScope.launch {

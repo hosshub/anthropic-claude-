@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -52,7 +53,7 @@ import com.tayyibat.app.ui.theme.Theme
 import kotlinx.coroutines.launch
 
 @Composable
-fun AuthScreen(auth: AuthService) {
+fun AuthScreen(auth: AuthService, onSkip: () -> Unit = {}) {
     val state by auth.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -147,6 +148,11 @@ fun AuthScreen(auth: AuthService) {
             "بالمتابعة فإنك توافق على سياسة الخصوصية الخاصة بالتطبيق.",
             style = AppType.caption, color = Theme.colors.textSecondary, textAlign = TextAlign.Center,
         )
+
+        // المتابعة كضيف — اختياري، بلا حساب.
+        TextButton(onClick = onSkip, enabled = !state.isWorking) {
+            Text("المتابعة كضيف", color = Primary)
+        }
         Spacer(Modifier.size(24.dp))
     }
 }

@@ -20,15 +20,16 @@ fun RootScreen(vm: RootViewModel = viewModel()) {
     val profile by vm.profile.collectAsStateWithLifecycle()
     val authState by vm.authState.collectAsStateWithLifecycle()
     val didAttemptRestore by vm.didAttemptRestore.collectAsStateWithLifecycle()
+    val guestMode by vm.guestMode.collectAsStateWithLifecycle()
 
     when {
-        AppConfig.authEnabled && !authState.isAuthenticated && !didAttemptRestore -> {
+        AppConfig.authEnabled && !authState.isAuthenticated && !guestMode && !didAttemptRestore -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-        AppConfig.authEnabled && !authState.isAuthenticated -> {
-            AuthScreen(auth = vm.auth)
+        AppConfig.authEnabled && !authState.isAuthenticated && !guestMode -> {
+            AuthScreen(auth = vm.auth, onSkip = { vm.continueAsGuest() })
         }
         profile?.disclaimerAcceptedAt != null -> {
             AppNavHost(profile = profile!!)

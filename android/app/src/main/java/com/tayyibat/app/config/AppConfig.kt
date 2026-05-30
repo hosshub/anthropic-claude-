@@ -17,10 +17,8 @@ object AppConfig {
     const val SUPABASE_URL = "https://cvznuwvwhnujdgfojmsb.supabase.co"
 
     /** المفتاح العام (anon public). آمن لتضمينه. اتركه فارغاً لتعطيل المصادقة.
-     *  مُعطَّل حالياً: التطبيق يعمل دون تسجيل دخول ويذهب مباشرةً للإعداد الأولي.
-     *  التحليل يعمل عبر الوسيط (proxy) بصرف النظر عن المصادقة.
-     *  لإعادة تفعيل تسجيل الدخول: ضع مفتاح Supabase العام هنا مرة أخرى. */
-    const val SUPABASE_ANON_KEY = ""
+     *  مُفعّل: تظهر شاشة التسجيل/الدخول (مع إمكانية "المتابعة كضيف"). */
+    const val SUPABASE_ANON_KEY = "sb_publishable_LecfzCczF2tn3w_x7mtbyQ_Ug-Dee-X"
 
     /** زر "المتابعة عبر Google" يستخدم تدفّق OAuth عبر المتصفح + PKCE. */
     const val AUTH_REDIRECT_SCHEME = "tayyibat"

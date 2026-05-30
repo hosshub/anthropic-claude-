@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tayyibat.app.AppGraph
+import com.tayyibat.app.data.GuestSession
 import com.tayyibat.app.data.model.NotificationIntensity
 import com.tayyibat.app.data.model.UserGoal
 import com.tayyibat.app.data.model.UserProfile
@@ -56,5 +57,11 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { DataExportService.deleteAllTrackingData(db) }
     }
 
-    fun signOut() = auth.signOut()
+    fun signOut() {
+        auth.signOut()
+        GuestSession.setGuest(false) // العودة لشاشة الدخول
+    }
+
+    /** خروج من وضع الضيف لعرض شاشة التسجيل/الدخول. */
+    fun signIn() = GuestSession.setGuest(false)
 }

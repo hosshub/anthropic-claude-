@@ -2,6 +2,7 @@ package com.tayyibat.app
 
 import android.app.Application
 import android.content.Context
+import com.tayyibat.app.data.GuestSession
 import com.tayyibat.app.data.db.AppDatabase
 import com.tayyibat.app.service.AuthService
 import com.tayyibat.app.service.GeminiApiService
@@ -17,6 +18,7 @@ class TayyibatApplication : Application() {
         super.onCreate()
         RulesService.init(this)
         NotificationScheduler.ensureChannel(this)
+        GuestSession.init(this)
         AppGraph.init(this)
     }
 }
