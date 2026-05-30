@@ -4,6 +4,7 @@ import UIKit
 /// تفاصيل وجبة محفوظة (للقراءة).
 struct MealDetailView: View {
     let meal: Meal
+    @State private var showBodyResponseFlow = false
 
     var body: some View {
         ScrollView {
@@ -63,6 +64,22 @@ struct MealDetailView: View {
                     }
                 }
 
+                if let response = meal.bodyResponse {
+                    BodyResponseSummaryCard(response: response) {
+                        showBodyResponseFlow = true
+                    }
+                } else {
+                    Button {
+                        showBodyResponseFlow = true
+                    } label: {
+                        Label("سجّل كيف شعرت بعد هذه الوجبة", systemImage: "heart.text.square")
+                            .font(.bodyText.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 46)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Theme.primary)
+                }
+
                 if !meal.improvementSuggestions.isEmpty {
                     CardContainer {
                         VStack(alignment: .leading, spacing: 8) {
@@ -82,5 +99,8 @@ struct MealDetailView: View {
         .background(Theme.background)
         .navigationTitle("تفاصيل الوجبة")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showBodyResponseFlow) {
+            BodyResponseFlowView(meal: meal)
+        }
     }
 }

@@ -15,6 +15,7 @@ struct CaptureFlowView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var step: CaptureStep = .camera
+    @State private var pendingBodyResponseMeal: Meal?
 
     var body: some View {
         Group {
@@ -39,6 +40,9 @@ struct CaptureFlowView: View {
             case .error(let message, let data):
                 errorView(message: message, data: data)
             }
+        }
+        .sheet(item: $pendingBodyResponseMeal, onDismiss: { dismiss() }) { meal in
+            BodyResponseFlowView(meal: meal)
         }
     }
 
@@ -86,7 +90,8 @@ struct CaptureFlowView: View {
         context.insert(meal)
         try? context.save()
         SummaryService.updateSummary(for: meal.capturedAt, context: context)
-        dismiss()
+        // اقترح متابعة الجسم بعد الوجبة (اختيارية، يمكن تخطّيها).
+        pendingBodyResponseMeal = meal
     }
 
     private func errorView(message: String, data: Data) -> some View {

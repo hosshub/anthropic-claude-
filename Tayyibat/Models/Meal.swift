@@ -11,6 +11,8 @@ final class Meal {
     var scoreExplanationAr: String
     var improvementSuggestions: [String]
     @Relationship(deleteRule: .cascade, inverse: \FoodItem.meal) var items: [FoodItem]
+    /// متابعة الجسم بعد هذه الوجبة (إن سجّلها المستخدم).
+    @Relationship(deleteRule: .cascade, inverse: \BodyResponse.meal) var bodyResponse: BodyResponse?
     var userNotes: String?
     var wasEdited: Bool
 

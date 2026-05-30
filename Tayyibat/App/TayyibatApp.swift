@@ -10,7 +10,8 @@ struct TayyibatApp: App {
         do {
             modelContainer = try ModelContainer(
                 for: Meal.self, FoodItem.self, FastingDay.self,
-                DailySummary.self, UserProfile.self, NotificationTip.self
+                DailySummary.self, UserProfile.self, NotificationTip.self,
+                BodyResponse.self
             )
         } catch {
             fatalError("تعذّر إنشاء حاوية البيانات: \(error)")
