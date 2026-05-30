@@ -7,6 +7,7 @@ struct TodayView: View {
 
     @Query private var todayMeals: [Meal]
     @State private var showCapture = false
+    @State private var showWhenInDoubt = false
     @State private var fastedToday = false
 
     init(profile: UserProfile) {
@@ -45,11 +46,31 @@ struct TodayView: View {
             }
             .background(Theme.background)
             .navigationTitle("اليوم")
+            .overlay(alignment: .bottomTrailing) { whenInDoubtFAB }
             .onAppear { fastedToday = SummaryService.summary(for: .now, context: context)?.fastedToday ?? false }
         }
         .fullScreenCover(isPresented: $showCapture) {
             CaptureFlowView()
         }
+        .sheet(isPresented: $showWhenInDoubt) {
+            WhenInDoubtView()
+        }
+    }
+
+    private var whenInDoubtFAB: some View {
+        Button {
+            showWhenInDoubt = true
+        } label: {
+            Text("🤔")
+                .font(.system(size: 26))
+                .frame(width: 56, height: 56)
+                .background(Theme.primary, in: Circle())
+                .foregroundStyle(.white)
+                .shadow(color: Theme.cardShadow, radius: 8, y: 4)
+                .accessibilityLabel("عندما تحتار")
+        }
+        .padding(.trailing, 18)
+        .padding(.bottom, 18)
     }
 
     private var greeting: some View {
