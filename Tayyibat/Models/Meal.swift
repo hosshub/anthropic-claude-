@@ -48,11 +48,20 @@ final class FoodItem {
     var confidence: Double
     var estimatedPortion: String
     var ruleViolated: String?
+    /// v2 — تصنيف المنطقة (أخضر/أصفر/أحمر). يبقى اختيارياً للتوافق مع وجبات v1.
+    var zoneRaw: String?
+    /// v2 — تنبيه خاص للعنصر الأصفر (مراقبة الهضم/الطاقة ونحوها).
+    var cautionAr: String?
     var meal: Meal?
 
     var verdict: Verdict {
         get { Verdict.from(verdictRaw) }
         set { verdictRaw = newValue.rawValue }
+    }
+
+    /// المنطقة المعتمدة: zoneRaw الصريح إن وُجد، وإلا تُشتقّ من الحكم القديم.
+    var zone: FoodZone {
+        FoodZone.from(zoneRaw) ?? FoodZone.fromVerdict(verdict)
     }
 
     init(
@@ -62,7 +71,9 @@ final class FoodItem {
         reasoning: String,
         confidence: Double,
         estimatedPortion: String = "متوسطة",
-        ruleViolated: String? = nil
+        ruleViolated: String? = nil,
+        zone: FoodZone? = nil,
+        cautionAr: String? = nil
     ) {
         self.nameAr = nameAr
         self.verdictRaw = verdict.rawValue
@@ -71,5 +82,7 @@ final class FoodItem {
         self.confidence = confidence
         self.estimatedPortion = estimatedPortion
         self.ruleViolated = ruleViolated
+        self.zoneRaw = zone?.rawValue
+        self.cautionAr = cautionAr
     }
 }

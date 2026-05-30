@@ -19,6 +19,9 @@ struct AnalysisResult: Codable {
         var category: String
         var reasoningAr: String
         var ruleViolated: String?
+        // v2 — إشارات الألوان الثلاث + تنبيه الأصفر.
+        var zone: String?
+        var cautionAr: String?
 
         enum CodingKeys: String, CodingKey {
             case nameAr = "name_ar"
@@ -28,6 +31,8 @@ struct AnalysisResult: Codable {
             case category
             case reasoningAr = "reasoning_ar"
             case ruleViolated = "rule_violated"
+            case zone
+            case cautionAr = "caution_ar"
         }
 
         init(from decoder: Decoder) throws {
@@ -40,6 +45,8 @@ struct AnalysisResult: Codable {
             category = try c.decodeIfPresent(String.self, forKey: .category) ?? "عام"
             reasoningAr = try c.decodeIfPresent(String.self, forKey: .reasoningAr) ?? ""
             ruleViolated = try c.decodeIfPresent(String.self, forKey: .ruleViolated)
+            zone = try c.decodeIfPresent(String.self, forKey: .zone)
+            cautionAr = try c.decodeIfPresent(String.self, forKey: .cautionAr)
         }
     }
 
@@ -74,7 +81,9 @@ extension AnalysisResult {
                 reasoning: item.reasoningAr,
                 confidence: item.confidence,
                 estimatedPortion: item.estimatedPortion,
-                ruleViolated: item.ruleViolated
+                ruleViolated: item.ruleViolated,
+                zone: FoodZone.from(item.zone),
+                cautionAr: item.cautionAr
             )
         }
         return Meal(
