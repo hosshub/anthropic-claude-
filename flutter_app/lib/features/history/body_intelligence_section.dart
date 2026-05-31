@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/analysis_result.dart';
@@ -141,6 +142,8 @@ class BodyIntelligenceSection extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        _ScoreTrendChart(meals: meals),
         const SizedBox(height: 12),
         _metricsCard,
         if (responses.isEmpty) ...[
@@ -595,5 +598,243 @@ class BodyIntelligenceSection extends StatelessWidget {
     final l = dt.toLocal();
     String two(int n) => n.toString().padLeft(2, '0');
     return '${l.year}/${two(l.month)}/${two(l.day)} • ${two(l.hour)}:${two(l.minute)}';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Score-trend line chart — last 30 days, average daily score.
+// ---------------------------------------------------------------------------
+
+class _ScoreTrendChart extends StatelessWidget {
+  final List<Meal> meals;
+  const _ScoreTrendChart({required this.meals});
+
+  static const int _days = 30;
+
+  /// يبني قائمة بمتوسط درجة كل يوم من آخر ٣٠ يوماً. يبقى null لو ما في وجبة.
+  List<double?> _series() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = today.subtract(const Duration(days: _days - 1));
+    final buckets = <DateTime, List<int>>{};
+    for (final m in meals) {
+      final l = m.capturedAt.toLocal();
+      final day = DateTime(l.year, l.month, l.day);
+      if (day.isBefore(start)) continue;
+      buckets.putIfAbsent(day, () => []).add(m.overallScore);
+    }
+    return List<double?>.generate(_days, (i) {
+      final d = start.add(Duration(days: i));
+      final list = buckets[d];
+      if (list == null || list.isEmpty) return null;
+      final sum = list.fold<int>(0, (a, b) => a + b);
+      return sum / list.length;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final series = _series();
+    final spots = <FlSpot>[];
+    for (var i = 0; i < series.length; i++) {
+      final v = series[i];
+      if (v != null) spots.add(FlSpot(i.toDouble(), v));
+    }
+    final hasData = spots.length >= 2;
+    final avg = spots.isEmpty
+        ? null
+        : spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+    final lineColor = avg == null ? TColors.primary : TColors.scoreColor(avg.round());
+
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.show_chart,
+                  color: TColors.primary, size: 18),
+              const SizedBox(width: 6),
+              const Text(
+                'منحنى الالتزام',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: TColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              if (avg != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: lineColor.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  child: Text(
+                    'متوسط ${avg.round()}٪',
+                    style: TextStyle(
+                      color: lineColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'آخر ٣٠ يوماً — متوسط درجة وجبات كل يوم.',
+            style: TextStyle(
+              color: TColors.textSecondary,
+              fontSize: 11,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 160,
+            child: !hasData
+                ? const Center(
+                    child: Text(
+                      'يلزم على الأقل وجبتان لرسم المنحنى.',
+                      style: TextStyle(
+                        color: TColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  )
+                : LineChart(
+                    LineChartData(
+                      minX: 0,
+                      maxX: (_days - 1).toDouble(),
+                      minY: 0,
+                      maxY: 100,
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: 25,
+                        getDrawingHorizontalLine: (_) => FlLine(
+                          color: TColors.textSecondary.withOpacity(0.10),
+                          strokeWidth: 1,
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      titlesData: FlTitlesData(
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 28,
+                            interval: 25,
+                            getTitlesWidget: (v, _) {
+                              if (v == 0 || v == 100) {
+                                return Text(
+                                  '${v.toInt()}',
+                                  style: const TextStyle(
+                                    color: TColors.textSecondary,
+                                    fontSize: 10,
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 10,
+                            reservedSize: 22,
+                            getTitlesWidget: (v, _) {
+                              final daysAgo = (_days - 1 - v).toInt();
+                              if (daysAgo == 0) {
+                                return const Padding(
+                                  padding: EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'اليوم',
+                                    style: TextStyle(
+                                      color: TColors.textSecondary,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                );
+                              }
+                              if (daysAgo == 30) {
+                                return const Padding(
+                                  padding: EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '٣٠ يوم',
+                                    style: TextStyle(
+                                      color: TColors.textSecondary,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                      ),
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipColor: (_) => TColors.textPrimary,
+                          getTooltipItems: (touched) => touched
+                              .map(
+                                (s) => LineTooltipItem(
+                                  '${s.y.round()}٪',
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          curveSmoothness: 0.18,
+                          color: lineColor,
+                          barWidth: 2.4,
+                          dotData: FlDotData(
+                            show: spots.length <= 12,
+                            getDotPainter: (s, _, __, ___) =>
+                                FlDotCirclePainter(
+                              radius: 3,
+                              color: lineColor,
+                              strokeWidth: 0,
+                            ),
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                lineColor.withOpacity(0.25),
+                                lineColor.withOpacity(0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
   }
 }
