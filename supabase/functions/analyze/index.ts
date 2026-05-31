@@ -1,20 +1,26 @@
 // Supabase Edge Function: analyze (Google Gemini)
-// Holds the Gemini API key as a Supabase secret and forwards meal-image
-// analysis for the Tayyibat iOS app, so the key never ships in the app.
+// Holds the Gemini API key as a Supabase secret and serves the Tayyibat app:
+//   - meal-image analysis  (image_base64)
+//   - tayyib meal suggestion  (task: "suggest")
+//   - weekly meal plan        (task: "plan")
+// so the key never ships in the app.
 //
 // Deploy (CLI):   supabase functions deploy analyze --no-verify-jwt
 // Secret:         supabase secrets set GEMINI_API_KEY=...      (from Google AI Studio)
 // Optional:       supabase secrets set GEMINI_MODEL=gemini-2.5-flash-lite
 // Endpoint:       https://<project-ref>.supabase.co/functions/v1/analyze
-//   GET  -> { "ok": true }
-//   POST -> { "image_base64": "...", "media_type": "image/jpeg" } -> result JSON
+//   GET   -> { "ok": true }
+//   POST  { "image_base64": "...", "media_type": "image/jpeg" }  -> analysis JSON   (counted in daily cap)
+//   POST  { "task": "suggest" }                                  -> meal suggestion JSON
+//   POST  { "task": "plan" }                                     -> weekly plan JSON
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
 const APP_TOKEN = Deno.env.get("APP_TOKEN") ?? "";
 
-// حدّ يومي لكل مستخدم (حماية من التكلفة). يُفرَض فقط عند إرسال التطبيق توكن المستخدم.
-// SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY يحقنهما Supabase تلقائياً في الدوال.
+// حدّ يومي لكل مستخدم لتحليل الصور فقط (الميزة الأغلى).
+// suggest/plan لا يُحتسبان لأنهما نصّيان رخيصان نسبياً.
+// SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY يحقنهما Supabase تلقائياً.
 const DAILY_LIMIT = 7;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -41,7 +47,7 @@ const RULES = {
       "watchword_ar": "جرّب، راقب، وقلّل عند ظهور ثقل أو اضطراب هضمي",
       "groups": [
         { "item_ar": "الأجبان المعتقة", "examples_ar": "شيدر، جودة، بارميزان، روكفور، فلمنك", "guidance_ar": "باعتدال وحسب الهضم" },
-        { "item_ar": "الفواكه الطبيعية", "examples_ar": "التفاح، الكمثرى، المانجو، الجوافة، الرمان، الفراولة، التين، العنب، الموز", "guidance_ar": "تدخل تدريجياً، مع مراقبة الانتفاخ أو الخمول" },
+        { "item_ar": "الفواكه الطبيعية", "examples_ar": "التفاح، الكمثرى، المانجو، الجوافة، الرمان، الفراولة، التين، العنب، الموز", "guidance_ar": "تدخل تدريجياً مع مراقبة الانتفاخ أو الخمول" },
         { "item_ar": "العسل والتمر", "guidance_ar": "كميات بسيطة، وليس استخداماً مفتوحاً طوال اليوم" },
         { "item_ar": "القهوة", "guidance_ar": "حسب النوم والتوتر وتحمل الكافيين" },
         { "item_ar": "الشاي", "guidance_ar": "ليس أساساً. إن وُجد يكون بسيطاً وبسكر خفيف" }
@@ -71,6 +77,10 @@ const RULES = {
 };
 
 const RULES_JSON = JSON.stringify(RULES);
+
+// قاعدة مشتركة لكل المهام: لا ادعاءات طبية إطلاقاً.
+const SAFETY_PREAMBLE =
+  `لا تذكر أي ادعاءات صحية أو علاجية، ولا تدّعِ أن النظام يعالج أو يشفي أي مرض، ولا تذكر الأدوية إطلاقاً. التزم بقوائم النظام فقط.`;
 
 function buildPrompt(): string {
   return `أنت محلل صور طعام متخصص في نظام "الطيبات" الغذائي وفق نسخة الدليل الموسّع (نسخة 2).
@@ -114,7 +124,47 @@ ${RULES_JSON}
 - إذا ظهر عنصر أحمر مذكور صراحة في القائمة الحمراء بثقة عالية، الحد الأقصى للنتيجة = 50.
 - إذا كان الطبق كله أخضر، أعطِ النقاط الكاملة واذكر "وجبة طيبة كاملة" في score_explanation_ar.
 
+${SAFETY_PREAMBLE}
 التزم بصياغة الدليل عند الإمكان، وكن متحفظاً — إذا لم تكن متأكداً من عنصر، ضع confidence أقل من 0.7 ونبّه المستخدم للمراجعة في warnings.`;
+}
+
+function buildSuggestPrompt(): string {
+  return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
+${RULES_JSON}
+
+اقترح وجبة طيبة واحدة متكاملة من المنطقة الخضراء فقط (أو مع لمسة صفراء بحساب)، وتجنّب تماماً أي عنصر من المنطقة الحمراء. راعِ القواعد الذهبية: تبسيط المكونات، التوقف قبل الامتلاء، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ.
+
+أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
+{
+  "name_ar": "اسم مختصر للوجبة المقترحة",
+  "components_ar": ["مكوّن 1", "مكوّن 2", "مكوّن 3"],
+  "reasoning_ar": "جملة أو جملتان عن سبب كون الوجبة طيبة وفق النظام",
+  "best_time_ar": "وقت مناسب للوجبة (مثلاً: فطور، غداء، عشاء خفيف)"
+}
+
+${SAFETY_PREAMBLE}`;
+}
+
+function buildPlanPrompt(): string {
+  return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
+${RULES_JSON}
+
+ولّد خطة وجبات لأسبوع كامل (٧ أيام تبدأ بالسبت وتنتهي بالجمعة) من المنطقة الخضراء أساساً، مع لمسات صفراء بحساب، وتجنّب كل عناصر المنطقة الحمراء تماماً. راعِ: البروتين يوماً بعد يوم، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ، وأيام الصيام المستحبة (الإثنين والخميس) بإفطار على طعام طيّب.
+
+لكل يوم اقترح فطوراً وغداءً وعشاءً من الطيبات. أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
+{
+  "intro_ar": "جملة تمهيدية قصيرة",
+  "days": [
+    {
+      "day_ar": "السبت",
+      "meals_ar": ["فطور: ...", "غداء: ...", "عشاء: ..."],
+      "note_ar": "ملاحظة قصيرة اختيارية أو نص فارغ"
+    }
+  ]
+}
+يجب أن تحتوي days على ٧ عناصر بالضبط بالترتيب: السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة.
+
+${SAFETY_PREAMBLE}`;
 }
 
 function stripFences(text: string): string {
@@ -156,9 +206,6 @@ function userIdFromJWT(authHeader: string | null): string | null {
   }
 }
 
-// يزيد عدّاد اليوم ذرّياً عبر دالة Postgres. يُعيد:
-//   عدد موجب = مسموح (رقم التحليل اليوم بعد الزيادة)،
-//   عدد سالب = تجاوز الحدّ، أو null إذا تعذّر العدّ (نسمح حينها — fail open).
 async function bumpDailyUsage(userId: string): Promise<number | null> {
   if (!SUPABASE_URL || !SERVICE_KEY) return null;
   try {
@@ -180,7 +227,6 @@ async function bumpDailyUsage(userId: string): Promise<number | null> {
   }
 }
 
-// يسترجع حصّة واحدة عند فشل التحليل. أفضل جهد — يتجاهل الأخطاء.
 async function refundDailyUsage(userId: string): Promise<void> {
   if (!SUPABASE_URL || !SERVICE_KEY) return;
   try {
@@ -198,46 +244,16 @@ async function refundDailyUsage(userId: string): Promise<void> {
   }
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method === "GET") return json(200, { ok: true });
-  if (req.method !== "POST") return json(404, { error: "غير موجود" });
-
-  if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
-    return json(401, { error: "غير مصرّح" });
-  }
-  if (!GEMINI_API_KEY) {
-    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
-  }
-
-  let payload: { image_base64?: string; media_type?: string };
-  try {
-    payload = await req.json();
-  } catch {
-    return json(400, { error: "جسم الطلب غير صالح" });
-  }
-  const imageBase64 = payload.image_base64;
-  const mediaType = payload.media_type ?? "image/jpeg";
-  if (!imageBase64) return json(400, { error: "image_base64 مطلوب" });
-
-  // الحدّ اليومي لكل مستخدم (إن أرسل التطبيق التوكن).
-  const userId = userIdFromJWT(req.headers.get("authorization"));
-  let counted = false;
-  if (userId) {
-    const used = await bumpDailyUsage(userId);
-    if (used !== null && used < 0) {
-      return json(429, {
-        error: `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
-      });
-    }
-    counted = used !== null && used > 0;
-  }
-
-  // يُعيد الحصّة المحجوزة إذا فشل التحليل لاحقاً.
-  const refundIfCounted = async () => {
-    if (counted && userId) await refundDailyUsage(userId);
-  };
-
+/**
+ * نداء Gemini موحّد للمهام الثلاث (تحليل صورة / اقتراح / خطة).
+ * يُعيد Response جاهزاً للإرجاع للعميل. إذا فشلت العملية يستدعي onFailure قبل العودة
+ * (يُستخدم لاسترجاع الحصّة في حال تحليل الصور).
+ */
+async function callGemini(
+  parts: unknown[],
+  maxTokens: number,
+  onFailure: () => Promise<void> = async () => {},
+): Promise<Response> {
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -251,28 +267,22 @@ Deno.serve(async (req: Request) => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [
-            { inlineData: { mimeType: mediaType, data: imageBase64 } },
-            { text: buildPrompt() },
-          ],
-        }],
+        contents: [{ role: "user", parts }],
         generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048,
+          temperature: 0.4,
+          maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
         },
       }),
     });
     raw = await upstream.text();
   } catch (e) {
-    await refundIfCounted();
+    await onFailure();
     return json(502, { error: `تعذّر الاتصال بـ Gemini: ${(e as Error).message}` });
   }
 
   if (!upstream.ok) {
-    await refundIfCounted();
+    await onFailure();
     let msg = `خطأ من Gemini (${upstream.status})`;
     try { msg = JSON.parse(raw)?.error?.message ?? msg; } catch { /* keep default */ }
     return json(upstream.status, { error: msg });
@@ -285,14 +295,77 @@ Deno.serve(async (req: Request) => {
       .map((p: { text?: string }) => p.text ?? "")
       .join("");
     if (!text) {
-      await refundIfCounted();
+      await onFailure();
       const reason = candidate?.finishReason ?? data.promptFeedback?.blockReason;
+      // رسالة ألطف عند رفض مرشّح الأمان لصورة طعام.
+      if (reason === "SAFETY") {
+        return json(502, { error: "تعذّر تحليل الطلب. جرّب صياغة أو زاوية مختلفة." });
+      }
       return json(502, { error: `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}` });
     }
-    const result = JSON.parse(stripFences(text));
-    return json(200, result);
+    return json(200, JSON.parse(stripFences(text)));
   } catch {
-    await refundIfCounted();
+    await onFailure();
     return json(502, { error: "تعذّر تحليل نتيجة النموذج" });
   }
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method === "GET") return json(200, { ok: true });
+  if (req.method !== "POST") return json(404, { error: "غير موجود" });
+
+  if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
+    return json(401, { error: "غير مصرّح" });
+  }
+  if (!GEMINI_API_KEY) {
+    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
+  }
+
+  let payload: { image_base64?: string; media_type?: string; task?: string };
+  try {
+    payload = await req.json();
+  } catch {
+    return json(400, { error: "جسم الطلب غير صالح" });
+  }
+
+  // 1) اقتراح وجبة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
+  if (payload.task === "suggest") {
+    return await callGemini([{ text: buildSuggestPrompt() }], 1024);
+  }
+
+  // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).
+  if (payload.task === "plan") {
+    return await callGemini([{ text: buildPlanPrompt() }], 4096);
+  }
+
+  // 3) تحليل صورة وجبة (الافتراضي — يخضع للحدّ اليومي).
+  const imageBase64 = payload.image_base64;
+  const mediaType = payload.media_type ?? "image/jpeg";
+  if (!imageBase64) return json(400, { error: "image_base64 أو task مطلوب" });
+
+  const userId = userIdFromJWT(req.headers.get("authorization"));
+  let counted = false;
+  if (userId) {
+    const used = await bumpDailyUsage(userId);
+    if (used !== null && used < 0) {
+      return json(429, {
+        error: `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
+      });
+    }
+    counted = used !== null && used > 0;
+  }
+
+  const refundIfCounted = async () => {
+    if (counted && userId) await refundDailyUsage(userId);
+  };
+
+  return await callGemini(
+    [
+      { inlineData: { mimeType: mediaType, data: imageBase64 } },
+      { text: buildPrompt() },
+    ],
+    2048,
+    refundIfCounted,
+  );
 });

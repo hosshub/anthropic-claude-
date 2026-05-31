@@ -11,6 +11,7 @@ import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
 import '../history/meal_detail_screen.dart';
+import '../suggestions/suggestions_screen.dart';
 import 'when_in_doubt_screen.dart';
 
 class TodayScreen extends StatelessWidget {
@@ -90,6 +91,26 @@ class TodayScreen extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SuggestionsScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('اقتراحات ذكية'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: TColors.primary,
+                      minimumSize: const Size.fromHeight(48),
+                      side: const BorderSide(color: TColors.primary, width: 1.2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                   if (meals.isNotEmpty) ...[
                     const SizedBox(height: 20),
