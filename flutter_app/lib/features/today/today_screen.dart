@@ -11,6 +11,7 @@ import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
 import '../history/meal_detail_screen.dart';
+import 'when_in_doubt_screen.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
@@ -38,6 +39,20 @@ class TodayScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('اليوم'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: TColors.primary,
+        foregroundColor: Colors.white,
+        tooltip: 'عندما تحتار',
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (_) => const WhenInDoubtScreen(),
+            ),
+          );
+        },
+        child: const Text('🤔', style: TextStyle(fontSize: 24)),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Meal>>(

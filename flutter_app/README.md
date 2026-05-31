@@ -1,42 +1,70 @@
-# الطيبات — نسخة Flutter (Phase F2)
+# الطيبات — نسخة Flutter (Phase F3)
 
 نسخة Flutter من تطبيق الطيبات تعمل على **iOS و Android** من قاعدة كود واحدة،
 باستخدام نفس الواجهة الخلفية (Supabase + Gemini Edge Function) المستخدمة في نسخة SwiftUI.
 
-## ما هو موجود حتى F2
+## ما هو موجود حتى F3 (تكافؤ كبير مع SwiftUI v2)
 
-### تفاصيل المصادقة وتجربة المستخدم
-- ثيم الطيبات (RTL عربي + ألوان النظام + نظام تصميم أساسي).
-- تسجيل دخول / تسجيل بالبريد عبر Supabase.
-- شريط تبويب سفلي بـ ٣ تبويبات: **اليوم**، **السجل**، **الإعدادات**.
+### الأساس
+- ثيم الطيبات بعربية RTL وألوان النظام، **شريط تبويب سفلي بأربع تبويبات**:
+  **اليوم / السجل / الدليل / الإعدادات**.
+- تسجيل دخول وتسجيل بالبريد عبر Supabase.
 
-### تدفّق التحليل
-- تصوير وجبة (كاميرا أو معرض) → الوسيط على Supabase → تحليل Gemini.
-- **حفظ محلي تلقائي** للوجبة في SQLite (`sqflite`) بعد التحليل، مع كتابة الصورة على القرص.
-- شاشة تفاصيل الوجبة بإشارات الألوان (أخضر/أصفر/أحمر) + تنبيه الأصفر.
+### التحليل والسجل
+- تصوير → تحليل Gemini → **حفظ محلي تلقائي** (SQLite + ملف JPEG على القرص).
+- تفاصيل الوجبة بإشارات المناطق (أخضر/أصفر/أحمر) + تنبيه الأصفر.
+- شاشة اليوم تعرض حلقة متوسط الالتزام وشريطاً أفقياً لوجبات اليوم.
+- تبويب السجل: قائمة كل الوجبات + قسم **"كيف يتجاوب جسمك؟" (Body Intelligence)**.
 
-### السجل
-- قائمة كل الوجبات مرتّبة حسب التاريخ، مع صور مصغّرة، تسميات نسبية ("اليوم"، "أمس")،
-  وشارة النتيجة بلون نطاقها.
-- شاشة اليوم تعرض شريطاً أفقياً بصور وجبات اليوم وحلقة متوسط الالتزام محسوبة محلياً.
+### متابعة الجسم
+- تدفّق صفحات بـ ٥ أسئلة + بطاقة ملخّص في تفاصيل الوجبة.
 
-### متابعة الجسم بعد الوجبة (الميزة الموقّعة)
-- تدفّق صفحات بـ ٥ أسئلة: الشبع، الانتفاخ، الطاقة، النوم، التكرار.
-- يظهر كزر **"سجّل كيف شعرت بعد هذه الوجبة"** على تفاصيل الوجبة، وتظهر بطاقة موجزة
-  عند وجود متابعة (مع زر تعديل لإعادة فتح التدفّق).
-- يُحفظ في جدول `body_responses` بعلاقة ١-١ مع الوجبة.
+### Body Intelligence (جديد F3)
+- متوسط الشبع ومعدّل الانتفاخ آخر ٣٠ يوم.
+- أفضل ٣ وجبات راحة وأثقل ٣ وجبات (مع روابط لتفاصيلها).
+- توزيع تأثير الوجبات على النوم.
+- نسبة الإشارات في طبقك (آخر ٧ أيام / ٣٠ يوم).
 
-### الإعدادات وحذف الحساب
-- بريد المستخدم، **تسجيل الخروج**، و**حذف الحساب** (يستدعي دالة `delete-account` على
-  Supabase، ثم يمسح كل البيانات المحلية).
+### تبويب الدليل (جديد F3) — فهرس ذكي ٣×٣
+- ٠١ فلسفة النظام (٣ بطاقات)
+- ٠٢ القواعد الذهبية (٦ قواعد)
+- ٠٣ خريطة الأكل (المناطق الثلاث بكل مجموعاتها)
+- ٠٤ الممنوعات الصريحة
+- ٠٥ طبق الطيبات (الصيغة الأساسية)
+- ٠٦ برنامج ١٥ يوم (تفاعلي — انظر أدناه)
+- ٠٧ بنك الوجبات (تفاعلي — انظر أدناه)
+- ٠٨ التحضير الأسبوعي (٦ مهام)
+- ٠٩ الأخطاء الشائعة (٦ أخطاء وتصحيحها)
+
+### بنك الوجبات (جديد F3)
+- ٤ بنوك (فطار / غداء / عشاء / سناك) كل عنصر بـ:
+  نقطة منطقة، اسم، تركيب، وملاحظة. اضغط أي عنصر → ورقة تفاصيل +
+  زر "صوّر هذه الوجبة" يدخلك مباشرةً لتدفّق التحليل.
+
+### برنامج ١٥ يوم (جديد F3)
+- مقدمة + معاينة المراحل الأربع، زر "ابدأ البرنامج اليوم".
+- بعد البدء: حلقة تقدّم (X/١٥)، ٤ شارات مراحل، شريط أيام أفقي
+  (مكتمل/الحالي/قادم)، بطاقة اليوم بفوكسه + وجبة مقترحة + نصيحة.
+- زر "صوّر وجبة اليوم" يظهر فقط في اليوم الحالي.
+- "أوقف البرنامج" / "ابدأ من جديد" حسب الحالة. التقدّم يومي تلقائي
+  (يُحفظ تاريخ البدء في `SharedPreferences`).
+
+### "عندما تحتار" — FAB (جديد F3)
+- زر عائم 🤔 في زاوية شاشة اليوم → ورقة بـ ٤ بطاقات ملخّص ذهبية
+  (اختر / امنع / اعتدل / راقب) + ٣ إجراءات: افتح بنك الوجبات، اقرأ
+  القواعد الذهبية، صوّر ما أمامك.
+
+### الإعدادات
+- البريد، **تسجيل الخروج**، **حذف الحساب** (يستدعي دالة Supabase
+  `delete-account` ثم يمسح البيانات المحلية).
 
 ## ما هو **ليس** هنا بعد
 
 | المرحلة | الميزة |
 |---|---|
 | **F2.5** | تسجيل الدخول عبر Google و Apple (يحتاج روابط نظام) |
-| **F3** | تبويب الدليل بفهرس ٣×٣، بنك الوجبات، FAB "عندما تحتار"، برنامج ١٥ يوم، إحصائيات Body Intelligence |
 | **F4** | الاقتراحات الذكية والخطة الأسبوعية بـ Gemini (نُقل من فرع Android) |
+| **مستقبلاً** | إشعارات متابعة الجسم/البرنامج، ميزة الصيام، السجل اليومي بالتقويم |
 
 ## الإعداد لأول مرة
 
@@ -48,7 +76,7 @@ cd ~/anthropic-claude-/flutter_app
 # مرة واحدة: يولّد مجلدات android/ و ios/ بدون أن يلمس lib/ ولا pubspec.yaml
 flutter create --org ai.tayyibat --platforms=ios,android .
 
-# يحمّل الاعتمادات (يتضمّن الآن sqflite, path_provider, uuid)
+# يحمّل الاعتمادات (يتضمّن الآن sqflite + path_provider + uuid + shared_preferences)
 flutter pub get
 ```
 
@@ -62,7 +90,7 @@ flutter pub get
 <string>نطلب الوصول إلى صورك لاختيار صورة وجبة وتحليلها.</string>
 ```
 
-**Android — في `android/app/src/main/AndroidManifest.xml` داخل `<manifest>` قبل `<application>`:**
+**Android — في `android/app/src/main/AndroidManifest.xml` داخل `<manifest>`:**
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.CAMERA" />
@@ -71,53 +99,65 @@ flutter pub get
 ## التشغيل
 
 ```bash
-# iOS Simulator
+flutter pub get          # عند الترقية لـ F3 لأننا أضفنا shared_preferences
 flutter run -d "iPhone 16 Pro"
-
-# Android Emulator
+# أو
 flutter run -d emulator-5554
-
-# لائحة الأجهزة المتاحة
-flutter devices
 ```
 
-عند الترقية من F1 إلى F2 لا تنسَ `flutter pub get` — أضفنا اعتمادات `sqflite` و
-`path_provider` و `path` و `uuid`.
-
-## بنية المشروع (F2)
+## بنية المشروع (F3)
 
 ```
 flutter_app/lib/
-├── main.dart                 # Supabase + MultiProvider
-├── app.dart                  # auth-gated AppRoot
-├── shell/main_shell.dart     # شريط التبويب السفلي
-├── theme/theme.dart          # ألوان + ثيم Material 3
+├── main.dart                     # Supabase + MultiProvider
+├── app.dart                      # auth-gated AppRoot
+├── shell/main_shell.dart         # ٤ تبويبات
+├── theme/theme.dart
 ├── data/
-│   ├── database.dart         # افتتاح SQLite + المخطّط
-│   └── meal_repository.dart  # ChangeNotifier — حفظ/قراءة/حذف
+│   ├── database.dart             # SQLite + المخطّط
+│   ├── meal_repository.dart      # حفظ/قراءة/حذف
+│   ├── guide_data.dart           # كل بيانات الدليل ساكنة (نسخة 2)
+│   ├── meal_banks_data.dart      # ٤ بنوك بعناصرها
+│   └── program_data.dart         # ١٥ يوم + ٤ مراحل + ProgramStatus
 ├── models/
-│   ├── analysis_result.dart  # AnalysisResult + FoodItem + FoodZone
-│   ├── meal.dart             # وجبة محفوظة (مع imagePath + bodyResponse)
-│   └── body_response.dart    # BodyResponse + SleepImpact + WorthRepeating
+│   ├── analysis_result.dart      # AnalysisResult + FoodItem + FoodZone
+│   ├── meal.dart
+│   └── body_response.dart
 ├── services/
-│   ├── auth_service.dart     # ChangeNotifier فوق supabase_flutter
-│   ├── analyze_service.dart  # POST للوسيط (image_base64 + Authorization)
-│   └── account_service.dart  # حذف الحساب → مسح محلي
+│   ├── auth_service.dart
+│   ├── analyze_service.dart
+│   └── account_service.dart
 ├── widgets/
 │   ├── card_container.dart
 │   ├── primary_button.dart
 │   └── zone_badge.dart
 └── features/
     ├── auth/auth_screen.dart
-    ├── today/today_screen.dart       # حلقة المتوسط + شريط وجبات اليوم
+    ├── today/
+    │   ├── today_screen.dart            # حلقة + شريط + 🤔 FAB
+    │   └── when_in_doubt_screen.dart
     ├── capture/
-    │   ├── capture_screen.dart       # ImagePicker → analyze → save → push
-    │   └── result_screen.dart        # غلاف رفيع حول MealDetailScreen
+    │   ├── capture_screen.dart
+    │   └── result_screen.dart           # غلاف رفيع
     ├── history/
-    │   ├── history_screen.dart       # قائمة كل الوجبات
-    │   └── meal_detail_screen.dart   # تفاصيل + متابعة الجسم + حذف
+    │   ├── history_screen.dart          # قائمة + Body Intelligence
+    │   ├── meal_detail_screen.dart
+    │   └── body_intelligence_section.dart
     ├── body_response/
-    │   ├── body_response_flow.dart   # تدفّق ٥ أسئلة
-    │   └── body_response_card.dart   # بطاقة الملخّص
-    └── settings/settings_screen.dart # خروج + حذف الحساب
+    │   ├── body_response_flow.dart
+    │   └── body_response_card.dart
+    ├── guide/
+    │   ├── guide_screen.dart            # الفهرس ٣×٣
+    │   ├── guide_philosophy.dart        # ٠١
+    │   ├── guide_golden_rules.dart      # ٠٢
+    │   ├── guide_eating_map.dart        # ٠٣
+    │   ├── guide_forbidden.dart         # ٠٤
+    │   ├── guide_plate.dart             # ٠٥
+    │   ├── guide_program_wrapper.dart   # ٠٦ → ProgramScreen
+    │   ├── guide_meal_banks_wrapper.dart# ٠٧ → MealBanksScreen
+    │   ├── guide_weekly_prep.dart       # ٠٨
+    │   └── guide_mistakes.dart          # ٠٩
+    ├── meal_banks/meal_banks_screen.dart
+    ├── program/program_screen.dart
+    └── settings/settings_screen.dart
 ```

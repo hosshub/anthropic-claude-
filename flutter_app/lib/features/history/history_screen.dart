@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../data/meal_repository.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
+import 'body_intelligence_section.dart';
 import 'meal_detail_screen.dart';
 
 /// تبويب السجل — قائمة كل الوجبات المحفوظة.
@@ -29,11 +30,17 @@ class HistoryScreen extends StatelessWidget {
           if (meals.isEmpty) {
             return _emptyState(context);
           }
-          return ListView.separated(
+          return ListView(
             padding: const EdgeInsets.all(16),
-            itemBuilder: (_, i) => _MealRow(meal: meals[i]),
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemCount: meals.length,
+            children: [
+              for (final m in meals) ...[
+                _MealRow(meal: m),
+                const SizedBox(height: 10),
+              ],
+              const SizedBox(height: 8),
+              BodyIntelligenceSection(meals: meals),
+              const SizedBox(height: 12),
+            ],
           );
         },
       ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../features/guide/guide_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/today/today_screen.dart';
 import '../theme/theme.dart';
 
-/// إطار التطبيق الرئيسي بعد تسجيل الدخول — شريط تبويب سفلي بثلاث تبويبات.
+/// إطار التطبيق بعد تسجيل الدخول — شريط تبويب سفلي بأربع تبويبات.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -16,10 +17,10 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _index = 0;
 
-  // IndexedStack يحافظ على حالة كل تبويب (مثلاً قائمة السجل لا تُعاد بناءها كل مرة).
   final _screens = const [
     TodayScreen(),
     HistoryScreen(),
+    GuideScreen(),
     SettingsScreen(),
   ];
 
@@ -42,6 +43,11 @@ class _MainShellState extends State<MainShell> {
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today, color: TColors.primary),
             label: 'السجل',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book, color: TColors.primary),
+            label: 'الدليل',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
