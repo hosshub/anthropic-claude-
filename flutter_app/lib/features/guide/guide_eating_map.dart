@@ -3,180 +3,583 @@ import 'package:flutter/material.dart';
 import '../../data/guide_data.dart';
 import '../../models/analysis_result.dart';
 import '../../theme/theme.dart';
-import '../../widgets/card_container.dart';
 
-/// ٠٣ — خريطة الأكل: المناطق الثلاث بكل مجموعاتها.
+/// ٠٣ — خريطة الأكل. ثلاث مناطق في تبويبات، كل منطقة بهوية لونية وأيقونات
+/// فئات وعناصر على شكل شرائح.
 class GuideEatingMapScreen extends StatelessWidget {
   const GuideEatingMapScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('خريطة الأكل')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _zoneCard(FoodZone.green, GuideData.greenZone),
-          const SizedBox(height: 14),
-          _zoneCard(FoodZone.yellow, GuideData.yellowZone),
-          const SizedBox(height: 14),
-          _zoneCard(FoodZone.red, GuideData.redZone),
-        ],
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('خريطة الأكل'),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              color: TColors.background,
+              child: const TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: TColors.textPrimary,
+                unselectedLabelColor: TColors.textSecondary,
+                labelStyle: TextStyle(fontWeight: FontWeight.w700),
+                tabs: [
+                  Tab(child: _TabLabel(zone: FoodZone.green, label: 'أخضر')),
+                  Tab(child: _TabLabel(zone: FoodZone.yellow, label: 'أصفر')),
+                  Tab(child: _TabLabel(zone: FoodZone.red, label: 'أحمر')),
+                ],
+              ),
+            ),
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            _ZonePage(zone: FoodZone.green, data: GuideData.greenZone),
+            _ZonePage(zone: FoodZone.yellow, data: GuideData.yellowZone),
+            _ZonePage(zone: FoodZone.red, data: GuideData.redZone),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Color _zoneColor(FoodZone zone) {
+// ---------------------------------------------------------------------------
+// Tab label with colored dot
+// ---------------------------------------------------------------------------
+
+class _TabLabel extends StatelessWidget {
+  final FoodZone zone;
+  final String label;
+  const _TabLabel({required this.zone, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: _zoneColor(zone),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Zone page (hero header + groups)
+// ---------------------------------------------------------------------------
+
+class _ZonePage extends StatelessWidget {
+  final FoodZone zone;
+  final ZoneData data;
+  const _ZonePage({required this.zone, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _zoneColor(zone);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        _ZoneHero(zone: zone, data: data, color: color),
+        const SizedBox(height: 14),
+        for (int i = 0; i < data.groups.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _GroupCard(
+            zone: zone,
+            group: data.groups[i],
+            color: color,
+            index: i,
+          ),
+        ],
+        const SizedBox(height: 18),
+        _Footer(zone: zone),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Hero card at top of each zone
+// ---------------------------------------------------------------------------
+
+class _ZoneHero extends StatelessWidget {
+  final FoodZone zone;
+  final ZoneData data;
+  final Color color;
+  const _ZoneHero({
+    required this.zone,
+    required this.data,
+    required this.color,
+  });
+
+  IconData get _icon {
     switch (zone) {
       case FoodZone.green:
-        return TColors.zoneGreen;
+        return Icons.check_circle;
       case FoodZone.yellow:
-        return TColors.zoneYellow;
+        return Icons.warning_amber_rounded;
       case FoodZone.red:
-        return TColors.zoneRed;
+        return Icons.block;
     }
   }
 
-  Widget _zoneCard(FoodZone zone, ZoneData data) {
-    final c = _zoneColor(zone);
-    return CardContainer(
+  String get _verdict {
+    switch (zone) {
+      case FoodZone.green:
+        return 'كُل بثقة';
+      case FoodZone.yellow:
+        return 'باعتدال';
+      case FoodZone.red:
+        return 'تجنّب';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+          colors: [
+            color.withOpacity(0.18),
+            color.withOpacity(0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.30)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Icon(_icon, color: Colors.white, size: 22),
               ),
-              const SizedBox(width: 8),
-              Text(
-                data.labelAr,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: c,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.labelAr,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                        height: 1.1,
+                      ),
+                    ),
+                    Text(
+                      _verdict,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: color.withOpacity(0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 14),
           Text(
             data.subtitleAr,
             style: const TextStyle(
-              color: TColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          if (data.watchwordAr != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              data.watchwordAr!,
-              style: const TextStyle(
-                color: TColors.textSecondary,
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          for (final group in data.groups) ...[
-            _groupRow(group, c),
-            const SizedBox(height: 10),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _groupRow(ZoneGroup group, Color zoneColor) {
-    if (group.categoryAr != null && group.items != null) {
-      // مجموعة فئة (خضراء/حمراء).
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            group.categoryAr!,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              height: 1.6,
               color: TColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
-          for (final item in group.items!)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+          if (data.watchwordAr != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: zoneColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+                  Icon(Icons.tips_and_updates, size: 16, color: color),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      item,
-                      style: const TextStyle(fontSize: 14),
+                      data.watchwordAr!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: TColors.textPrimary,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+          ],
         ],
-      );
-    }
-    // مجموعة عنصر (صفراء).
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Group card — different layout for category-style vs item-style
+// ---------------------------------------------------------------------------
+
+class _GroupCard extends StatelessWidget {
+  final FoodZone zone;
+  final ZoneGroup group;
+  final Color color;
+  final int index;
+  const _GroupCard({
+    required this.zone,
+    required this.group,
+    required this.color,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isCategoryStyle =
+        group.categoryAr != null && group.items != null;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: TColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: TColors.cardShadow,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: isCategoryStyle
+          ? _CategoryStyle(
+              zone: zone,
+              categoryAr: group.categoryAr!,
+              items: group.items!,
+              color: color,
+              index: index,
+            )
+          : _ItemStyle(
+              itemAr: group.itemAr ?? '',
+              examplesAr: group.examplesAr,
+              guidanceAr: group.guidanceAr,
+              color: color,
+              index: index,
+            ),
+    );
+  }
+}
+
+class _CategoryStyle extends StatelessWidget {
+  final FoodZone zone;
+  final String categoryAr;
+  final List<String> items;
+  final Color color;
+  final int index;
+  const _CategoryStyle({
+    required this.zone,
+    required this.categoryAr,
+    required this.items,
+    required this.color,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = _categoryIcon(zone, categoryAr);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Container(
-              width: 8,
-              height: 8,
-              decoration:
-                  BoxDecoration(color: zoneColor, shape: BoxShape.circle),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                group.itemAr ?? '',
+                categoryAr,
                 style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: TColors.textPrimary,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Text(
+                '${items.length}',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
                 ),
               ),
             ),
           ],
         ),
-        if (group.examplesAr != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            'أمثلة: ${group.examplesAr!}',
-            style: const TextStyle(
-              color: TColors.textSecondary,
-              fontSize: 12,
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final item in items) _ItemChip(label: item, color: color),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ItemStyle extends StatelessWidget {
+  final String itemAr;
+  final String? examplesAr;
+  final String? guidanceAr;
+  final Color color;
+  final int index;
+  const _ItemStyle({
+    required this.itemAr,
+    required this.examplesAr,
+    required this.guidanceAr,
+    required this.color,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(_yellowItemIcon(itemAr), color: color, size: 20),
             ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                itemAr,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: TColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (examplesAr != null) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final ex in examplesAr!.split('،').map((s) => s.trim()))
+                if (ex.isNotEmpty) _ItemChip(label: ex, color: color),
+            ],
           ),
         ],
-        if (group.guidanceAr != null) ...[
-          const SizedBox(height: 2),
-          Text(
-            group.guidanceAr!,
-            style: const TextStyle(
-              color: TColors.textSecondary,
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
+        if (guidanceAr != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lightbulb_outline, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    guidanceAr!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.5,
+                      color: color.withOpacity(0.95),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ],
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Item chip
+// ---------------------------------------------------------------------------
+
+class _ItemChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _ItemChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(40),
+        border: Border.all(color: color.withOpacity(0.25), width: 1),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          color: color.withOpacity(0.95),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Footer disclaimer per zone
+// ---------------------------------------------------------------------------
+
+class _Footer extends StatelessWidget {
+  final FoodZone zone;
+  const _Footer({required this.zone});
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+    switch (zone) {
+      case FoodZone.green:
+        text = 'هذه المنطقة هي الأساس. لا حدّ على الكميات إلا الشبع المريح.';
+        break;
+      case FoodZone.yellow:
+        text =
+            'العلامة الصفراء ليست تحريماً — هي دعوة للانتباه. راقب جسمك وقلّل عند الحاجة.';
+        break;
+      case FoodZone.red:
+        text =
+            'هذه المنطقة ممنوعة في هذا النظام. عند الشك بمكوّن، افتح "عندما تحتار" من شاشة اليوم.';
+        break;
+    }
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: TColors.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline,
+              size: 16, color: TColors.textSecondary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.6,
+                color: TColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+Color _zoneColor(FoodZone zone) {
+  switch (zone) {
+    case FoodZone.green:
+      return TColors.zoneGreen;
+    case FoodZone.yellow:
+      return TColors.zoneYellow;
+    case FoodZone.red:
+      return TColors.zoneRed;
+  }
+}
+
+IconData _categoryIcon(FoodZone zone, String categoryAr) {
+  // Green zone categories
+  if (categoryAr.contains('النشويات')) return Icons.rice_bowl;
+  if (categoryAr.contains('البروتينات')) return Icons.set_meal;
+  if (categoryAr.contains('الدهون')) return Icons.opacity;
+  if (categoryAr.contains('إضافات بسيطة')) return Icons.spa;
+  if (categoryAr.contains('مشروبات')) return Icons.local_drink;
+  // Red zone categories
+  if (categoryAr.contains('الدواجن') || categoryAr.contains('البيض')) {
+    return Icons.egg_alt;
+  }
+  if (categoryAr.contains('الحليب')) return Icons.local_cafe;
+  if (categoryAr.contains('البقوليات')) return Icons.grain;
+  if (categoryAr.contains('فائقة التصنيع')) return Icons.fastfood;
+  if (categoryAr.contains('الزيوت الصناعية')) return Icons.water_drop;
+  if (categoryAr.contains('الإضافات الجاهزة')) return Icons.science;
+  return Icons.restaurant_menu;
+}
+
+IconData _yellowItemIcon(String itemAr) {
+  if (itemAr.contains('الأجبان')) return Icons.bakery_dining;
+  if (itemAr.contains('الفواكه')) return Icons.apple;
+  if (itemAr.contains('العسل') || itemAr.contains('التمر')) {
+    return Icons.eco;
+  }
+  if (itemAr.contains('القهوة')) return Icons.coffee;
+  if (itemAr.contains('الشاي')) return Icons.emoji_food_beverage;
+  return Icons.restaurant;
 }
