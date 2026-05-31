@@ -89,15 +89,18 @@ class AuthService extends ChangeNotifier {
   // Google (تدفّق متصفح + رابط عائد)
   // ---------------------------------------------------------------------------
 
-  /// يفتح متصفح النظام لتدفّق Google OAuth. عند العودة يلتقط main.dart الرابط
-  /// `tayyibat://login-callback?code=…` ويسلّمه إلى getSessionFromUrl، فتقفز
-  /// الجلسة في onAuthStateChange.
+  /// يفتح متصفّحاً داخل التطبيق (SFSafariViewController على iOS،
+  /// Chrome Custom Tabs على Android) فيُسجّل المستخدم دخوله في Google ثم
+  /// يُغلق نفسه تلقائياً عند إعادة التوجيه إلى `tayyibat://login-callback`
+  /// لأن iOS/Android يلتقطان مخطّط tayyibat الذي سجّلناه. ذلك يُعيد التطبيق
+  /// للواجهة بسلاسة، فيلتقط main.dart الرابط ويُسلّمه إلى getSessionFromUrl.
   Future<bool> signInWithGoogle() async {
     _start();
     try {
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: AppConfig.oauthRedirect,
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
       // لا ننهي _busy هنا — onAuthStateChange سيفعل ذلك بعد عودة الرابط.
       return true;

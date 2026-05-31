@@ -7,6 +7,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../config.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
+import '../../widgets/google_sign_in_button.dart';
 import '../../widgets/primary_button.dart';
 
 enum _AuthMode { signIn, signUp }
@@ -203,23 +204,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
+                    GoogleSignInButton(
+                      loading: auth.isBusy,
                       onPressed: auth.isBusy
                           ? null
-                          : () => context.read<AuthService>().signInWithGoogle(),
-                      icon: const Icon(Icons.public, color: TColors.primary),
-                      label: const Text('المتابعة عبر Google'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: TColors.primary,
-                        minimumSize: const Size.fromHeight(50),
-                        side: const BorderSide(
-                          color: TColors.primary,
-                          width: 1.3,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
+                          : () =>
+                              context.read<AuthService>().signInWithGoogle(),
                     ),
                     if (AppConfig.appleSignInEnabled && Platform.isIOS) ...[
                       const SizedBox(height: 10),

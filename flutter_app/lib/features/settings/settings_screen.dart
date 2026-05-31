@@ -49,11 +49,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await context.read<AccountService>().deleteAccount();
+      if (!mounted) return;
+      // نجح الحذف. أبلغ المستخدم بصراحة أن أي تسجيل جديد يُنشئ حساباً مختلفاً
+      // حتى لو استخدم البريد نفسه — وإلا يحسب أن الحذف لم يعمل.
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('تم حذف حسابك'),
+          content: const Text(
+            'تم محو حسابك وبياناته من الخادم نهائياً.\n\n'
+            'لو سجّلت دخولاً مجدداً ببريد Google أو Apple نفسه، فسيُنشأ '
+            'حساب جديد تماماً بلا أي بيانات سابقة.',
+            style: TextStyle(height: 1.7),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('حسناً'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text('تعذّر حذف الحساب: ${e is AccountException ? e.message : e}'),
+          duration: const Duration(seconds: 6),
+          content: Text(
+            'تعذّر حذف الحساب: ${e is AccountException ? e.message : e}',
+          ),
         ),
       );
     } finally {
