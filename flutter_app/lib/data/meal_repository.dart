@@ -288,6 +288,10 @@ class MealRepository extends ChangeNotifier {
     await db.delete('food_items');
     await db.delete('body_responses');
     await db.delete('meals');
+    // امسح كذلك يوميات الصيام (تنظيف شامل عند حذف الحساب).
+    try {
+      await db.delete('fasting_days');
+    } catch (_) {/* الجدول قد لا يكون موجوداً في تثبيت أقدم */}
     notifyListeners();
   }
 }

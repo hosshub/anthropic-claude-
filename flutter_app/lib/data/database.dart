@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 /// قاعدة بيانات SQLite محلية لوجبات الطيبات.
 class TayyibatDatabase {
   TayyibatDatabase._();
-  static const _schemaVersion = 1;
+  static const _schemaVersion = 2;
   static Database? _db;
 
   /// يفتح قاعدة البيانات (مرة واحدة) ويعيد نفس الكائن في كل استدعاء لاحق.
@@ -20,8 +20,24 @@ class TayyibatDatabase {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return _db!;
+  }
+
+  static Future<void> _onUpgrade(Database db, int from, int to) async {
+    if (from < 2) await _createFastingTable(db);
+  }
+
+  static Future<void> _createFastingTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE fasting_days (
+        date_key   TEXT PRIMARY KEY,
+        logged_at  INTEGER NOT NULL,
+        kind       TEXT NOT NULL,
+        notes      TEXT
+      );
+    ''');
   }
 
   static Future<void> close() async {
@@ -80,5 +96,6 @@ class TayyibatDatabase {
     await db.execute(
       'CREATE INDEX idx_food_items_meal ON food_items(meal_id, item_order)',
     );
+    await _createFastingTable(db);
   }
 }

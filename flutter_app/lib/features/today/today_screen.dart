@@ -10,6 +10,7 @@ import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
+import '../fasting/fasting_screen.dart';
 import '../history/meal_detail_screen.dart';
 import '../suggestions/suggestions_screen.dart';
 import 'when_in_doubt_screen.dart';
@@ -93,24 +94,58 @@ class TodayScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 10),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SuggestionsScreen(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SuggestionsScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: const Text('اقتراحات'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: TColors.primary,
+                            minimumSize: const Size.fromHeight(48),
+                            side: const BorderSide(
+                              color: TColors.primary,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('اقتراحات ذكية'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: TColors.primary,
-                      minimumSize: const Size.fromHeight(48),
-                      side: const BorderSide(color: TColors.primary, width: 1.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const FastingScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.brightness_2, size: 18),
+                          label: const Text('صيام'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: TColors.primary,
+                            minimumSize: const Size.fromHeight(48),
+                            side: const BorderSide(
+                              color: TColors.primary,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (meals.isNotEmpty) ...[
                     const SizedBox(height: 20),
