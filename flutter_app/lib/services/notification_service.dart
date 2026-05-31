@@ -1,0 +1,304 @@
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
+
+import '../data/tips_data.dart';
+
+/// أنواع الإشعارات. كل نوع له معرف رقمي ثابت وتوقيت افتراضي.
+enum NotifKind { morningTip, lunchReminder, eveningTip, endOfDayLog, weeklyPrep }
+
+extension NotifKindMeta on NotifKind {
+  int get id {
+    switch (this) {
+      case NotifKind.morningTip:
+        return 1001;
+      case NotifKind.lunchReminder:
+        return 1002;
+      case NotifKind.eveningTip:
+        return 1003;
+      case NotifKind.endOfDayLog:
+        return 1004;
+      case NotifKind.weeklyPrep:
+        return 1005;
+    }
+  }
+
+  String get labelAr {
+    switch (this) {
+      case NotifKind.morningTip:
+        return 'نصيحة الصباح';
+      case NotifKind.lunchReminder:
+        return 'تذكير الغداء';
+      case NotifKind.eveningTip:
+        return 'نصيحة المساء';
+      case NotifKind.endOfDayLog:
+        return 'سجّل وجباتك';
+      case NotifKind.weeklyPrep:
+        return 'تحضير الأسبوع';
+    }
+  }
+
+  String get descriptionAr {
+    switch (this) {
+      case NotifKind.morningTip:
+        return 'تذكير صباحي بنصيحة من نظام الطيبات.';
+      case NotifKind.lunchReminder:
+        return 'تذكير بوقت الغداء وقاعدة ذهبية تختلف يومياً.';
+      case NotifKind.eveningTip:
+        return 'نصيحة المساء قبل العشاء.';
+      case NotifKind.endOfDayLog:
+        return 'تذكير بتسجيل ما أكلت اليوم.';
+      case NotifKind.weeklyPrep:
+        return 'كل سبت صباحاً — قائمة تحضير الأسبوع.';
+    }
+  }
+
+  /// الوقت الافتراضي (٢٤ ساعة).
+  /// الإشعار الأسبوعي يستخدم weekday=6 (السبت) بالإضافة للوقت.
+  (int hour, int minute) get defaultTime {
+    switch (this) {
+      case NotifKind.morningTip:
+        return (8, 0);
+      case NotifKind.lunchReminder:
+        return (13, 0);
+      case NotifKind.eveningTip:
+        return (18, 0);
+      case NotifKind.endOfDayLog:
+        return (21, 30);
+      case NotifKind.weeklyPrep:
+        return (8, 0);
+    }
+  }
+
+  TipSlot get tipSlot {
+    switch (this) {
+      case NotifKind.morningTip:
+        return TipSlot.morning;
+      case NotifKind.lunchReminder:
+        return TipSlot.afternoon;
+      case NotifKind.eveningTip:
+        return TipSlot.evening;
+      case NotifKind.endOfDayLog:
+        return TipSlot.general;
+      case NotifKind.weeklyPrep:
+        return TipSlot.prep;
+    }
+  }
+}
+
+/// خدمة الإشعارات المحلية. تشتغل كـ ChangeNotifier حتى تعيد شاشة الإعدادات
+/// رسم نفسها فور تغير الجلسة (تشغيل/إيقاف). تختار نصيحة جديدة عند كل جدولة
+/// مع تجنّب آخر ١٠ نصائح ظهرت لكل تصنيف.
+class NotificationService extends ChangeNotifier {
+  static const String _kEnabled = 'notif_enabled_';
+  static const String _kRecent = 'notif_recent_'; // ذيل آخر النصائح لكل تصنيف
+
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+  final Random _rng = Random();
+
+  bool _ready = false;
+  bool _permissionGranted = false;
+  final Map<NotifKind, bool> _enabled = {};
+
+  bool get isReady => _ready;
+  bool get permissionGranted => _permissionGranted;
+  bool enabled(NotifKind k) => _enabled[k] ?? false;
+
+  /// تشغيل النوع جميعاً معاً.
+  bool get anyEnabled => _enabled.values.any((v) => v);
+
+  Future<void> initialize() async {
+    if (_ready) return;
+    tzdata.initializeTimeZones();
+    _setLocalTimezoneBestEffort();
+
+    const initSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
+    );
+    await _plugin.initialize(initSettings);
+
+    final prefs = await SharedPreferences.getInstance();
+    for (final k in NotifKind.values) {
+      _enabled[k] = prefs.getBool('$_kEnabled${k.name}') ?? false;
+    }
+    _permissionGranted = await _checkPermission();
+    _ready = true;
+    notifyListeners();
+  }
+
+  void _setLocalTimezoneBestEffort() {
+    final offsetHours = DateTime.now().timeZoneOffset.inHours;
+    String name;
+    switch (offsetHours) {
+      case 2:
+        name = 'Africa/Cairo';
+        break;
+      case 3:
+        name = 'Asia/Riyadh';
+        break;
+      case 4:
+        name = 'Asia/Dubai';
+        break;
+      default:
+        // Etc/GMT signs are inverted from the offset.
+        name = offsetHours >= 0
+            ? 'Etc/GMT-$offsetHours'
+            : 'Etc/GMT+${offsetHours.abs()}';
+    }
+    try {
+      tz.setLocalLocation(tz.getLocation(name));
+    } catch (_) {
+      tz.setLocalLocation(tz.UTC);
+    }
+  }
+
+  /// يطلب الإذن من النظام (مرة واحدة). يرجع true إن أعطاه المستخدم.
+  Future<bool> requestPermission() async {
+    final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (iosPlugin != null) {
+      final granted = await iosPlugin.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      _permissionGranted = granted ?? false;
+    }
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      final granted = await androidPlugin.requestNotificationsPermission();
+      _permissionGranted = granted ?? _permissionGranted;
+    }
+    notifyListeners();
+    return _permissionGranted;
+  }
+
+  Future<bool> _checkPermission() async {
+    final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (iosPlugin != null) {
+      final perm = await iosPlugin.checkPermissions();
+      if (perm != null) return perm.isEnabled;
+    }
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      return enabled ?? false;
+    }
+    return false;
+  }
+
+  /// شغّل/أوقف نوعاً واحداً. يحفظ التفضيل ويعيد جدولة الإشعار.
+  Future<void> setEnabled(NotifKind kind, bool on) async {
+    _enabled[kind] = on;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('$_kEnabled${kind.name}', on);
+    if (on) {
+      if (!_permissionGranted) {
+        await requestPermission();
+      }
+      await _schedule(kind);
+    } else {
+      await _plugin.cancel(kind.id);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _schedule(NotifKind kind) async {
+    final (h, m) = kind.defaultTime;
+    final now = tz.TZDateTime.now(tz.local);
+    var when = tz.TZDateTime(tz.local, now.year, now.month, now.day, h, m);
+    if (when.isBefore(now)) {
+      when = when.add(const Duration(days: 1));
+    }
+    // إشعار التحضير: انتقل لأقرب سبت في الموعد.
+    if (kind == NotifKind.weeklyPrep) {
+      while (when.weekday != DateTime.saturday) {
+        when = when.add(const Duration(days: 1));
+      }
+    }
+
+    final tip = await _pickTip(kind.tipSlot);
+    final body = tip?.textAr ?? kind.descriptionAr;
+
+    await _plugin.zonedSchedule(
+      kind.id,
+      kind.labelAr,
+      body,
+      when,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'tayyibat_${kind.name}',
+          kind.labelAr,
+          channelDescription: kind.descriptionAr,
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: kind == NotifKind.weeklyPrep
+          ? DateTimeComponents.dayOfWeekAndTime
+          : DateTimeComponents.time,
+    );
+  }
+
+  /// يختار نصيحة لم تظهر في آخر ١٠ مرات (لكل تصنيف).
+  Future<Tip?> _pickTip(TipSlot slot) async {
+    final pool = TipsData.bySlot(slot);
+    if (pool.isEmpty) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final recent = prefs.getStringList('$_kRecent${slot.name}') ?? const [];
+    final fresh = pool.where((t) => !recent.contains(t.id)).toList();
+    final pick = fresh.isNotEmpty
+        ? fresh[_rng.nextInt(fresh.length)]
+        : pool[_rng.nextInt(pool.length)];
+    final newRecent = [...recent, pick.id];
+    while (newRecent.length > 10) {
+      newRecent.removeAt(0);
+    }
+    await prefs.setStringList('$_kRecent${slot.name}', newRecent);
+    return pick;
+  }
+
+  /// إلغاء كل ما هو مجدول (يفيد عند تسجيل الخروج).
+  Future<void> cancelAll() async {
+    await _plugin.cancelAll();
+  }
+
+  /// إشعار اختباري لمرة واحدة بعد ٥ ثوانٍ — مفيد للتأكد من إذن النظام.
+  Future<void> showTest() async {
+    if (!_permissionGranted) await requestPermission();
+    if (!_permissionGranted) return;
+    final when = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+    await _plugin.zonedSchedule(
+      9999,
+      'الطيبات',
+      'هذا إشعار اختباري. لو وصلك معناه التذكيرات شغّالة.',
+      when,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'tayyibat_test',
+          'اختبار',
+          channelDescription: 'إشعار اختباري لمرة واحدة',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+}

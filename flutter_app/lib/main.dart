@@ -12,6 +12,7 @@ import 'config.dart';
 import 'data/meal_repository.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
 
@@ -66,6 +67,9 @@ class TayyibatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => OnboardingService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
+        ChangeNotifierProvider(
+          create: (_) => NotificationService()..initialize(),
+        ),
         ProxyProvider<MealRepository, AccountService>(
           update: (_, repo, __) => AccountService(repo),
         ),

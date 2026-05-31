@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../onboarding/disclaimer_screen.dart';
+import 'notification_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -157,6 +158,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         minimumSize: const Size.fromHeight(48),
                         side: const BorderSide(
                           color: TColors.khabith,
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              CardContainer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'التذكيرات',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: TColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const NotificationSettingsScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.notifications_outlined),
+                      label: const Text('إعدادات الإشعارات'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: TColors.primary,
+                        alignment: AlignmentDirectional.centerStart,
+                        minimumSize: const Size.fromHeight(48),
+                        side: const BorderSide(
+                          color: TColors.primary,
                           width: 1.2,
                         ),
                       ),
