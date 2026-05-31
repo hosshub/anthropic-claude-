@@ -47,7 +47,7 @@ void _wireOAuthDeepLinks() {
   }
 
   // إقلاع بارد — لو فُتح التطبيق بسبب رابط.
-  appLinks.getInitialAppLink().then((uri) {
+  appLinks.getInitialLink().then((uri) {
     if (uri != null) handle(uri);
   });
 
