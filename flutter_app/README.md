@@ -1,4 +1,4 @@
-# الطيبات — نسخة Flutter (Phase F4)
+# الطيبات — نسخة Flutter (Phase F2.5 + F4)
 
 نسخة Flutter من تطبيق الطيبات تعمل على **iOS و Android** من قاعدة كود واحدة،
 باستخدام نفس الواجهة الخلفية (Supabase + Gemini Edge Function) المستخدمة في نسخة SwiftUI.
@@ -9,6 +9,9 @@
 - ثيم الطيبات بعربية RTL وألوان النظام، **شريط تبويب سفلي بأربع تبويبات**:
   **اليوم / السجل / الدليل / الإعدادات**.
 - تسجيل دخول وتسجيل بالبريد عبر Supabase.
+- **تسجيل دخول عبر Google** (تدفّق OAuth بمتصفّح + رابط عائد `tayyibat://login-callback`).
+- **تسجيل دخول عبر Apple** (أصلي على iOS، معطّل افتراضياً حتى عضوية Apple Developer
+  ثم يُفعّل بقلب `appleSignInEnabled` في `lib/config.dart` إلى `true`).
 
 ### التحليل والسجل
 - تصوير → تحليل Gemini → **حفظ محلي تلقائي** (SQLite + ملف JPEG على القرص).
@@ -70,7 +73,6 @@
 
 | المرحلة | الميزة |
 |---|---|
-| **F2.5** | تسجيل الدخول عبر Google و Apple (يحتاج روابط نظام) |
 | **مستقبلاً** | إشعارات متابعة الجسم/البرنامج، ميزة الصيام، السجل اليومي بالتقويم |
 
 ## الإعداد لأول مرة
@@ -95,13 +97,39 @@ flutter pub get
 <string>نستخدم الكاميرا لتصوير وجباتك وتحليل مدى توافقها مع نظام الطيبات.</string>
 <key>NSPhotoLibraryUsageDescription</key>
 <string>نطلب الوصول إلى صورك لاختيار صورة وجبة وتحليلها.</string>
+
+<!-- مخطّط tayyibat:// لرابط عودة OAuth (Google) -->
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLName</key>
+    <string>ai.tayyibat.oauth</string>
+    <key>CFBundleURLSchemes</key>
+    <array><string>tayyibat</string></array>
+  </dict>
+</array>
 ```
 
-**Android — في `android/app/src/main/AndroidManifest.xml` داخل `<manifest>`:**
+**Android — في `android/app/src/main/AndroidManifest.xml`:**
 ```xml
+<!-- داخل <manifest> -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.CAMERA" />
+
+<!-- داخل <activity android:name=".MainActivity"> -->
+<intent-filter android:autoVerify="false">
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="tayyibat" android:host="login-callback" />
+</intent-filter>
 ```
+
+**Sign in with Apple (بعد عضوية Apple Developer فقط):**
+1. في Xcode: target → Signing & Capabilities → + Capability → Sign in with Apple.
+2. في Supabase → Authentication → Providers → Apple → فعّل، وأضف معرّف الحزمة
+   (مثلاً `ai.tayyibat.tayyibat`) في حقل Client IDs.
+3. في `lib/config.dart` بدّل `appleSignInEnabled` إلى `true`.
 
 ## التشغيل
 

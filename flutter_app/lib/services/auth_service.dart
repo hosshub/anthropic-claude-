@@ -1,7 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../config.dart';
 
 /// خدمة المصادقة فوق supabase_flutter. تعمل كـ ChangeNotifier حتى تُعيد الواجهات
 /// رسم نفسها عند تغيّر الجلسة (تسجيل دخول/خروج، تأكيد بريد… إلخ).
@@ -15,10 +21,11 @@ class AuthService extends ChangeNotifier {
   String? _info;
 
   AuthService() {
-    _sub = _client.auth.onAuthStateChange.listen((_) {
+    _sub = _client.auth.onAuthStateChange.listen((state) {
+      // أي تغيير في الجلسة (signedIn, signedOut, …) ينهي حالة العمل ويُحدّث الواجهات.
+      _busy = false;
       notifyListeners();
     });
-    // supabase_flutter يستعيد الجلسة من التخزين الآمن تلقائياً عند بدء التشغيل.
     _restoring = false;
   }
 
@@ -34,6 +41,10 @@ class AuthService extends ChangeNotifier {
   String? get email => _client.auth.currentUser?.email;
   String? get error => _error;
   String? get info => _info;
+
+  // ---------------------------------------------------------------------------
+  // البريد وكلمة المرور
+  // ---------------------------------------------------------------------------
 
   Future<bool> signIn({required String email, required String password}) async {
     _start();
@@ -61,7 +72,6 @@ class AuthService extends ChangeNotifier {
         password: password,
       );
       if (res.session == null) {
-        // التأكيد عبر البريد مُفعّل في Supabase.
         _info = 'أنشأنا حسابك. تحقّق من بريدك لتأكيد الحساب، ثم سجّل الدخول.';
       }
       _finish();
@@ -75,12 +85,84 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Google (تدفّق متصفح + رابط عائد)
+  // ---------------------------------------------------------------------------
+
+  /// يفتح متصفح النظام لتدفّق Google OAuth. عند العودة يلتقط main.dart الرابط
+  /// `tayyibat://login-callback?code=…` ويسلّمه إلى getSessionFromUrl، فتقفز
+  /// الجلسة في onAuthStateChange.
+  Future<bool> signInWithGoogle() async {
+    _start();
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: AppConfig.oauthRedirect,
+      );
+      // لا ننهي _busy هنا — onAuthStateChange سيفعل ذلك بعد عودة الرابط.
+      return true;
+    } on AuthException catch (e) {
+      _fail(e.message);
+      return false;
+    } catch (e) {
+      _fail(e.toString());
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Apple (أصلي على iOS — يتطلب عضوية Apple Developer)
+  // ---------------------------------------------------------------------------
+
+  /// يستخدم Sign in with Apple الأصلي ثم يبادل id_token مع Supabase.
+  /// يعمل فقط بعد تفعيل قدرة Sign in with Apple وضبط مزوّد Apple في Supabase.
+  Future<bool> signInWithApple() async {
+    _start();
+    try {
+      final rawNonce = _generateNonce();
+      final hashedNonce = _sha256(rawNonce);
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        _fail('تعذّر الحصول على بيانات Apple.');
+        return false;
+      }
+
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+      _finish();
+      return true;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      _fail(e.message.isEmpty ? 'أُلغي تسجيل الدخول.' : e.message);
+      return false;
+    } on AuthException catch (e) {
+      _fail(e.message);
+      return false;
+    } catch (e) {
+      _fail(e.toString());
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // تسجيل الخروج
+  // ---------------------------------------------------------------------------
+
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
-    } catch (_) {
-      // نمضي قُدُماً بحذف الجلسة محلياً حتى لو فشلت دعوة الخادم.
-    }
+    } catch (_) {/* نمضي قُدُماً بحذف الجلسة محلياً حتى لو فشلت دعوة الخادم. */}
     notifyListeners();
   }
 
@@ -89,6 +171,10 @@ class AuthService extends ChangeNotifier {
     _info = null;
     notifyListeners();
   }
+
+  // ---------------------------------------------------------------------------
+  // داخلية
+  // ---------------------------------------------------------------------------
 
   void _start() {
     _busy = true;
@@ -106,5 +192,20 @@ class AuthService extends ChangeNotifier {
     _busy = false;
     _error = message;
     notifyListeners();
+  }
+
+  static String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
+  }
+
+  static String _sha256(String input) {
+    final bytes = utf8.encode(input);
+    return sha256.convert(bytes).toString();
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -5,15 +8,11 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'config.dart';
 import 'data/meal_repository.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
 import 'theme/theme.dart';
-
-// نفس قيم AppConfig.swift في نسخة SwiftUI.
-const String _supabaseUrl = 'https://cvznuwvwhnujdgfojmsb.supabase.co';
-const String _supabaseAnonKey =
-    'sb_publishable_LecfzCczF2tn3w_x7mtbyQ_Ug-Dee-X';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,11 +21,38 @@ Future<void> main() async {
   ]);
 
   await Supabase.initialize(
-    url: _supabaseUrl,
-    anonKey: _supabaseAnonKey,
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
   );
 
+  // يلتقط روابط OAuth العائدة (tayyibat://login-callback?code=…) ويسلّمها لـ Supabase.
+  _wireOAuthDeepLinks();
+
   runApp(const TayyibatApp());
+}
+
+void _wireOAuthDeepLinks() {
+  final appLinks = AppLinks();
+
+  Future<void> handle(Uri uri) async {
+    if (uri.scheme != 'tayyibat') return;
+    try {
+      await Supabase.instance.client.auth.getSessionFromUrl(uri);
+    } catch (_) {
+      // تجاهل: إن لم يكن للرابط علاقة بـ OAuth أو فشل التبادل، يبقى المستخدم على الشاشة الحالية.
+    }
+  }
+
+  // إقلاع بارد — لو فُتح التطبيق بسبب رابط.
+  appLinks.getInitialAppLink().then((uri) {
+    if (uri != null) handle(uri);
+  });
+
+  // إقلاع دافئ — لو وصل الرابط والتطبيق يعمل.
+  appLinks.uriLinkStream.listen((uri) => handle(uri));
 }
 
 class TayyibatApp extends StatelessWidget {
@@ -38,7 +64,6 @@ class TayyibatApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
-        // AccountService يعتمد على MealRepository (لمسح البيانات المحلية بعد الحذف).
         ProxyProvider<MealRepository, AccountService>(
           update: (_, repo, __) => AccountService(repo),
         ),

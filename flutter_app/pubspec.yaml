@@ -30,6 +30,11 @@ dependencies:
   # إدارة الحالة
   provider: ^6.1.2
 
+  # المصادقة عبر مزوّدي OAuth
+  app_links: ^6.3.2          # يلتقط روابط الـ OAuth العائدة (tayyibat://login-callback)
+  sign_in_with_apple: ^6.1.4 # تسجيل الدخول الأصلي عبر Apple (iOS؛ معطّل افتراضياً حتى عضوية Developer)
+  crypto: ^3.0.5             # SHA-256 لتوليد nonce لـ Apple
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

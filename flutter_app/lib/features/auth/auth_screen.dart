@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../config.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
@@ -181,15 +185,53 @@ class _AuthScreenState extends State<AuthScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    const Text(
-                      'تسجيل الدخول عبر Google و Apple يأتي في مرحلة لاحقة من نسخة Flutter.',
-                      style: TextStyle(
-                        color: TColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            'أو',
+                            style: TextStyle(
+                              color: TColors.textSecondary.withOpacity(0.85),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: auth.isBusy
+                          ? null
+                          : () => context.read<AuthService>().signInWithGoogle(),
+                      icon: const Icon(Icons.public, color: TColors.primary),
+                      label: const Text('المتابعة عبر Google'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: TColors.primary,
+                        minimumSize: const Size.fromHeight(50),
+                        side: const BorderSide(
+                          color: TColors.primary,
+                          width: 1.3,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                    if (AppConfig.appleSignInEnabled && Platform.isIOS) ...[
+                      const SizedBox(height: 10),
+                      SignInWithAppleButton(
+                        onPressed: auth.isBusy
+                            ? () {}
+                            : () => context.read<AuthService>().signInWithApple(),
+                        text: 'تسجيل الدخول عبر Apple',
+                        height: 50,
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
+                      ),
+                    ],
                   ],
                 ),
               ),
