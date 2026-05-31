@@ -12,6 +12,7 @@ import 'config.dart';
 import 'data/meal_repository.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
+import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
 
 Future<void> main() async {
@@ -63,6 +64,7 @@ class TayyibatApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => OnboardingService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
         ProxyProvider<MealRepository, AccountService>(
           update: (_, repo, __) => AccountService(repo),

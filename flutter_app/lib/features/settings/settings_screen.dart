@@ -5,6 +5,7 @@ import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
+import '../onboarding/disclaimer_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -139,6 +140,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+              CardContainer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'الأمان والقانون',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: TColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const DisclaimerScreen(readOnly: true),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.medical_information_outlined),
+                      label: const Text('إعادة قراءة التنبيه الطبي'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: TColors.primary,
+                        alignment: AlignmentDirectional.centerStart,
+                        minimumSize: const Size.fromHeight(48),
+                        side: const BorderSide(
+                          color: TColors.primary,
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
               const CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +190,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'نسخة Flutter (Phase F2). الدليل و بنك الوجبات و برنامج ١٥ يوم و إحصائيات Body Intelligence تأتي في F3.',
+                      'الطيبات — تطبيق وعي غذائي. يستخدم نموذج Gemini للتحليل عبر '
+                      'خادم آمن. لا يقدّم استشارة طبية ولا يحلّ محل الطبيب أو '
+                      'أخصائي التغذية.',
                       style: TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,

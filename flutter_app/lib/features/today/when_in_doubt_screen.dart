@@ -15,12 +15,6 @@ class WhenInDoubtScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('عندما تحتار'),
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

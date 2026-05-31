@@ -125,6 +125,33 @@ flutter pub get
 </intent-filter>
 ```
 
+**iOS — تعطيل SceneDelegate (مهم لرابط Google العائد):**
+
+نسخ Flutter الحديثة تُنشئ `ios/Runner/SceneDelegate.swift` ومفتاح
+`UIApplicationSceneManifest` في `Info.plist`. مع هذا الإطار يبتلع المشهد
+روابط النظام ولا يمرّرها للـ AppDelegate، فلا يصل
+`tayyibat://login-callback?code=…` إلى ملحق `app_links`، ولا يعود
+المستخدم تلقائياً للتطبيق بعد تسجيل دخول Google. الحل تعطيل المشهد:
+
+```bash
+cd ~/anthropic-claude-/flutter_app/ios/Runner
+/usr/libexec/PlistBuddy -c "Delete :UIApplicationSceneManifest" Info.plist
+rm -f SceneDelegate.swift
+```
+
+ثم في Xcode افتح `Runner.xcworkspace`، وفي شريط المشروع الأيسر اضغط بزر اليمين
+على `SceneDelegate.swift` (لو ظهر بلون أحمر) → Delete → Remove Reference.
+لاحقاً نظّف وأعد البناء:
+
+```bash
+cd ~/anthropic-claude-/flutter_app
+flutter clean && flutter pub get
+cd ios && pod install && cd ..
+flutter run
+```
+
+بعدها يتولّى `AppDelegate` فتح روابط النظام، ويعمل تسجيل Google كما هو متوقّع.
+
 **Sign in with Apple (بعد عضوية Apple Developer فقط):**
 1. في Xcode: target → Signing & Capabilities → + Capability → Sign in with Apple.
 2. في Supabase → Authentication → Providers → Apple → فعّل، وأضف معرّف الحزمة
