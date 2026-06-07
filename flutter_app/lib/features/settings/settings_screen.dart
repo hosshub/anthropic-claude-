@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/meal_repository.dart';
 import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
@@ -265,6 +267,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 18),
+                CardContainer(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'تطوير — لقطات المتجر',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: TColors.gold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'يزرع ١١ وجبة وهمية موزّعة على آخر ١٤ يوماً مع متابعات '
+                        'جسم متنوّعة. يظهر هذا الزر في وضع التطوير فقط.',
+                        style: TextStyle(
+                          color: TColors.textSecondary,
+                          fontSize: 11.5,
+                          height: 1.55,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final repo = context.read<MealRepository>();
+                          final messenger = ScaffoldMessenger.of(context);
+                          final n = await repo.seedDemoData();
+                          if (!mounted) return;
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('تم زرع $n وجبة تجريبية.')),
+                          );
+                        },
+                        icon: const Icon(Icons.science_outlined),
+                        label: const Text('زرع بيانات تجريبية'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: TColors.gold,
+                          alignment: AlignmentDirectional.centerStart,
+                          minimumSize: const Size.fromHeight(46),
+                          side: const BorderSide(
+                            color: TColors.gold,
+                            width: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

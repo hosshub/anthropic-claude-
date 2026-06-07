@@ -294,4 +294,269 @@ class MealRepository extends ChangeNotifier {
     } catch (_) {/* الجدول قد لا يكون موجوداً في تثبيت أقدم */}
     notifyListeners();
   }
+
+  // -------------------------------------------------------------------------
+  // بيانات تجريبية (للقطات شاشة المتجر فقط — تُستخدم في وضع التطوير)
+  // -------------------------------------------------------------------------
+
+  /// يزرع وجبات وهمية موزّعة على آخر ١٤ يوماً مع تنويع المنطقة والدرجات
+  /// ومتابعات الجسم — حتى تظهر شاشتا التقويم وBody Intelligence بمحتوى
+  /// حقيقي عند التقاط الصور للمتجر. أزل البيانات لاحقاً بـ "حذف الحساب".
+  Future<int> seedDemoData() async {
+    final db = await _db;
+    final now = DateTime.now();
+    DateTime daysAgo(int d, int hour, int minute) {
+      final base = now.subtract(Duration(days: d));
+      return DateTime(base.year, base.month, base.day, hour, minute);
+    }
+
+    // وجبة → (وقت، درجة، تسمية، عناصر، اقتراحات، متابعة جسم اختيارية)
+    final samples = <_DemoMeal>[
+      _DemoMeal(
+        capturedAt: daysAgo(13, 8, 30),
+        score: 92,
+        label: 'ممتاز',
+        explanation: 'تركيب بسيط ومتوازن.',
+        items: [
+          _DemoItem('بطاطس مسلوقة', 'green', 'starch', 'نشوي بسيط مقبول.'),
+          _DemoItem('سمن بلدي', 'green', 'fat', 'دهن طبيعي.'),
+          _DemoItem('قهوة', 'yellow', 'beverage',
+              'باعتدال؛ راقب النوم والتوتر.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 4, bloating: 1, energy: 4,
+          sleep: 'positive', worth: 'yes',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(12, 13, 10),
+        score: 88,
+        label: 'جيد',
+        explanation: 'وجبة طيبة في مجملها.',
+        items: [
+          _DemoItem('أرز بسمتي', 'green', 'starch', 'أساس مقبول.'),
+          _DemoItem('سمك مشوي', 'green', 'protein', 'بروتين خفيف ومُحبب.'),
+          _DemoItem('زيت زيتون', 'green', 'fat', 'دهن طبيعي.'),
+        ],
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(11, 9, 0),
+        score: 65,
+        label: 'متوسط',
+        explanation: 'كميات السكر مرتفعة قليلاً.',
+        items: [
+          _DemoItem('شاي', 'yellow', 'beverage', 'بسيط وبسكر خفيف.'),
+          _DemoItem('تمر', 'yellow', 'sweets', 'كمية محسوبة.'),
+        ],
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(10, 13, 30),
+        score: 95,
+        label: 'ممتاز',
+        explanation: 'وجبة طيبة بنقاء كامل.',
+        items: [
+          _DemoItem('كبدة بلدي', 'green', 'protein', 'بروتين قوي ومناسب.'),
+          _DemoItem('بطاطس مشوية', 'green', 'starch', 'نشوي بسيط.'),
+          _DemoItem('زبدة طبيعية', 'green', 'fat', 'دهن طبيعي.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 5, bloating: 0, energy: 5,
+          sleep: 'positive', worth: 'yes',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(8, 19, 0),
+        score: 78,
+        label: 'جيد',
+        explanation: 'منطقة صفراء بحساب.',
+        items: [
+          _DemoItem('قهوة', 'yellow', 'beverage', 'باعتدال.'),
+          _DemoItem('تمر', 'yellow', 'sweets', 'كمية محسوبة.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 3, bloating: 2, energy: 3,
+          sleep: 'neutral', worth: 'maybe',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(6, 13, 0),
+        score: 90,
+        label: 'ممتاز',
+        explanation: 'تركيب متّزن ومُشبع.',
+        items: [
+          _DemoItem('أرز أبيض', 'green', 'starch', 'أساس بسيط.'),
+          _DemoItem('لحم أحمر', 'green', 'protein', 'بروتين طيب.'),
+          _DemoItem('زيت زيتون', 'green', 'fat', 'دهن طبيعي.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 5, bloating: 0, energy: 4,
+          sleep: 'positive', worth: 'yes',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(5, 17, 30),
+        score: 55,
+        label: 'بعيدة عن نظام الطيبات',
+        explanation: 'وجود عنصر من المنطقة الحمراء.',
+        items: [
+          _DemoItem('شاي', 'yellow', 'beverage', 'بسيط.'),
+          _DemoItem('بسكوت مصنّع', 'red', 'snack',
+              'منتج فائق التصنيع — يُتجنّب.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 2, bloating: 4, energy: 2,
+          sleep: 'negative', worth: 'no',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(3, 14, 0),
+        score: 95,
+        label: 'ممتاز',
+        explanation: 'بساطة ووضوح.',
+        items: [
+          _DemoItem('بطاطس مشوية', 'green', 'starch', 'نشوي بسيط.'),
+          _DemoItem('سمن بلدي', 'green', 'fat', 'دهن طبيعي.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 5, bloating: 0, energy: 5,
+          sleep: 'positive', worth: 'yes',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(2, 13, 15),
+        score: 92,
+        label: 'ممتاز',
+        explanation: 'وجبة طيبة بطعم بسيط.',
+        items: [
+          _DemoItem('لحم أحمر', 'green', 'protein', 'بروتين أساسي.'),
+          _DemoItem('أرز بسمتي', 'green', 'starch', 'نشوي مقبول.'),
+          _DemoItem('زيت زيتون', 'green', 'fat', 'دهن طبيعي.'),
+        ],
+        bodyResponse: _DemoResponse(
+          satisfaction: 4, bloating: 1, energy: 4,
+          sleep: 'positive', worth: 'yes',
+        ),
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(1, 9, 30),
+        score: 80,
+        label: 'جيد',
+        explanation: 'بساطة مع لمسة صفراء.',
+        items: [
+          _DemoItem('قهوة', 'yellow', 'beverage', 'باعتدال.'),
+          _DemoItem('تمر', 'yellow', 'sweets', 'كمية محسوبة.'),
+          _DemoItem('ماء', 'green', 'beverage', 'أساس.'),
+        ],
+      ),
+      _DemoMeal(
+        capturedAt: daysAgo(0, 13, 0),
+        score: 88,
+        label: 'جيد',
+        explanation: 'تركيب متوازن.',
+        items: [
+          _DemoItem('أرز أبيض', 'green', 'starch', 'أساس مقبول.'),
+          _DemoItem('سمك مشوي', 'green', 'protein', 'بروتين خفيف.'),
+          _DemoItem('زيتون', 'green', 'fat', 'إضافة طبيعية.'),
+        ],
+      ),
+    ];
+
+    var inserted = 0;
+    await db.transaction((tx) async {
+      for (final meal in samples) {
+        final mealId = _uuid.v4();
+        await tx.insert('meals', {
+          'id': mealId,
+          'captured_at': meal.capturedAt.millisecondsSinceEpoch,
+          'image_path': null,
+          'overall_score': meal.score,
+          'score_label_ar': meal.label,
+          'score_explanation_ar': meal.explanation,
+          'suggestions': jsonEncode(<String>[]),
+          'warnings': jsonEncode(<String>[]),
+        });
+        for (var i = 0; i < meal.items.length; i++) {
+          final item = meal.items[i];
+          await tx.insert('food_items', {
+            'id': _uuid.v4(),
+            'meal_id': mealId,
+            'name_ar': item.nameAr,
+            'verdict': item.zoneRaw == 'green'
+                ? 'tayyib'
+                : item.zoneRaw == 'red'
+                    ? 'khabith'
+                    : 'conditional',
+            'zone': item.zoneRaw,
+            'caution_ar': item.zoneRaw == 'yellow' ? item.reasoning : null,
+            'category': item.category,
+            'reasoning': item.reasoning,
+            'confidence': 0.92,
+            'estimated_portion': 'متوسطة',
+            'rule_violated': null,
+            'item_order': i,
+          });
+        }
+        final br = meal.bodyResponse;
+        if (br != null) {
+          await tx.insert('body_responses', {
+            'id': _uuid.v4(),
+            'meal_id': mealId,
+            'logged_at': meal.capturedAt
+                .add(const Duration(hours: 3))
+                .millisecondsSinceEpoch,
+            'hours_after_meal': 3,
+            'satisfying_fullness': br.satisfaction,
+            'bloating': br.bloating,
+            'energy_level': br.energy,
+            'sleep_impact': br.sleep,
+            'worth_repeating': br.worth,
+            'notes': null,
+          });
+        }
+        inserted++;
+      }
+    });
+    notifyListeners();
+    return inserted;
+  }
+}
+
+class _DemoItem {
+  final String nameAr;
+  final String zoneRaw;
+  final String category;
+  final String reasoning;
+  _DemoItem(this.nameAr, this.zoneRaw, this.category, this.reasoning);
+}
+
+class _DemoResponse {
+  final int satisfaction;
+  final int bloating;
+  final int energy;
+  final String sleep;
+  final String worth;
+  _DemoResponse({
+    required this.satisfaction,
+    required this.bloating,
+    required this.energy,
+    required this.sleep,
+    required this.worth,
+  });
+}
+
+class _DemoMeal {
+  final DateTime capturedAt;
+  final int score;
+  final String label;
+  final String explanation;
+  final List<_DemoItem> items;
+  final _DemoResponse? bodyResponse;
+  _DemoMeal({
+    required this.capturedAt,
+    required this.score,
+    required this.label,
+    required this.explanation,
+    required this.items,
+    this.bodyResponse,
+  });
 }
