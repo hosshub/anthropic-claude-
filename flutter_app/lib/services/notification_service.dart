@@ -249,6 +249,8 @@ class NotificationService extends ChangeNotifier {
         iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: kind == NotifKind.weeklyPrep
           ? DateTimeComponents.dayOfWeekAndTime
           : DateTimeComponents.time,
@@ -299,6 +301,8 @@ class NotificationService extends ChangeNotifier {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
