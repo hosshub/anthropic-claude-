@@ -4,8 +4,12 @@
 *30 characters max*
 
 ```
-Tayyibat — Mindful Eating
+Tayyibat
 ```
+
+> Note: we use the bare "Tayyibat" since "الطيبات" alone is reserved by
+> another app on the App Store. The descriptive tagline lives in the
+> subtitle field.
 
 ## Subtitle
 *30 characters max*
