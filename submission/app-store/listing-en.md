@@ -15,7 +15,7 @@ Tayyibat
 *30 characters max*
 
 ```
-Zone-based diet tracker
+The Tayyibat System, AI-powered
 ```
 
 ## Promotional text
