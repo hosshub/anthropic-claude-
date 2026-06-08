@@ -4,6 +4,7 @@ import '../features/guide/guide_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/today/today_screen.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../theme/theme.dart';
 
 /// إطار التطبيق بعد تسجيل الدخول — شريط تبويب سفلي بأربع تبويبات.
@@ -26,6 +27,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: NavigationBar(
@@ -33,26 +35,27 @@ class _MainShellState extends State<MainShell> {
         onDestinationSelected: (i) => setState(() => _index = i),
         indicatorColor: TColors.primary.withOpacity(0.15),
         backgroundColor: TColors.surface,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.wb_sunny_outlined),
-            selectedIcon: Icon(Icons.wb_sunny, color: TColors.primary),
-            label: 'اليوم',
+            icon: const Icon(Icons.wb_sunny_outlined),
+            selectedIcon: const Icon(Icons.wb_sunny, color: TColors.primary),
+            label: l.tab_today,
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today, color: TColors.primary),
-            label: 'السجل',
+            icon: const Icon(Icons.calendar_today_outlined),
+            selectedIcon:
+                const Icon(Icons.calendar_today, color: TColors.primary),
+            label: l.tab_history,
           ),
           NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book, color: TColors.primary),
-            label: 'الدليل',
+            icon: const Icon(Icons.menu_book_outlined),
+            selectedIcon: const Icon(Icons.menu_book, color: TColors.primary),
+            label: l.tab_guide,
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings, color: TColors.primary),
-            label: 'الإعدادات',
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings, color: TColors.primary),
+            label: l.tab_settings,
           ),
         ],
       ),

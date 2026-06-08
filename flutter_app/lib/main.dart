@@ -10,9 +10,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'config.dart';
 import 'data/meal_repository.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
 import 'services/fasting_repository.dart';
+import 'services/locale_service.dart';
 import 'services/notification_service.dart';
 import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
@@ -31,7 +33,6 @@ Future<void> main() async {
     ),
   );
 
-  // يلتقط روابط OAuth العائدة (tayyibat://login-callback?code=…) ويسلّمها لـ Supabase.
   _wireOAuthDeepLinks();
 
   runApp(const TayyibatApp());
@@ -39,22 +40,16 @@ Future<void> main() async {
 
 void _wireOAuthDeepLinks() {
   final appLinks = AppLinks();
-
   Future<void> handle(Uri uri) async {
     if (uri.scheme != 'tayyibat') return;
     try {
       await Supabase.instance.client.auth.getSessionFromUrl(uri);
-    } catch (_) {
-      // تجاهل: إن لم يكن للرابط علاقة بـ OAuth أو فشل التبادل، يبقى المستخدم على الشاشة الحالية.
-    }
+    } catch (_) {/* تجاهل: روابط ليست OAuth أو تبادل فاشل */}
   }
 
-  // إقلاع بارد — لو فُتح التطبيق بسبب رابط.
   appLinks.getInitialLink().then((uri) {
     if (uri != null) handle(uri);
   });
-
-  // إقلاع دافئ — لو وصل الرابط والتطبيق يعمل.
   appLinks.uriLinkStream.listen((uri) => handle(uri));
 }
 
@@ -67,6 +62,7 @@ class TayyibatApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => OnboardingService()),
+        ChangeNotifierProvider(create: (_) => LocaleService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
         ChangeNotifierProvider(create: (_) => FastingRepository()),
         ChangeNotifierProvider(
@@ -76,24 +72,27 @@ class TayyibatApp extends StatelessWidget {
           update: (_, repo, __) => AccountService(repo),
         ),
       ],
-      child: MaterialApp(
-        title: 'الطيبات',
-        debugShowCheckedModeBanner: false,
-        theme: tayyibatTheme,
-        locale: const Locale('ar'),
-        supportedLocales: const [Locale('ar'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        builder: (context, child) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
+      child: Consumer<LocaleService>(
+        builder: (context, locale, _) => MaterialApp(
+          onGenerateTitle: (ctx) =>
+              AppLocalizations.of(ctx)?.appTitle ?? 'الطيبات',
+          debugShowCheckedModeBanner: false,
+          theme: tayyibatTheme,
+          locale: locale.locale,
+          supportedLocales: const [Locale('ar'), Locale('en')],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          // الاتجاه يتبع اللغة المختارة — RTL للعربية، LTR للإنجليزية.
+          builder: (context, child) => Directionality(
+            textDirection: locale.textDirection,
             child: child ?? const SizedBox.shrink(),
-          );
-        },
-        home: const AppRoot(),
+          ),
+          home: const AppRoot(),
+        ),
       ),
     );
   }

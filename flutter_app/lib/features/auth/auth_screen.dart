@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../config.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/google_sign_in_button.dart';
@@ -53,6 +54,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final text = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -93,14 +95,14 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'الطيبات',
+                      l.appTitle,
                       style: text.displayLarge,
                       textAlign: TextAlign.center,
                     ),
                     Text(
                       _mode == _AuthMode.signIn
-                          ? 'سجّل الدخول للمتابعة'
-                          : 'أنشئ حساباً للبدء',
+                          ? l.auth_signInTagline
+                          : l.auth_signUpTagline,
                       style: text.bodyLarge?.copyWith(
                         color: TColors.textSecondary,
                       ),
@@ -109,14 +111,14 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 24),
                     Center(
                       child: SegmentedButton<_AuthMode>(
-                        segments: const [
+                        segments: [
                           ButtonSegment(
                             value: _AuthMode.signIn,
-                            label: Text('تسجيل الدخول'),
+                            label: Text(l.auth_signIn),
                           ),
                           ButtonSegment(
                             value: _AuthMode.signUp,
-                            label: Text('حساب جديد'),
+                            label: Text(l.auth_signUp),
                           ),
                         ],
                         selected: {_mode},
@@ -129,13 +131,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       keyboardType: TextInputType.emailAddress,
                       autocorrect: false,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'البريد الإلكتروني',
+                      decoration: InputDecoration(
+                        labelText: l.auth_email,
                       ),
                       validator: (v) {
                         final t = (v ?? '').trim();
                         if (!t.contains('@') || !t.contains('.')) {
-                          return 'بريد غير صالح';
+                          return l.auth_invalidEmail;
                         }
                         return null;
                       },
@@ -146,12 +148,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       obscureText: true,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
-                      decoration: const InputDecoration(
-                        labelText: 'كلمة المرور (٦ أحرف فأكثر)',
+                      decoration: InputDecoration(
+                        labelText: l.auth_password,
                       ),
                       validator: (v) {
                         if ((v ?? '').length < 6) {
-                          return 'كلمة المرور قصيرة جداً';
+                          return l.auth_passwordTooShort;
                         }
                         return null;
                       },
@@ -159,8 +161,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 18),
                     PrimaryButton(
                       label: _mode == _AuthMode.signIn
-                          ? 'تسجيل الدخول'
-                          : 'إنشاء الحساب',
+                          ? l.auth_signIn
+                          : l.auth_createAccount,
                       loading: auth.isBusy,
                       onPressed: auth.isBusy ? null : _submit,
                     ),
@@ -193,7 +195,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            'أو',
+                            l.common_or,
                             style: TextStyle(
                               color: TColors.textSecondary.withOpacity(0.85),
                               fontSize: 12,
@@ -206,6 +208,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 12),
                     GoogleSignInButton(
                       loading: auth.isBusy,
+                      label: l.auth_continueWithGoogle,
                       onPressed: auth.isBusy
                           ? null
                           : () =>
@@ -217,7 +220,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         onPressed: auth.isBusy
                             ? () {}
                             : () => context.read<AuthService>().signInWithApple(),
-                        text: 'تسجيل الدخول عبر Apple',
+                        text: l.auth_signInWithApple,
                         height: 50,
                         borderRadius: const BorderRadius.all(Radius.circular(14)),
                       ),

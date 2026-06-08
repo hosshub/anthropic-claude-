@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/onboarding_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
@@ -38,7 +39,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
     if (_reachedEnd) return;
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
-    // اعتبر الوصول للنهاية = ضمن آخر ٢٤ بكسل من المحتوى.
     if (pos.pixels >= pos.maxScrollExtent - 24) {
       setState(() => _reachedEnd = true);
     }
@@ -47,15 +47,15 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
   Future<void> _accept() async {
     setState(() => _saving = true);
     await context.read<OnboardingService>().acceptDisclaimer();
-    // الـ AppRoot يلتقط التغيير ويعيد التوجيه إلى الإطار الرئيسي.
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: TColors.background,
       appBar: widget.readOnly
-          ? AppBar(title: const Text('التنبيه الطبي'))
+          ? AppBar(title: Text(l.disclaimer_screenTitle))
           : null,
       body: SafeArea(
         child: Column(
@@ -94,15 +94,15 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'أهلاً بك في الطيبات',
+                        l.disclaimer_welcome,
                         style: Theme.of(context).textTheme.displayLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'قبل البدء، اقرأ التنبيه التالي حتى النهاية.',
+                      Text(
+                        l.disclaimer_intro,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: TColors.textSecondary,
                           fontSize: 14,
                           height: 1.6,
@@ -112,15 +112,15 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                       const Divider(),
                       const SizedBox(height: 14),
                     ],
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded,
+                        const Icon(Icons.warning_amber_rounded,
                             color: TColors.gold, size: 24),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'تنبيه طبي مهم',
-                            style: TextStyle(
+                            l.disclaimer_title,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: TColors.textPrimary,
@@ -130,54 +130,26 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _para(
-                      'تطبيق "الطيبات" أداة معلوماتية تساعدك على متابعة وعيك الغذائي وفق '
-                      'مبادئ نظام طبيعي وقفت عليها بنفسك. لا يقدّم التطبيق استشارة طبية، '
-                      'ولا يصف علاجاً، ولا يشخّص مرضاً، ولا يحلّ محل الطبيب أو أخصائي '
-                      'التغذية.',
-                    ),
-                    _heading('ما هذا التطبيق؟'),
-                    _para(
-                      'أداة تذكير ومتابعة لأنماط أكلك، تعطيك إشارات (أخضر/أصفر/أحمر) '
-                      'وملخّصات لمساعدتك في الانتباه لما تأكل. الإشارات لأغراض المتابعة '
-                      'الذاتية فقط — لا تفسّرها على أنها حكم طبي.',
-                    ),
-                    _heading('ما هذا التطبيق ليس به؟'),
-                    _bullet('لا يصف دواءً أو يطلب إيقاف أي دواء.'),
-                    _bullet('لا يشخّص أمراضاً ولا يقترح علاجات.'),
-                    _bullet('لا يقدّم نصيحة غذائية مخصّصة لحالتك الصحية.'),
-                    _bullet('لا يحلّ محل زيارة الطبيب أو أخصائي التغذية.'),
-                    _heading('متى يجب استشارة طبيب؟'),
-                    _para(
-                      'إذا كان لديك حالة صحية مزمنة (سكري، ضغط، أمراض كلى، أمراض قلب، '
-                      'حساسية غذائية، اضطرابات هضمية)، أو إذا كنتِ حاملاً أو مرضعاً، '
-                      'أو إذا كنت تتناول أدوية، فعليك مراجعة طبيبك قبل تغيير نظامك '
-                      'الغذائي بناءً على ما يعرضه هذا التطبيق.',
-                    ),
-                    _heading('مسؤوليتك الشخصية'),
-                    _para(
-                      'باستخدامك التطبيق، تقرّ بأنك:',
-                    ),
-                    _bullet('قرأت هذا التنبيه وفهمته.'),
-                    _bullet('تتحمّل المسؤولية الكاملة عن قراراتك الغذائية.'),
-                    _bullet(
-                      'لن تستخدم التطبيق بديلاً عن الرعاية الطبية المتخصّصة.',
-                    ),
-                    _bullet(
-                      'تعفي مطوّر التطبيق من أي ضرر مباشر أو غير مباشر ينجم عن '
-                      'القرارات الشخصية التي تتخذها بناءً على ما يعرضه التطبيق.',
-                    ),
-                    _heading('بيانات وجباتك'),
-                    _para(
-                      'تُحفظ صور وجباتك وملاحظاتك على جهازك بشكل أساسي. لا تُرسل '
-                      'بياناتك الصحية لأي طرف ثالث للتسويق. التحليل يمرّ بنموذج '
-                      'ذكاء اصطناعي (Gemini) عبر خادم وسيط لا يحتفظ بالصور.',
-                    ),
-                    _heading('في حالة الطوارئ'),
-                    _para(
-                      'إذا واجهت أعراضاً صحية حادة، اتصل بخدمات الطوارئ فوراً. '
-                      'هذا التطبيق ليس مخصّصاً للاستخدام في الحالات الطارئة.',
-                    ),
+                    _para(l.disclaimer_intro_body),
+                    _heading(l.disclaimer_section_what),
+                    _para(l.disclaimer_section_what_body),
+                    _heading(l.disclaimer_section_whatNot),
+                    _bullet(l.disclaimer_whatNot_1),
+                    _bullet(l.disclaimer_whatNot_2),
+                    _bullet(l.disclaimer_whatNot_3),
+                    _bullet(l.disclaimer_whatNot_4),
+                    _heading(l.disclaimer_section_whenDoctor),
+                    _para(l.disclaimer_section_whenDoctor_body),
+                    _heading(l.disclaimer_section_responsibility),
+                    _para(l.disclaimer_section_responsibility_body),
+                    _bullet(l.disclaimer_responsibility_1),
+                    _bullet(l.disclaimer_responsibility_2),
+                    _bullet(l.disclaimer_responsibility_3),
+                    _bullet(l.disclaimer_responsibility_4),
+                    _heading(l.disclaimer_section_data),
+                    _para(l.disclaimer_section_data_body),
+                    _heading(l.disclaimer_section_emergency),
+                    _para(l.disclaimer_section_emergency_body),
                     const SizedBox(height: 18),
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -188,17 +160,16 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                           color: TColors.gold.withOpacity(0.4),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline,
+                          const Icon(Icons.info_outline,
                               color: TColors.gold, size: 18),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'بقراءتك حتى هنا، أنت جاهز للموافقة. '
-                              'يمكنك دائماً إعادة قراءة هذا التنبيه من الإعدادات.',
-                              style: TextStyle(
+                              l.disclaimer_readyHint,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 height: 1.6,
                                 color: TColors.textPrimary,
@@ -230,19 +201,19 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!_reachedEnd)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          'مرّر القراءة حتى نهاية النص لتفعيل زر الموافقة.',
+                          l.disclaimer_scrollPrompt,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: TColors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
                       ),
                     PrimaryButton(
-                      label: 'أوافق وأتحمّل المسؤولية',
+                      label: l.disclaimer_action,
                       icon: Icons.check_circle,
                       loading: _saving,
                       onPressed:
@@ -282,7 +253,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
       );
 
   Widget _bullet(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 4, right: 8),
+        padding: const EdgeInsetsDirectional.only(bottom: 4, end: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

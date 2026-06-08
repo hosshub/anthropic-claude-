@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/meal.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
@@ -18,9 +19,11 @@ import 'when_in_doubt_screen.dart';
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
 
-  String _greeting(AuthService auth) {
+  String _greeting(BuildContext context, AuthService auth) {
+    final l = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
-    final period = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+    final period =
+        hour < 12 ? l.today_greetingMorning : l.today_greetingEvening;
     final email = auth.email;
     if (email == null || email.isEmpty) return period;
     return '$period، ${email.split('@').first}';
@@ -35,17 +38,18 @@ class TodayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final repo = context.watch<MealRepository>();
+    final l = AppLocalizations.of(context)!;
     final dayStart = _dayStart;
     final dayEnd = dayStart.add(const Duration(days: 1));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('اليوم'),
+        title: Text(l.tab_today),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: TColors.primary,
         foregroundColor: Colors.white,
-        tooltip: 'عندما تحتار',
+        tooltip: l.today_whenInDoubtTooltip,
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -70,12 +74,13 @@ class TodayScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    _greeting(auth),
+                    _greeting(context, auth),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 20),
                   CardContainer(
                     child: _scoreRing(
+                      context: context,
                       score: score,
                       hasMeals: meals.isNotEmpty,
                       loading: loading,
@@ -83,7 +88,7 @@ class TodayScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
-                    label: 'صوّر وجبتك',
+                    label: l.today_photoYourMeal,
                     icon: Icons.camera_alt,
                     onPressed: () {
                       Navigator.of(context).push(
@@ -106,7 +111,7 @@ class TodayScreen extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.auto_awesome, size: 18),
-                          label: const Text('اقتراحات'),
+                          label: Text(l.today_suggestions),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
@@ -131,7 +136,7 @@ class TodayScreen extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.brightness_2, size: 18),
-                          label: const Text('صيام'),
+                          label: Text(l.today_fasting),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
@@ -150,7 +155,7 @@ class TodayScreen extends StatelessWidget {
                   if (meals.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Text(
-                      'سجل اليوم',
+                      l.today_log,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 10),
@@ -180,10 +185,12 @@ class TodayScreen extends StatelessWidget {
   }
 
   Widget _scoreRing({
+    required BuildContext context,
     required int score,
     required bool hasMeals,
     required bool loading,
   }) {
+    final l = AppLocalizations.of(context)!;
     final color = TColors.scoreColor(score);
     return Column(
       children: [
@@ -213,9 +220,9 @@ class TodayScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'طيب اليوم',
-                  style: TextStyle(
+                Text(
+                  l.today_score,
+                  style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 13,
                   ),
@@ -228,7 +235,9 @@ class TodayScreen extends StatelessWidget {
         Text(
           loading
               ? '…'
-              : (hasMeals ? '${_pluralMeals(score)} اليوم' : 'لم تسجّل وجبات اليوم بعد'),
+              : (hasMeals
+                  ? l.today_averageToday(score)
+                  : l.today_noMealsYet),
           style: const TextStyle(
             color: TColors.textSecondary,
             fontSize: 13,
@@ -237,8 +246,6 @@ class TodayScreen extends StatelessWidget {
       ],
     );
   }
-
-  String _pluralMeals(int avg) => 'متوسط $avg٪';
 }
 
 class _MealThumb extends StatelessWidget {
