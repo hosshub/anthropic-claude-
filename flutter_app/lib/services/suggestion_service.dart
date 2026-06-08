@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/suggestion.dart';
@@ -25,6 +26,7 @@ class SuggestionService {
 
   Future<Map<String, dynamic>> _postTask(String task, Duration timeout) async {
     final session = Supabase.instance.client.auth.currentSession;
+    final locale = await _currentLocale();
     final headers = <String, String>{
       'content-type': 'application/json',
       if (session != null) 'authorization': 'Bearer ${session.accessToken}',
@@ -34,7 +36,7 @@ class SuggestionService {
         .post(
           Uri.parse(_proxyUrl),
           headers: headers,
-          body: jsonEncode({'task': task}),
+          body: jsonEncode({'task': task, 'locale': locale}),
         )
         .timeout(timeout);
 
@@ -71,4 +73,13 @@ class SuggestionException implements Exception {
   SuggestionException(this.message);
   @override
   String toString() => message;
+}
+
+Future<String> _currentLocale() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('app_locale') == 'en' ? 'en' : 'ar';
+  } catch (_) {
+    return 'ar';
+  }
 }

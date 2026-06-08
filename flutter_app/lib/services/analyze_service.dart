@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/analysis_result.dart';
@@ -19,6 +20,7 @@ class AnalyzeService {
   Future<AnalysisResult> analyze(Uint8List imageBytes) async {
     final base64Image = base64Encode(imageBytes);
     final session = Supabase.instance.client.auth.currentSession;
+    final locale = await _currentLocale();
 
     final headers = <String, String>{
       'content-type': 'application/json',
@@ -28,6 +30,7 @@ class AnalyzeService {
     final body = jsonEncode({
       'image_base64': base64Image,
       'media_type': 'image/jpeg',
+      'locale': locale,
     });
 
     final res = await _http
@@ -73,4 +76,13 @@ class AnalyzeException implements Exception {
   AnalyzeException(this.message);
   @override
   String toString() => message;
+}
+
+Future<String> _currentLocale() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('app_locale') == 'en' ? 'en' : 'ar';
+  } catch (_) {
+    return 'ar';
+  }
 }

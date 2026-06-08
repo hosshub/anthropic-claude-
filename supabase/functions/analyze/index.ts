@@ -82,7 +82,56 @@ const RULES_JSON = JSON.stringify(RULES);
 const SAFETY_PREAMBLE =
   `لا تذكر أي ادعاءات صحية أو علاجية، ولا تدّعِ أن النظام يعالج أو يشفي أي مرض، ولا تذكر الأدوية إطلاقاً. التزم بقوائم النظام فقط.`;
 
-function buildPrompt(): string {
+const SAFETY_PREAMBLE_EN =
+  `Do not make any medical or therapeutic claims. Do not claim the system treats or cures any condition. Never mention medication. Stay strictly within the Tayyibat system's food lists.`;
+
+function buildPrompt(locale: "ar" | "en" = "ar"): string {
+  if (locale === "en") {
+    return `You are a food-image analyzer specialized in the "Tayyibat" eating system (visual guide v2).
+
+The system classifies foods into three visual zones:
+- 🟢 Green: the foundation of the system; most meals are built on these.
+- 🟡 Yellow: use in moderation, watching your body's response.
+- 🔴 Red: completely avoided.
+
+System rules (the keys are in Arabic — keep them as-is when grounding your judgment):
+${RULES_JSON}
+
+Analyze the attached image and return JSON only (no markdown, no preamble) with EXACTLY this structure. **All natural-language string VALUES must be in clear, natural English. Keep the field NAMES exactly as below (the _ar suffix is historical):**
+
+{
+  "identified_items": [
+    {
+      "name_ar": "food name in English",
+      "confidence": 0.0,
+      "estimated_portion": "small | medium | large portion",
+      "zone": "green | yellow | red",
+      "zone_reason_ar": "short reason for the classification, in English",
+      "caution_ar": "an item-specific caution for a yellow item (e.g., 'watch digestion after aged cheese') or null",
+      "verdict": "tayyib | conditional | khabith   (for compatibility: green=tayyib, yellow=conditional, red=khabith)",
+      "category": "starch | protein | fat | cheese | fruit | etc.",
+      "reasoning_ar": "same as zone_reason_ar or a slightly broader description, in English",
+      "rule_violated": "name of violated rule, in English, or null"
+    }
+  ],
+  "overall_score": 0,
+  "score_label_ar": "Excellent | Good | Average | Weak",
+  "score_explanation_ar": "two or three sentences in English",
+  "improvement_suggestions_ar": ["suggestion 1", "suggestion 2"],
+  "warnings": []
+}
+
+Scoring logic (v2):
+- Each green item: full points proportional to its share of the plate.
+- Each yellow item: 60% of points; include a caution_ar.
+- Each red item: 0 and a deduction proportional to its share.
+- If a red item from the explicit red list is clearly present with high confidence, cap the overall score at 50.
+- If the plate is entirely green, give full points and say "fully Tayyib meal" in score_explanation_ar.
+
+${SAFETY_PREAMBLE_EN}
+Stay aligned with the guide's wording when possible; be conservative — if unsure about an item, set confidence under 0.7 and warn the user in warnings.`;
+  }
+
   return `أنت محلل صور طعام متخصص في نظام "الطيبات" الغذائي وفق نسخة الدليل الموسّع (نسخة 2).
 
 يصنّف النظام الأطعمة في ثلاث مناطق بصرية:
@@ -128,7 +177,24 @@ ${SAFETY_PREAMBLE}
 التزم بصياغة الدليل عند الإمكان، وكن متحفظاً — إذا لم تكن متأكداً من عنصر، ضع confidence أقل من 0.7 ونبّه المستخدم للمراجعة في warnings.`;
 }
 
-function buildSuggestPrompt(): string {
+function buildSuggestPrompt(locale: "ar" | "en" = "ar"): string {
+  if (locale === "en") {
+    return `You are an assistant for the "Tayyibat" eating system. System rules (the three zones — keys are in Arabic, keep them as-is when grounding your judgment):
+${RULES_JSON}
+
+Suggest one complete, balanced Tayyib meal built from the green zone only (or with a measured yellow touch), and avoid every item from the red zone entirely. Honor the golden rules: simplify ingredients, stop before fullness, one fruit type per sitting, prefer cooked over raw.
+
+Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is historical — keep it). All natural-language string VALUES must be in clear, natural English:
+{
+  "name_ar": "short name of the suggested meal, in English",
+  "components_ar": ["component 1", "component 2", "component 3"],
+  "reasoning_ar": "one or two sentences in English explaining why this meal is Tayyib",
+  "best_time_ar": "appropriate time of day (e.g., breakfast, lunch, light dinner)"
+}
+
+${SAFETY_PREAMBLE_EN}`;
+  }
+
   return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
 ${RULES_JSON}
 
@@ -145,7 +211,29 @@ ${RULES_JSON}
 ${SAFETY_PREAMBLE}`;
 }
 
-function buildPlanPrompt(): string {
+function buildPlanPrompt(locale: "ar" | "en" = "ar"): string {
+  if (locale === "en") {
+    return `You are an assistant for the "Tayyibat" eating system. System rules (the three zones — keys are in Arabic, keep them as-is):
+${RULES_JSON}
+
+Generate a full week of meals (7 days, Saturday through Friday) built mostly from the green zone, with measured yellow touches, and avoid every red-zone item entirely. Honor: alternate protein day-to-day, one fruit type per sitting, prefer cooked, and the recommended fasting days (Monday and Thursday) with a Tayyib iftar.
+
+For each day suggest breakfast, lunch, and dinner from Tayyibat foods. Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is historical). String VALUES must be in clear, natural English; day names must be the English weekday names ("Saturday" .. "Friday"):
+{
+  "intro_ar": "a short introductory sentence in English",
+  "days": [
+    {
+      "day_ar": "Saturday",
+      "meals_ar": ["Breakfast: ...", "Lunch: ...", "Dinner: ..."],
+      "note_ar": "optional short note in English, or empty string"
+    }
+  ]
+}
+"days" must contain exactly 7 entries in this order: Saturday, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday.
+
+${SAFETY_PREAMBLE_EN}`;
+  }
+
   return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
 ${RULES_JSON}
 
@@ -322,21 +410,28 @@ Deno.serve(async (req: Request) => {
     return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
   }
 
-  let payload: { image_base64?: string; media_type?: string; task?: string };
+  let payload: {
+    image_base64?: string;
+    media_type?: string;
+    task?: string;
+    locale?: string;
+  };
   try {
     payload = await req.json();
   } catch {
     return json(400, { error: "جسم الطلب غير صالح" });
   }
 
+  const locale: "ar" | "en" = payload.locale === "en" ? "en" : "ar";
+
   // 1) اقتراح وجبة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "suggest") {
-    return await callGemini([{ text: buildSuggestPrompt() }], 1024);
+    return await callGemini([{ text: buildSuggestPrompt(locale) }], 1024);
   }
 
   // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "plan") {
-    return await callGemini([{ text: buildPlanPrompt() }], 4096);
+    return await callGemini([{ text: buildPlanPrompt(locale) }], 4096);
   }
 
   // 3) تحليل صورة وجبة (الافتراضي — يخضع للحدّ اليومي).
@@ -350,7 +445,9 @@ Deno.serve(async (req: Request) => {
     const used = await bumpDailyUsage(userId);
     if (used !== null && used < 0) {
       return json(429, {
-        error: `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
+        error: locale === "en"
+          ? `Daily analysis limit reached (${DAILY_LIMIT}). Try again tomorrow.`
+          : `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
       });
     }
     counted = used !== null && used > 0;
@@ -363,7 +460,7 @@ Deno.serve(async (req: Request) => {
   return await callGemini(
     [
       { inlineData: { mimeType: mediaType, data: imageBase64 } },
-      { text: buildPrompt() },
+      { text: buildPrompt(locale) },
     ],
     2048,
     refundIfCounted,
