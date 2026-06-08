@@ -1,9 +1,39 @@
-# What's New — version 1.0.0
+# What's New
 
 App Store Connect → **Version Information → What's New in This Version**.
 Max 4000 characters per locale. Keep it punchy.
 
-## Arabic (ar)
+---
+
+## v1.0.1 — current draft
+
+### Arabic (ar)
+
+```
+تحديث v1.0.1 🌿
+
+• ترجمة كاملة لكل شاشات المتابعة اليومية إلى الإنجليزية مع زر تبديل اللغة في الإعدادات.
+• تحليل الذكاء الاصطناعي للوجبة يخرج الآن بلغتك المختارة (عربي أو إنجليزي).
+• تحسينات ثبات وتقليل الأعطال من خلال متابعة فنية مجهولة الهوية.
+• قسم الدليل وبنك الوجبات وبرنامج الـ١٥ يوم تبقى بالعربية في هذا الإصدار وتُترجَم لاحقاً.
+```
+
+### English (en-US)
+
+```
+v1.0.1 update 🌿
+
+• Full English translation across every tracking screen, with a language toggle in Settings.
+• AI meal analysis now answers in your chosen language (Arabic or English).
+• Stability improvements and anonymous crash diagnostics for fewer surprises.
+• The Guide, Meal Banks, and 15-day Program remain in Arabic in this build and will be translated in a coming update.
+```
+
+---
+
+## v1.0.0 — original launch
+
+### Arabic (ar)
 
 ```
 الإصدار الأول من تطبيق الطيبات 🌿
@@ -18,7 +48,7 @@ Max 4000 characters per locale. Keep it punchy.
 • خصوصية أولاً — بياناتك على جهازك، حذف الحساب من داخل التطبيق.
 ```
 
-## English (en-US)
+### English (en-US)
 
 ```
 First release of Tayyibat 🌿

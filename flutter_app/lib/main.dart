@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
@@ -20,6 +22,36 @@ import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
 
 Future<void> main() async {
+  if (!AppConfig.crashReportingEnabled) {
+    await _bootstrap();
+    runApp(const TayyibatApp());
+    return;
+  }
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = AppConfig.sentryDsn;
+      // Privacy-first defaults: ship crashes + Dart errors, nothing else.
+      // We never attach a user manually, so sendDefaultPii=false is enough
+      // — no need for a beforeSend scrubber.
+      options.sendDefaultPii = false;
+      options.attachScreenshot = false;
+      options.attachViewHierarchy = false;
+      options.tracesSampleRate = 0.0;
+      options.profilesSampleRate = 0.0;
+      options.enableUserInteractionTracing = false;
+      options.enableUserInteractionBreadcrumbs = false;
+      options.enableAutoSessionTracking = true;
+      options.environment = kReleaseMode ? 'production' : 'debug';
+    },
+    appRunner: () async {
+      await _bootstrap();
+      runApp(const TayyibatApp());
+    },
+  );
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -34,8 +66,6 @@ Future<void> main() async {
   );
 
   _wireOAuthDeepLinks();
-
-  runApp(const TayyibatApp());
 }
 
 void _wireOAuthDeepLinks() {

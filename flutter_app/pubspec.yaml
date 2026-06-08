@@ -1,7 +1,7 @@
 name: tayyibat
 description: تطبيق الطيبات — متابعة غذائية واعية (نسخة Flutter).
 publish_to: 'none'
-version: 1.0.0+3
+version: 1.0.1+4
 
 environment:
   sdk: ^3.5.0
@@ -11,8 +11,13 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: any
+  # Pinned to match what flutter_localizations expects on Flutter 3.5.
+  intl: ^0.19.0
   cupertino_icons: ^1.0.8
+
+  # Crash + error reporting. PII collection disabled; builds without
+  # --dart-define=SENTRY_DSN=... silently skip init (no events sent).
+  sentry_flutter: ^8.9.0
 
   # الواجهة الخلفية
   supabase_flutter: ^2.5.6

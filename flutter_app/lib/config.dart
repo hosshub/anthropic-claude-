@@ -16,4 +16,13 @@ class AppConfig {
   /// 3) Supabase ← Authentication ← Providers ← Apple مفعّل بكلا المعرّفين
   ///    وبسرّ JWT مولّد من المفتاح.
   static const bool appleSignInEnabled = true;
+
+  /// Sentry DSN — supplied at build time via:
+  ///   flutter run --dart-define=SENTRY_DSN=https://...@o....ingest.de.sentry.io/...
+  /// Empty by default so unconfigured builds don't try to send anything.
+  /// Create the project at https://sentry.io (choose the EU region).
+  static const String sentryDsn =
+      String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+
+  static bool get crashReportingEnabled => sentryDsn.isNotEmpty;
 }
