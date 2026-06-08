@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
-/// ٠١ — فلسفة النظام: ٣ بطاقات.
 class GuidePhilosophyScreen extends StatelessWidget {
   const GuidePhilosophyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Scaffold(
-      appBar: AppBar(title: const Text('فلسفة النظام')),
+      appBar: AppBar(title: Text(l.guide_section_philosophy)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -21,7 +23,7 @@ class GuidePhilosophyScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    card.titleAr,
+                    card.title(locale),
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -30,7 +32,7 @@ class GuidePhilosophyScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    card.bodyAr,
+                    card.body(locale),
                     style: const TextStyle(
                       color: TColors.textPrimary,
                       height: 1.65,
@@ -44,7 +46,7 @@ class GuidePhilosophyScreen extends StatelessWidget {
           ],
           const SizedBox(height: 6),
           Text(
-            GuideData.medicalDisclaimer,
+            GuideData.medicalDisclaimer(locale),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: TColors.textSecondary,

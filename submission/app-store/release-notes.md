@@ -12,10 +12,10 @@ Max 4000 characters per locale. Keep it punchy.
 ```
 تحديث v1.0.1 🌿
 
-• ترجمة كاملة لكل شاشات المتابعة اليومية إلى الإنجليزية مع زر تبديل اللغة في الإعدادات.
-• تحليل الذكاء الاصطناعي للوجبة يخرج الآن بلغتك المختارة (عربي أو إنجليزي).
-• تحسينات ثبات وتقليل الأعطال من خلال متابعة فنية مجهولة الهوية.
-• قسم الدليل وبنك الوجبات وبرنامج الـ١٥ يوم تبقى بالعربية في هذا الإصدار وتُترجَم لاحقاً.
+• ترجمة كاملة للإنجليزية تشمل الدليل وبنك الوجبات وبرنامج الـ١٥ يوم. زر تبديل اللغة في الإعدادات يطبَّق فوراً.
+• تحليل الذكاء الاصطناعي للوجبة يخرج بلغتك المختارة، وتذكيرات اليوم بنصائحها كذلك.
+• تذكير "كيف شعرت؟" بعد كل وجبة بثلاث ساعات — يُلغى تلقائياً لو سجّلت متابعة الجسم قبله.
+• تحسينات ثبات ومتابعة فنية مجهولة الهوية لتقليل الأعطال.
 ```
 
 ### English (en-US)
@@ -23,10 +23,10 @@ Max 4000 characters per locale. Keep it punchy.
 ```
 v1.0.1 update 🌿
 
-• Full English translation across every tracking screen, with a language toggle in Settings.
-• AI meal analysis now answers in your chosen language (Arabic or English).
-• Stability improvements and anonymous crash diagnostics for fewer surprises.
-• The Guide, Meal Banks, and 15-day Program remain in Arabic in this build and will be translated in a coming update.
+• Full English translation now covers the Guide, Meal Banks, and 15-day Program in addition to all tracking screens. Toggle in Settings applies instantly.
+• AI meal analysis answers in your chosen language, and so do daily reminder tips.
+• A "how did you feel?" nudge 3 hours after every meal — auto-cancels if you log your body response first.
+• Stability improvements and anonymous diagnostics for fewer surprises.
 ```
 
 ---

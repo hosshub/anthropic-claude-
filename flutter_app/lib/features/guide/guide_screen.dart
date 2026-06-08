@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../data/program_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import 'guide_eating_map.dart';
 import 'guide_forbidden.dart';
@@ -18,28 +20,30 @@ class GuideScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Scaffold(
-      appBar: AppBar(title: const Text('الدليل')),
+      appBar: AppBar(title: Text(l.tab_guide)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'الفهرس الذكي',
-                  style: TextStyle(
+                  l.guide_index_title,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: TColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'الدليل في ٩ أقسام',
-                  style: TextStyle(color: TColors.textSecondary),
+                  l.guide_index_subtitle,
+                  style: const TextStyle(color: TColors.textSecondary),
                 ),
               ],
             ),
@@ -64,7 +68,7 @@ class GuideScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              GuideData.medicalDisclaimer,
+              GuideData.medicalDisclaimer(locale),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: TColors.textSecondary,
@@ -92,34 +96,32 @@ enum _GuideSection {
 }
 
 extension _SectionMeta on _GuideSection {
-  String get number {
-    const map = {
-      _GuideSection.philosophy: '٠١',
-      _GuideSection.goldenRules: '٠٢',
-      _GuideSection.eatingMap: '٠٣',
-      _GuideSection.forbidden: '٠٤',
-      _GuideSection.plate: '٠٥',
-      _GuideSection.program15: '٠٦',
-      _GuideSection.mealBanks: '٠٧',
-      _GuideSection.weeklyPrep: '٠٨',
-      _GuideSection.mistakes: '٠٩',
-    };
-    return map[this]!;
+  String number(String locale) {
+    final raw = index + 1;
+    return localizedNumeral(raw, locale).padLeft(2, locale == 'en' ? '0' : '٠');
   }
 
-  String get titleAr {
-    const map = {
-      _GuideSection.philosophy: 'فلسفة النظام',
-      _GuideSection.goldenRules: 'القواعد الذهبية',
-      _GuideSection.eatingMap: 'خريطة الأكل',
-      _GuideSection.forbidden: 'الممنوعات الصريحة',
-      _GuideSection.plate: 'طبق الطيبات',
-      _GuideSection.program15: 'برنامج ١٥ يوم',
-      _GuideSection.mealBanks: 'بنك الوجبات',
-      _GuideSection.weeklyPrep: 'التحضير الأسبوعي',
-      _GuideSection.mistakes: 'الأخطاء الشائعة',
-    };
-    return map[this]!;
+  String title(AppLocalizations l) {
+    switch (this) {
+      case _GuideSection.philosophy:
+        return l.guide_section_philosophy;
+      case _GuideSection.goldenRules:
+        return l.guide_section_goldenRules;
+      case _GuideSection.eatingMap:
+        return l.guide_section_eatingMap;
+      case _GuideSection.forbidden:
+        return l.guide_section_forbidden;
+      case _GuideSection.plate:
+        return l.guide_section_plate;
+      case _GuideSection.program15:
+        return l.guide_section_program15;
+      case _GuideSection.mealBanks:
+        return l.guide_section_mealBanks;
+      case _GuideSection.weeklyPrep:
+        return l.guide_section_weeklyPrep;
+      case _GuideSection.mistakes:
+        return l.guide_section_mistakes;
+    }
   }
 
   IconData get icon {
@@ -167,6 +169,8 @@ class _GuideIndexCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Material(
       color: TColors.primary,
       borderRadius: BorderRadius.circular(18),
@@ -186,7 +190,7 @@ class _GuideIndexCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    section.number,
+                    section.number(locale),
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.6),
                       fontWeight: FontWeight.w700,
@@ -203,7 +207,7 @@ class _GuideIndexCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                section.titleAr,
+                section.title(l),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

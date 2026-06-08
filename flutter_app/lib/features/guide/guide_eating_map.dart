@@ -1,34 +1,49 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../theme/theme.dart';
 
-/// ٠٣ — خريطة الأكل. ثلاث مناطق في تبويبات، كل منطقة بهوية لونية وأيقونات
-/// فئات وعناصر على شكل شرائح.
 class GuideEatingMapScreen extends StatelessWidget {
   const GuideEatingMapScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('خريطة الأكل'),
+          title: Text(l.guide_section_eatingMap),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
             child: Container(
               color: TColors.background,
-              child: const TabBar(
+              child: TabBar(
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: TColors.textPrimary,
                 unselectedLabelColor: TColors.textSecondary,
-                labelStyle: TextStyle(fontWeight: FontWeight.w700),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w700),
                 tabs: [
-                  Tab(child: _TabLabel(zone: FoodZone.green, label: 'أخضر')),
-                  Tab(child: _TabLabel(zone: FoodZone.yellow, label: 'أصفر')),
-                  Tab(child: _TabLabel(zone: FoodZone.red, label: 'أحمر')),
+                  Tab(
+                    child: _TabLabel(
+                      zone: FoodZone.green,
+                      label: l.guide_eatingMap_zoneGreen,
+                    ),
+                  ),
+                  Tab(
+                    child: _TabLabel(
+                      zone: FoodZone.yellow,
+                      label: l.guide_eatingMap_zoneYellow,
+                    ),
+                  ),
+                  Tab(
+                    child: _TabLabel(
+                      zone: FoodZone.red,
+                      label: l.guide_eatingMap_zoneRed,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -45,10 +60,6 @@ class GuideEatingMapScreen extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Tab label with colored dot
-// ---------------------------------------------------------------------------
 
 class _TabLabel extends StatelessWidget {
   final FoodZone zone;
@@ -74,10 +85,6 @@ class _TabLabel extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Zone page (hero header + groups)
-// ---------------------------------------------------------------------------
 
 class _ZonePage extends StatelessWidget {
   final FoodZone zone;
@@ -108,10 +115,6 @@ class _ZonePage extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Hero card at top of each zone
-// ---------------------------------------------------------------------------
-
 class _ZoneHero extends StatelessWidget {
   final FoodZone zone;
   final ZoneData data;
@@ -133,19 +136,22 @@ class _ZoneHero extends StatelessWidget {
     }
   }
 
-  String get _verdict {
+  String _verdict(AppLocalizations l) {
     switch (zone) {
       case FoodZone.green:
-        return 'كُل بثقة';
+        return l.guide_eatingMap_verdictEat;
       case FoodZone.yellow:
-        return 'باعتدال';
+        return l.guide_eatingMap_verdictModerate;
       case FoodZone.red:
-        return 'تجنّب';
+        return l.guide_eatingMap_verdictAvoid;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final watch = data.watchword(locale);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
@@ -181,7 +187,7 @@ class _ZoneHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data.labelAr,
+                      data.label(locale),
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
@@ -190,7 +196,7 @@ class _ZoneHero extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      _verdict,
+                      _verdict(l),
                       style: TextStyle(
                         fontSize: 13,
                         color: color.withOpacity(0.85),
@@ -204,14 +210,14 @@ class _ZoneHero extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            data.subtitleAr,
+            data.subtitle(locale),
             style: const TextStyle(
               fontSize: 14,
               height: 1.6,
               color: TColors.textPrimary,
             ),
           ),
-          if (data.watchwordAr != null) ...[
+          if (watch != null) ...[
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -226,7 +232,7 @@ class _ZoneHero extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      data.watchwordAr!,
+                      watch,
                       style: const TextStyle(
                         fontSize: 12,
                         height: 1.5,
@@ -245,10 +251,6 @@ class _ZoneHero extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Group card — different layout for category-style vs item-style
-// ---------------------------------------------------------------------------
-
 class _GroupCard extends StatelessWidget {
   final FoodZone zone;
   final ZoneGroup group;
@@ -263,8 +265,9 @@ class _GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCategoryStyle =
-        group.categoryAr != null && group.items != null;
+    final locale = Localizations.localeOf(context).languageCode;
+    final categoryStyle =
+        group.category(locale) != null && group.items(locale) != null;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -278,18 +281,20 @@ class _GroupCard extends StatelessWidget {
           ),
         ],
       ),
-      child: isCategoryStyle
+      child: categoryStyle
           ? _CategoryStyle(
               zone: zone,
               categoryAr: group.categoryAr!,
-              items: group.items!,
+              category: group.category(locale)!,
+              items: group.items(locale)!,
               color: color,
               index: index,
             )
           : _ItemStyle(
               itemAr: group.itemAr ?? '',
-              examplesAr: group.examplesAr,
-              guidanceAr: group.guidanceAr,
+              item: group.item(locale) ?? '',
+              examples: group.examples(locale),
+              guidance: group.guidance(locale),
               color: color,
               index: index,
             ),
@@ -300,12 +305,14 @@ class _GroupCard extends StatelessWidget {
 class _CategoryStyle extends StatelessWidget {
   final FoodZone zone;
   final String categoryAr;
+  final String category;
   final List<String> items;
   final Color color;
   final int index;
   const _CategoryStyle({
     required this.zone,
     required this.categoryAr,
+    required this.category,
     required this.items,
     required this.color,
     required this.index,
@@ -332,7 +339,7 @@ class _CategoryStyle extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                categoryAr,
+                category,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -372,14 +379,16 @@ class _CategoryStyle extends StatelessWidget {
 
 class _ItemStyle extends StatelessWidget {
   final String itemAr;
-  final String? examplesAr;
-  final String? guidanceAr;
+  final String item;
+  final String? examples;
+  final String? guidance;
   final Color color;
   final int index;
   const _ItemStyle({
     required this.itemAr,
-    required this.examplesAr,
-    required this.guidanceAr,
+    required this.item,
+    required this.examples,
+    required this.guidance,
     required this.color,
     required this.index,
   });
@@ -404,7 +413,7 @@ class _ItemStyle extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                itemAr,
+                item,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -414,18 +423,18 @@ class _ItemStyle extends StatelessWidget {
             ),
           ],
         ),
-        if (examplesAr != null) ...[
+        if (examples != null) ...[
           const SizedBox(height: 12),
           Wrap(
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final ex in examplesAr!.split('،').map((s) => s.trim()))
+              for (final ex in _splitExamples(examples!))
                 if (ex.isNotEmpty) _ItemChip(label: ex, color: color),
             ],
           ),
         ],
-        if (guidanceAr != null) ...[
+        if (guidance != null) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
@@ -440,7 +449,7 @@ class _ItemStyle extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    guidanceAr!,
+                    guidance!,
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
@@ -455,11 +464,12 @@ class _ItemStyle extends StatelessWidget {
       ],
     );
   }
-}
 
-// ---------------------------------------------------------------------------
-// Item chip
-// ---------------------------------------------------------------------------
+  /// Split on either Arabic comma or Latin comma so chips render correctly
+  /// in both languages.
+  List<String> _splitExamples(String raw) =>
+      raw.split(RegExp(r'[،,]')).map((s) => s.trim()).toList();
+}
 
 class _ItemChip extends StatelessWidget {
   final String label;
@@ -487,28 +497,23 @@ class _ItemChip extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Footer disclaimer per zone
-// ---------------------------------------------------------------------------
-
 class _Footer extends StatelessWidget {
   final FoodZone zone;
   const _Footer({required this.zone});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     String text;
     switch (zone) {
       case FoodZone.green:
-        text = 'هذه المنطقة هي الأساس. لا حدّ على الكميات إلا الشبع المريح.';
+        text = l.guide_eatingMap_footerGreen;
         break;
       case FoodZone.yellow:
-        text =
-            'العلامة الصفراء ليست تحريماً — هي دعوة للانتباه. راقب جسمك وقلّل عند الحاجة.';
+        text = l.guide_eatingMap_footerYellow;
         break;
       case FoodZone.red:
-        text =
-            'هذه المنطقة ممنوعة في هذا النظام. عند الشك بمكوّن، افتح "عندما تحتار" من شاشة اليوم.';
+        text = l.guide_eatingMap_footerRed;
         break;
     }
     return Container(
@@ -539,10 +544,6 @@ class _Footer extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 Color _zoneColor(FoodZone zone) {
   switch (zone) {
     case FoodZone.green:
@@ -554,14 +555,14 @@ Color _zoneColor(FoodZone zone) {
   }
 }
 
+/// Icon lookup is keyed off the Arabic category name so it stays stable
+/// regardless of which language is currently displayed.
 IconData _categoryIcon(FoodZone zone, String categoryAr) {
-  // Green zone categories
   if (categoryAr.contains('النشويات')) return Icons.rice_bowl;
   if (categoryAr.contains('البروتينات')) return Icons.set_meal;
   if (categoryAr.contains('الدهون')) return Icons.opacity;
   if (categoryAr.contains('إضافات بسيطة')) return Icons.spa;
   if (categoryAr.contains('مشروبات')) return Icons.local_drink;
-  // Red zone categories
   if (categoryAr.contains('الدواجن') || categoryAr.contains('البيض')) {
     return Icons.egg_alt;
   }
