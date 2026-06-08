@@ -50,5 +50,6 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        # No tests yet — this still exits 0 if the test/ dir is empty.
+        # Pure-logic + localization tests live under flutter_app/test/.
+        # --no-pub: deps + gen-l10n already ran in the steps above.
         run: flutter test --no-pub
