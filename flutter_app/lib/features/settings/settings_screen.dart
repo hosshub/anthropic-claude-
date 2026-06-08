@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/locale_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../onboarding/disclaimer_screen.dart';
@@ -21,28 +23,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _deleting = false;
 
   Future<void> _signOut() async {
+    final l = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     await context.read<AuthService>().signOut();
-    messenger.showSnackBar(const SnackBar(content: Text('تم تسجيل الخروج.')));
+    messenger.showSnackBar(SnackBar(content: Text(l.settings_signedOut)));
   }
 
   Future<void> _deleteAccount() async {
+    final l = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('حذف الحساب نهائياً؟'),
-        content: const Text(
-          'سيُحذف حسابك وبياناته من الخادم، وكذلك كل بيانات المتابعة على هذا الجهاز. لا يمكن التراجع.',
-        ),
+        title: Text(l.settings_deleteAccount_confirmTitle),
+        content: Text(l.settings_deleteAccount_confirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('إلغاء'),
+            child: Text(l.common_cancel),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(foregroundColor: TColors.khabith),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('حذف الحساب'),
+            child: Text(l.settings_deleteAccount),
           ),
         ],
       ),
@@ -53,23 +55,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await context.read<AccountService>().deleteAccount();
       if (!mounted) return;
-      // نجح الحذف. أبلغ المستخدم بصراحة أن أي تسجيل جديد يُنشئ حساباً مختلفاً
-      // حتى لو استخدم البريد نفسه — وإلا يحسب أن الحذف لم يعمل.
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('تم حذف حسابك'),
-          content: const Text(
-            'تم محو حسابك وبياناته من الخادم نهائياً.\n\n'
-            'لو سجّلت دخولاً مجدداً ببريد Google أو Apple نفسه، فسيُنشأ '
-            'حساب جديد تماماً بلا أي بيانات سابقة.',
-            style: TextStyle(height: 1.7),
+          title: Text(l.settings_deleteAccount_successTitle),
+          content: Text(
+            l.settings_deleteAccount_successBody,
+            style: const TextStyle(height: 1.7),
           ),
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('حسناً'),
+              child: Text(l.common_ok),
             ),
           ],
         ),
@@ -80,7 +78,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SnackBar(
           duration: const Duration(seconds: 6),
           content: Text(
-            'تعذّر حذف الحساب: ${e is AccountException ? e.message : e}',
+            l.settings_deleteAccount_failed(
+              e is AccountException ? e.message : e.toString(),
+            ),
           ),
         ),
       );
@@ -92,21 +92,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
+    final locale = context.watch<LocaleService>();
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('الإعدادات')),
+      appBar: AppBar(title: Text(l.settings_title)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // -- Account ---------------------------------------------------
               CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'الحساب',
-                      style: TextStyle(
+                    Text(
+                      l.settings_account,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: TColors.primary,
                       ),
@@ -131,14 +134,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     OutlinedButton.icon(
                       onPressed: _deleting ? null : _signOut,
                       icon: const Icon(Icons.logout),
-                      label: const Text('تسجيل الخروج'),
+                      label: Text(l.settings_signOut),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: TColors.primary,
                         minimumSize: const Size.fromHeight(48),
                         side: const BorderSide(
-                          color: TColors.primary,
-                          width: 1.2,
-                        ),
+                            color: TColors.primary, width: 1.2),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -149,116 +150,150 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: TColors.khabith,
-                              ),
+                                strokeWidth: 2, color: TColors.khabith),
                             )
                           : const Icon(Icons.delete_forever),
-                      label: const Text('حذف الحساب'),
+                      label: Text(l.settings_deleteAccount),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: TColors.khabith,
                         minimumSize: const Size.fromHeight(48),
                         side: const BorderSide(
-                          color: TColors.khabith,
-                          width: 1.2,
-                        ),
+                            color: TColors.khabith, width: 1.2),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // -- Language --------------------------------------------------
               const SizedBox(height: 18),
               CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'التذكيرات',
-                      style: TextStyle(
+                    Text(
+                      l.settings_language,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: TColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SegmentedButton<String>(
+                      segments: [
+                        ButtonSegment(
+                          value: 'ar',
+                          label: Text(l.settings_language_arabic),
+                        ),
+                        ButtonSegment(
+                          value: 'en',
+                          label: Text(l.settings_language_english),
+                        ),
+                      ],
+                      selected: {locale.locale.languageCode},
+                      onSelectionChanged: (s) => locale.setLocale(
+                        Locale(s.first),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l.settings_partialEnglishNote,
+                      style: const TextStyle(
+                        color: TColors.textSecondary,
+                        fontSize: 11.5,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // -- Reminders -------------------------------------------------
+              const SizedBox(height: 18),
+              CardContainer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.settings_reminders,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: TColors.primary,
                       ),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const NotificationSettingsScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationSettingsScreen(),
+                        ),
+                      ),
                       icon: const Icon(Icons.notifications_outlined),
-                      label: const Text('إعدادات الإشعارات'),
+                      label: Text(l.settings_notificationSettings),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: TColors.primary,
                         alignment: AlignmentDirectional.centerStart,
                         minimumSize: const Size.fromHeight(48),
                         side: const BorderSide(
-                          color: TColors.primary,
-                          width: 1.2,
-                        ),
+                            color: TColors.primary, width: 1.2),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // -- Safety & legal --------------------------------------------
               const SizedBox(height: 18),
               CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'الأمان والقانون',
-                      style: TextStyle(
+                    Text(
+                      l.settings_safetyLegal,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: TColors.primary,
                       ),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const DisclaimerScreen(readOnly: true),
-                          ),
-                        );
-                      },
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const DisclaimerScreen(readOnly: true),
+                        ),
+                      ),
                       icon: const Icon(Icons.medical_information_outlined),
-                      label: const Text('إعادة قراءة التنبيه الطبي'),
+                      label: Text(l.settings_reReadDisclaimer),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: TColors.primary,
                         alignment: AlignmentDirectional.centerStart,
                         minimumSize: const Size.fromHeight(48),
                         side: const BorderSide(
-                          color: TColors.primary,
-                          width: 1.2,
-                        ),
+                            color: TColors.primary, width: 1.2),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // -- About -----------------------------------------------------
               const SizedBox(height: 18),
-              const CardContainer(
+              CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'حول',
-                      style: TextStyle(
+                      l.settings_about,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: TColors.primary,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      'الطيبات — تطبيق وعي غذائي. يستخدم نموذج Gemini للتحليل عبر '
-                      'خادم آمن. لا يقدّم استشارة طبية ولا يحلّ محل الطبيب أو '
-                      'أخصائي التغذية.',
-                      style: TextStyle(
+                      l.settings_about_body,
+                      style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,
                         height: 1.6,
@@ -267,6 +302,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+
+              // -- Dev tools (debug only) ------------------------------------
               if (kDebugMode) ...[
                 const SizedBox(height: 18),
                 CardContainer(
@@ -274,7 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'تطوير — لقطات المتجر',
+                        'Dev — App Store screenshots',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: TColors.gold,
@@ -282,8 +319,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'يزرع ١١ وجبة وهمية موزّعة على آخر ١٤ يوماً مع متابعات '
-                        'جسم متنوّعة. يظهر هذا الزر في وضع التطوير فقط.',
+                        'Seeds 11 synthetic meals across the last 14 days '
+                        'with varied body responses. Visible in debug builds '
+                        'only.',
                         style: TextStyle(
                           color: TColors.textSecondary,
                           fontSize: 11.5,
@@ -298,19 +336,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           final n = await repo.seedDemoData();
                           if (!mounted) return;
                           messenger.showSnackBar(
-                            SnackBar(content: Text('تم زرع $n وجبة تجريبية.')),
+                            SnackBar(
+                              content: Text('Seeded $n demo meals.'),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.science_outlined),
-                        label: const Text('زرع بيانات تجريبية'),
+                        label: const Text('Seed demo data'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: TColors.gold,
                           alignment: AlignmentDirectional.centerStart,
                           minimumSize: const Size.fromHeight(46),
                           side: const BorderSide(
-                            color: TColors.gold,
-                            width: 1.2,
-                          ),
+                              color: TColors.gold, width: 1.2),
                         ),
                       ),
                     ],

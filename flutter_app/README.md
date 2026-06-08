@@ -87,6 +87,12 @@ flutter create --org ai.tayyibat --platforms=ios,android .
 
 # يحمّل الاعتمادات (يتضمّن الآن sqflite + path_provider + uuid + shared_preferences)
 flutter pub get
+
+# ⚠️ مهم — يولّد أيقونة التطبيق (إيقاع الطيبات بالأخضر + ورقة + بذرة ذهبية) لـ iOS و Android.
+# لو تجاهلت هذه الخطوة، البناء يستخدم أيقونة Flutter الزرقاء الافتراضية (وقد تسبب
+# الرفض من App Store تحت توجيه 2.3.1 — محتوى مؤقت). شغّل مرّة واحدة، وبعد أي
+# تحديث للأيقونة:
+flutter pub run flutter_launcher_icons
 ```
 
 ### إضافات يدوية مطلوبة بعد `flutter create`
@@ -157,6 +163,40 @@ flutter run
 2. في Supabase → Authentication → Providers → Apple → فعّل، وأضف معرّف الحزمة
    (مثلاً `ai.tayyibat.tayyibat`) في حقل Client IDs.
 3. في `lib/config.dart` بدّل `appleSignInEnabled` إلى `true`.
+
+## ترقية إلى v1.0.0+3 — إنجليزي + iPad + أيقونة فعلية
+
+### ١) الإنجليزي (تبديل اللغة من داخل التطبيق)
+الإعدادات → "اللغة" → اختر **English**. التطبيق يبدّل فوراً إلى تخطيط LTR
+ويستخدم الترجمات في `lib/l10n/app_en.arb`. المحتوى الطويل (الدليل، بنك الوجبات،
+البرنامج، النصائح، ونصوص التحليل من Gemini) يبقى بالعربية في هذا الإصدار —
+سيُترجم في تحديث قادم.
+
+### ٢) iPad — إعادة التفعيل
+الإصدارات السابقة كانت iPhone-فقط. لإعادة دعم iPad (universal binary):
+
+في Xcode افتح `Runner.xcworkspace` → اختر مشروع **Runner** → target **Runner** →
+تبويب **General** → قسم **Supported Destinations** → اضغط **+** → أضف
+**iPad** بجانب iPhone الموجود. احفظ.
+
+التطبيق سيعمل على iPad بتخطيط الهاتف العمودي مقيّداً بـ `ConstrainedBox(maxWidth: 460)`
+في شاشات المصادقة، وبقية الشاشات تتمدّد على عرض الـ iPad. تخطيطات iPad حقيقية
+(split view، شبكات أوسع) تأتي في إصدار لاحق.
+
+### ٣) خطوات البناء الكاملة للإصدار 1.0.0+3
+```bash
+cd ~/anthropic-claude-/flutter_app
+
+flutter pub get
+flutter pub run flutter_launcher_icons        # ← أيقونة الطيبات الفعلية
+cd ios && pod install && cd ..
+
+flutter build ipa --release
+# IPA في build/ios/ipa/tayyibat.ipa → اسحبه إلى Transporter → Deliver
+```
+
+ثم في App Store Connect → 1.0 Prepare for Submission → قسم Build → اختر
+**1.0.1 (3)** → أكمل الإرسال.
 
 ## التشغيل
 

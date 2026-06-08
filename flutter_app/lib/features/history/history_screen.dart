@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
 import 'body_intelligence_section.dart';
@@ -26,24 +27,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<MealRepository>();
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('السجل'),
+        title: Text(l.tab_history),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(54),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: SegmentedButton<_HistoryView>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: _HistoryView.list,
-                  icon: Icon(Icons.view_list, size: 18),
-                  label: Text('قائمة'),
+                  icon: const Icon(Icons.view_list, size: 18),
+                  label: Text(l.history_list),
                 ),
                 ButtonSegment(
                   value: _HistoryView.calendar,
-                  icon: Icon(Icons.calendar_month, size: 18),
-                  label: Text('تقويم'),
+                  icon: const Icon(Icons.calendar_month, size: 18),
+                  label: Text(l.history_calendar),
                 ),
               ],
               selected: {_view},
@@ -70,6 +72,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _emptyState(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -80,14 +83,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 size: 64, color: TColors.textSecondary),
             const SizedBox(height: 12),
             Text(
-              'لا سجلّات بعد',
+              l.history_empty_title,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'صوّر أول وجبة من تبويب اليوم لتبدأ المتابعة.',
+            Text(
+              l.history_empty_hint,
               textAlign: TextAlign.center,
-              style: TextStyle(color: TColors.textSecondary),
+              style: const TextStyle(color: TColors.textSecondary),
             ),
           ],
         ),
@@ -271,9 +274,9 @@ class _CalendarViewState extends State<_CalendarView> {
               color: TColors.surface,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Text(
-              'لم تسجّل وجبات في هذا اليوم.',
-              style: TextStyle(color: TColors.textSecondary),
+            child: Text(
+              AppLocalizations.of(context)!.history_noMealsThatDay,
+              style: const TextStyle(color: TColors.textSecondary),
             ),
           )
         else
@@ -293,6 +296,7 @@ class _DaySummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     int? avg;
     if (meals.isNotEmpty) {
       final sum = meals.fold<int>(0, (a, m) => a + m.overallScore);
@@ -340,8 +344,14 @@ class _DaySummary extends StatelessWidget {
                 ),
                 Text(
                   meals.isEmpty
-                      ? 'بلا وجبات'
-                      : '${meals.length} ${meals.length == 1 ? "وجبة" : "وجبات"} • متوسط $avg٪',
+                      ? l.history_noMealsLabel
+                      : l.history_mealsAvg(
+                          meals.length,
+                          meals.length == 1
+                              ? l.history_mealsOne
+                              : l.history_mealsMany,
+                          avg ?? 0,
+                        ),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 12,
@@ -419,7 +429,7 @@ class _MealRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _relativeDate(meal.capturedAt),
+                      _relativeDate(context, meal.capturedAt),
                       style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,
@@ -433,7 +443,8 @@ class _MealRow extends StatelessWidget {
                               size: 12, color: TColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'متابعة جسم مسجّلة',
+                            AppLocalizations.of(context)!
+                                .history_bodyTrackingLogged,
                             style: TextStyle(
                               color: TColors.primary.withOpacity(0.9),
                               fontSize: 11,
@@ -497,16 +508,17 @@ class _MealRow extends StatelessWidget {
             color: TColors.textSecondary, size: 22),
       );
 
-  String _relativeDate(DateTime dt) {
+  String _relativeDate(BuildContext context, DateTime dt) {
+    final l = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final local = dt.toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final mealDay = DateTime(local.year, local.month, local.day);
     String two(int n) => n.toString().padLeft(2, '0');
     final time = '${two(local.hour)}:${two(local.minute)}';
-    if (mealDay == today) return 'اليوم • $time';
+    if (mealDay == today) return '${l.history_today} • $time';
     if (mealDay == today.subtract(const Duration(days: 1))) {
-      return 'أمس • $time';
+      return '${l.history_yesterday} • $time';
     }
     return '${local.year}/${two(local.month)}/${two(local.day)} • $time';
   }

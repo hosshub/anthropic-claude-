@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/analyze_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
@@ -25,6 +26,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   String? _error;
 
   Future<void> _pick(ImageSource source) async {
+    final l = AppLocalizations.of(context)!;
     setState(() {
       _busy = true;
       _error = null;
@@ -42,7 +44,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
       final Uint8List bytes = await picked.readAsBytes();
       final result = await _analyzer.analyze(bytes);
       if (!mounted) return;
-      // احفظ الوجبة محلياً قبل الانتقال للنتيجة.
       final saved = await context
           .read<MealRepository>()
           .saveFromAnalysis(result, bytes);
@@ -60,15 +61,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
     } catch (e) {
       setState(() {
         _busy = false;
-        _error = 'حدث خطأ غير متوقع: $e';
+        _error = '${l.capture_unexpectedError}: $e';
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('تحليل وجبة')),
+      appBar: AppBar(title: Text(l.capture_title)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -77,13 +79,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (_busy)
-                const Column(
+                Column(
                   children: [
-                    CircularProgressIndicator(color: TColors.primary),
-                    SizedBox(height: 14),
+                    const CircularProgressIndicator(color: TColors.primary),
+                    const SizedBox(height: 14),
                     Text(
-                      'جارٍ تحليل الوجبة…',
-                      style: TextStyle(color: TColors.textSecondary),
+                      l.capture_analyzing,
+                      style: const TextStyle(color: TColors.textSecondary),
                     ),
                   ],
                 )
@@ -95,7 +97,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'صوّر وجبتك أو اختر صورة من المعرض، وسنحلّلها فوراً.',
+                  l.capture_hint,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: TColors.textSecondary,
@@ -103,7 +105,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 ),
                 const SizedBox(height: 28),
                 PrimaryButton(
-                  label: 'التقط بالكاميرا',
+                  label: l.capture_camera,
                   icon: Icons.camera_alt,
                   onPressed: () => _pick(ImageSource.camera),
                 ),
@@ -111,7 +113,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 OutlinedButton.icon(
                   onPressed: () => _pick(ImageSource.gallery),
                   icon: const Icon(Icons.photo_library),
-                  label: const Text('اختر من المعرض'),
+                  label: Text(l.capture_gallery),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: TColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
@@ -46,22 +47,21 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   }
 
   Future<void> _delete(Meal meal) async {
+    final l = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('حذف هذه الوجبة؟'),
-        content: const Text('سيُحذف سجل الوجبة وملاحظاتها نهائياً.'),
+        title: Text(l.mealDetail_deleteTitle),
+        content: Text(l.mealDetail_deleteBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('إلغاء'),
+            child: Text(l.common_cancel),
           ),
           FilledButton.tonal(
-            style: FilledButton.styleFrom(
-              foregroundColor: TColors.khabith,
-            ),
+            style: FilledButton.styleFrom(foregroundColor: TColors.khabith),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('حذف'),
+            child: Text(l.common_delete),
           ),
         ],
       ),
@@ -77,9 +77,10 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     // إعادة التحميل عند أي تغيير في المستودع (مثلاً بعد حفظ متابعة الجسم).
     _future ??= repo.load(widget.mealId);
 
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الوجبة'),
+        title: Text(l.mealDetail_title),
       ),
       body: FutureBuilder<Meal?>(
         future: _future,
@@ -89,7 +90,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           }
           final meal = snap.data;
           if (meal == null) {
-            return const Center(child: Text('لم تعد هذه الوجبة موجودة.'));
+            return Center(child: Text(l.mealDetail_notFound));
           }
           return _body(meal);
         },
@@ -98,6 +99,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   }
 
   Widget _body(Meal meal) {
+    final l = AppLocalizations.of(context)!;
     final scoreColor = TColors.scoreColor(meal.overallScore);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -151,7 +153,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           ),
           const SizedBox(height: 22),
           Text(
-            'العناصر',
+            l.mealDetail_items,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
@@ -166,7 +168,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
             OutlinedButton.icon(
               onPressed: () => _openBodyResponse(meal),
               icon: const Icon(Icons.favorite_border),
-              label: const Text('سجّل كيف شعرت بعد هذه الوجبة'),
+              label: Text(l.mealDetail_logBodyResponse),
               style: OutlinedButton.styleFrom(
                 foregroundColor: TColors.primary,
                 minimumSize: const Size.fromHeight(48),
@@ -182,13 +184,13 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.lightbulb, color: TColors.primary),
-                      SizedBox(width: 6),
+                      const Icon(Icons.lightbulb, color: TColors.primary),
+                      const SizedBox(width: 6),
                       Text(
-                        'اقتراحات للتحسين',
-                        style: TextStyle(
+                        l.mealDetail_suggestions,
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: TColors.primary,
                         ),
@@ -210,14 +212,14 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           TextButton.icon(
             onPressed: () => _delete(meal),
             icon: const Icon(Icons.delete_outline),
-            label: const Text('حذف الوجبة'),
+            label: Text(l.mealDetail_deleteMeal),
             style: TextButton.styleFrom(foregroundColor: TColors.khabith),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'هذا التطبيق لا يقدّم استشارة طبية. النتائج لأغراض المتابعة فقط.',
+          Text(
+            l.mealDetail_footerDisclaimer,
             textAlign: TextAlign.center,
-            style: TextStyle(color: TColors.textSecondary, fontSize: 11),
+            style: const TextStyle(color: TColors.textSecondary, fontSize: 11),
           ),
         ],
       ),
