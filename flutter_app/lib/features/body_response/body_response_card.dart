@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/enum_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/body_response.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
-/// بطاقة موجزة لمتابعة الجسم — تُعرض داخل تفاصيل الوجبة.
 class BodyResponseCard extends StatelessWidget {
   final BodyResponse response;
   final VoidCallback onEdit;
@@ -14,34 +15,34 @@ class BodyResponseCard extends StatelessWidget {
     required this.onEdit,
   });
 
-  String get _satisfactionText {
+  String _satisfactionText(AppLocalizations l) {
     switch (response.satisfyingFullness) {
       case 1:
-        return 'لا شبع';
+        return l.bodyResponseCard_satietyNone;
       case 2:
-        return 'خفيف';
+        return l.bodyResponseCard_satietyLight;
       case 3:
-        return 'مريح';
+        return l.bodyResponseCard_satietyComfortable;
       case 4:
-        return 'كامل';
+        return l.bodyResponseCard_satietyFull;
       default:
-        return 'ممتلئ جداً';
+        return l.bodyResponseCard_satietyOverfull;
     }
   }
 
-  String get _bloatingText {
+  String _bloatingText(AppLocalizations l) {
     switch (response.bloating) {
       case 0:
-        return 'مرتاح';
+        return l.bodyResponseCard_bloatingComfortable;
       case 1:
       case 2:
-        return 'خفيف';
+        return l.bodyResponseCard_bloatingLight;
       case 3:
-        return 'ملحوظ';
+        return l.bodyResponseCard_bloatingNoticeable;
       case 4:
-        return 'واضح';
+        return l.bodyResponseCard_bloatingClear;
       default:
-        return 'شديد';
+        return l.bodyResponseCard_bloatingSevere;
     }
   }
 
@@ -51,18 +52,18 @@ class BodyResponseCard extends StatelessWidget {
     return TColors.khabith;
   }
 
-  String get _energyText {
+  String _energyText(AppLocalizations l) {
     switch (response.energyLevel) {
       case 1:
-        return 'نعسان';
+        return l.bodyResponseCard_energySleepy;
       case 2:
-        return 'خامل';
+        return l.bodyResponseCard_energySluggish;
       case 3:
-        return 'عادي';
+        return l.bodyResponseCard_energyNormal;
       case 4:
-        return 'نشيط';
+        return l.bodyResponseCard_energyEnergetic;
       default:
-        return 'نشيط جداً';
+        return l.bodyResponseCard_energyVeryEnergetic;
     }
   }
 
@@ -90,6 +91,7 @@ class BodyResponseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +100,9 @@ class BodyResponseCard extends StatelessWidget {
             children: [
               const Icon(Icons.favorite, color: TColors.primary),
               const SizedBox(width: 6),
-              const Text(
-                'متابعة الجسم',
-                style: TextStyle(
+              Text(
+                l.bodyResponseCard_title,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                   color: TColors.primary,
@@ -110,7 +112,7 @@ class BodyResponseCard extends StatelessWidget {
               TextButton(
                 onPressed: onEdit,
                 style: TextButton.styleFrom(foregroundColor: TColors.primary),
-                child: const Text('تعديل'),
+                child: Text(l.bodyResponseCard_edit),
               ),
             ],
           ),
@@ -119,20 +121,20 @@ class BodyResponseCard extends StatelessWidget {
             children: [
               _metric(
                 icon: Icons.restaurant,
-                label: 'الشبع',
-                value: _satisfactionText,
+                label: l.bodyResponseCard_satietyLabel,
+                value: _satisfactionText(l),
                 color: TColors.primary,
               ),
               _metric(
                 icon: Icons.air,
-                label: 'الانتفاخ',
-                value: _bloatingText,
+                label: l.bodyResponseCard_bloatingLabel,
+                value: _bloatingText(l),
                 color: _bloatingColor,
               ),
               _metric(
                 icon: Icons.bolt,
-                label: 'الطاقة',
-                value: _energyText,
+                label: l.bodyResponseCard_energyLabel,
+                value: _energyText(l),
                 color: TColors.primary,
               ),
             ],
@@ -144,12 +146,12 @@ class BodyResponseCard extends StatelessWidget {
             children: [
               _pill(
                 icon: Icons.nights_stay,
-                label: response.sleepImpact.labelAr,
+                label: sleepImpactLabel(l, response.sleepImpact),
                 color: TColors.primary,
               ),
               _pill(
                 icon: _worthIcon,
-                label: response.worthRepeating.labelAr,
+                label: worthRepeatingLabel(l, response.worthRepeating),
                 color: _worthColor,
               ),
             ],
@@ -167,7 +169,7 @@ class BodyResponseCard extends StatelessWidget {
           ],
           const SizedBox(height: 6),
           Text(
-            'سُجّلت بعد ${response.hoursAfterMeal} ساعة من الوجبة',
+            l.bodyResponseCard_loggedAfter(response.hoursAfterMeal),
             style: const TextStyle(color: TColors.textSecondary, fontSize: 11),
           ),
         ],

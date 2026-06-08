@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../l10n/enum_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
 
-/// تدفق متابعة الجسم بعد الوجبة — ٥ أسئلة + شاشة شكر.
 class BodyResponseFlow extends StatefulWidget {
   final Meal meal;
   const BodyResponseFlow({super.key, required this.meal});
@@ -16,7 +17,7 @@ class BodyResponseFlow extends StatefulWidget {
 }
 
 class _BodyResponseFlowState extends State<BodyResponseFlow> {
-  static const int _totalSteps = 6; // ٥ أسئلة + شاشة الشكر
+  static const int _totalSteps = 6;
 
   final PageController _controller = PageController();
   int _step = 0;
@@ -61,6 +62,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
   }
 
   Future<void> _saveAndAdvance() async {
+    final l = AppLocalizations.of(context)!;
     setState(() {
       _saving = true;
       _error = null;
@@ -77,7 +79,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
           );
       _go(_totalSteps - 1);
     } catch (e) {
-      setState(() => _error = 'تعذّر الحفظ: $e');
+      setState(() => _error = l.bodyResponse_couldNotSave(e.toString()));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -85,42 +87,38 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: TColors.background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _header,
-              Expanded(
-                child: PageView(
-                  controller: _controller,
-                  onPageChanged: (i) => setState(() => _step = i),
-                  children: [
-                    _satisfactionPage,
-                    _bloatingPage,
-                    _energyPage,
-                    _sleepPage,
-                    _worthPage,
-                    _thankYouPage,
-                  ],
-                ),
+    final l = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: TColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(l),
+            Expanded(
+              child: PageView(
+                controller: _controller,
+                onPageChanged: (i) => setState(() => _step = i),
+                children: [
+                  _satisfactionPage(l),
+                  _bloatingPage(l),
+                  _energyPage(l),
+                  _sleepPage(l),
+                  _worthPage(l),
+                  _thankYouPage(l),
+                ],
               ),
-              _footer,
-            ],
-          ),
+            ),
+            _buildFooter(l),
+          ],
         ),
       ),
     );
   }
 
-  // ----- Header / Footer -----
-
-  Widget get _header {
+  Widget _buildHeader(AppLocalizations l) {
     final stepIndicator = _step < _totalSteps - 1
-        ? '${_step + 1} / ${_totalSteps - 1}'
-        : 'تم';
+        ? l.bodyResponse_stepIndicator(_step + 1, _totalSteps - 1)
+        : l.common_done;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
       child: Column(
@@ -130,12 +128,12 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: TextButton.styleFrom(foregroundColor: TColors.textSecondary),
-                child: const Text('لاحقاً'),
+                child: Text(l.bodyResponse_later),
               ),
               const Spacer(),
-              const Text(
-                'كيف شعرت بعد الوجبة؟',
-                style: TextStyle(
+              Text(
+                l.bodyResponse_title,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: TColors.textPrimary,
@@ -163,7 +161,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _footer {
+  Widget _buildFooter(AppLocalizations l) {
     final isQuestionPage = _step < _totalSteps - 1;
     final isLastQuestion = _step == _totalSteps - 2;
     return Padding(
@@ -177,7 +175,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                 foregroundColor: TColors.textSecondary,
                 side: BorderSide(color: TColors.textSecondary.withOpacity(0.3)),
               ),
-              child: const Text('السابق'),
+              child: Text(l.common_previous),
             ),
           const Spacer(),
           if (_error != null) ...[
@@ -197,7 +195,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                 backgroundColor: TColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('التالي'),
+              child: Text(l.common_next),
             )
           else if (isLastQuestion)
             ElevatedButton(
@@ -212,7 +210,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('احفظ'),
+                  : Text(l.bodyResponse_save),
             )
           else
             ElevatedButton(
@@ -221,14 +219,12 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                 backgroundColor: TColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('أنهِ'),
+              child: Text(l.bodyResponse_finish),
             ),
         ],
       ),
     );
   }
-
-  // ----- Pages -----
 
   Widget _questionFrame({
     required String title,
@@ -260,7 +256,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _satisfactionPage {
+  Widget _satisfactionPage(AppLocalizations l) {
     String emojiFor(int v) {
       switch (v) {
         case 1:
@@ -279,20 +275,20 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     String hintFor(int v) {
       switch (v) {
         case 1:
-          return 'لم أشعر بشبع';
+          return l.bodyResponse_q1_h1;
         case 2:
-          return 'شبع خفيف';
+          return l.bodyResponse_q1_h2;
         case 3:
-          return 'شبع مريح';
+          return l.bodyResponse_q1_h3;
         case 4:
-          return 'شبع كامل';
+          return l.bodyResponse_q1_h4;
         default:
-          return 'ممتلئ جداً';
+          return l.bodyResponse_q1_h5;
       }
     }
 
     return _questionFrame(
-      title: 'هل شعرت بشبع مريح؟',
+      title: l.bodyResponse_q1_title,
       hint: hintFor(_satisfaction),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -322,13 +318,13 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _bloatingPage {
+  Widget _bloatingPage(AppLocalizations l) {
     String hint() {
-      if (_bloating == 0) return 'مرتاح تماماً';
-      if (_bloating <= 2) return 'ثقل خفيف';
-      if (_bloating == 3) return 'انتفاخ ملحوظ';
-      if (_bloating == 4) return 'ثقل واضح';
-      return 'ثقل شديد';
+      if (_bloating == 0) return l.bodyResponse_q2_h_comfortable;
+      if (_bloating <= 2) return l.bodyResponse_q2_h_lightHeavy;
+      if (_bloating == 3) return l.bodyResponse_q2_h_bloating;
+      if (_bloating == 4) return l.bodyResponse_q2_h_clearHeavy;
+      return l.bodyResponse_q2_h_severeHeavy;
     }
 
     Color color() {
@@ -338,7 +334,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     }
 
     return _questionFrame(
-      title: 'هل حدث انتفاخ أو ثقل؟',
+      title: l.bodyResponse_q2_title,
       hint: hint(),
       body: Column(
         children: [
@@ -364,13 +360,15 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
               onChanged: (v) => setState(() => _bloating = v.round()),
             ),
           ),
-          const Row(
+          Row(
             children: [
-              Text('٠ مرتاح',
-                  style: TextStyle(color: TColors.textSecondary, fontSize: 11)),
-              Spacer(),
-              Text('٥ ثقل شديد',
-                  style: TextStyle(color: TColors.textSecondary, fontSize: 11)),
+              Text(l.bodyResponse_q2_axisStart,
+                  style: const TextStyle(
+                      color: TColors.textSecondary, fontSize: 11)),
+              const Spacer(),
+              Text(l.bodyResponse_q2_axisEnd,
+                  style: const TextStyle(
+                      color: TColors.textSecondary, fontSize: 11)),
             ],
           ),
         ],
@@ -378,24 +376,24 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _energyPage {
+  Widget _energyPage(AppLocalizations l) {
     String label(int v) {
       switch (v) {
         case 1:
-          return 'نعسان جداً';
+          return l.bodyResponse_q3_l1;
         case 2:
-          return 'خامل';
+          return l.bodyResponse_q3_l2;
         case 3:
-          return 'عادي';
+          return l.bodyResponse_q3_l3;
         case 4:
-          return 'نشيط';
+          return l.bodyResponse_q3_l4;
         default:
-          return 'نشيط جداً';
+          return l.bodyResponse_q3_l5;
       }
     }
 
     return _questionFrame(
-      title: 'كيف كانت طاقتك بعد الأكل؟',
+      title: l.bodyResponse_q3_title,
       hint: label(_energy),
       body: Column(
         children: [
@@ -410,15 +408,15 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _sleepPage {
+  Widget _sleepPage(AppLocalizations l) {
     return _questionFrame(
-      title: 'كيف كان نومك بعد الوجبة؟',
-      hint: 'اختياري — يمكنك تركها على "لا أعلم" والعودة لاحقاً.',
+      title: l.bodyResponse_q4_title,
+      hint: l.bodyResponse_q4_hint,
       body: Column(
         children: [
           for (final option in SleepImpact.values)
             _RadioRow(
-              label: option.labelAr,
+              label: sleepImpactLabel(l, option),
               selected: _sleep == option,
               onTap: () => setState(() => _sleep = option),
             ),
@@ -427,10 +425,10 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _worthPage {
+  Widget _worthPage(AppLocalizations l) {
     return _questionFrame(
-      title: 'هل تستحق هذه الوجبة التكرار؟',
-      hint: 'هذه الإجابة تساعد التطبيق يقترح ما يناسب جسمك.',
+      title: l.bodyResponse_q5_title,
+      hint: l.bodyResponse_q5_hint,
       body: Column(
         children: [
           Row(
@@ -455,7 +453,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                                 style: const TextStyle(fontSize: 36)),
                             const SizedBox(height: 4),
                             Text(
-                              option.labelAr,
+                              worthRepeatingLabel(l, option),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 12,
@@ -477,8 +475,8 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
               controller: _notesCtrl,
               maxLines: 3,
               minLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'لماذا؟ (اختياري)',
+              decoration: InputDecoration(
+                labelText: l.bodyResponse_q5_whyOptional,
               ),
             ),
           ],
@@ -487,7 +485,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     );
   }
 
-  Widget get _thankYouPage {
+  Widget _thankYouPage(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -495,14 +493,14 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
         children: [
           const Icon(Icons.favorite, color: TColors.primary, size: 64),
           const SizedBox(height: 14),
-          Text('شكراً لك',
+          Text(l.bodyResponse_thanks_title,
               style: Theme.of(context).textTheme.displayLarge,
               textAlign: TextAlign.center),
           const SizedBox(height: 10),
-          const Text(
-            'هذه الملاحظات تساعدك تعرف جسمك أكثر، ومع الوقت يساعدك التطبيق على اقتراح ما يناسبك.',
+          Text(
+            l.bodyResponse_thanks_body,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: TColors.textSecondary,
               fontSize: 14,
               height: 1.6,

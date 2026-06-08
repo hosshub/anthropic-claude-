@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/suggestion.dart';
 import '../../services/suggestion_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
 
-/// "اقتراحات ذكية" — تبويبان: اقتراح وجبة واحدة، وخطة الأسبوع.
 class SuggestionsScreen extends StatelessWidget {
   const SuggestionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('اقتراحات ذكية'),
-          bottom: const TabBar(
+          title: Text(l.suggestions_title),
+          bottom: TabBar(
             indicatorColor: TColors.primary,
             labelColor: TColors.primary,
             unselectedLabelColor: TColors.textSecondary,
             tabs: [
-              Tab(text: 'اقتراح وجبة'),
-              Tab(text: 'خطة الأسبوع'),
+              Tab(text: l.suggestions_tab_single),
+              Tab(text: l.suggestions_tab_weekly),
             ],
           ),
         ),
@@ -80,19 +81,19 @@ class _SuggestionTabState extends State<_SuggestionTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         CardContainer(
           child: Row(
-            children: const [
-              Icon(Icons.auto_awesome, color: TColors.primary),
-              SizedBox(width: 10),
+            children: [
+              const Icon(Icons.auto_awesome, color: TColors.primary),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'اطلب من Gemini أن يقترح لك وجبة طيبة الآن — من المنطقة الخضراء، '
-                  'مع لمسات صفراء بحساب، وبدون أي عنصر ممنوع.',
-                  style: TextStyle(height: 1.55),
+                  l.suggestions_single_intro,
+                  style: const TextStyle(height: 1.55),
                 ),
               ),
             ],
@@ -100,7 +101,9 @@ class _SuggestionTabState extends State<_SuggestionTab>
         ),
         const SizedBox(height: 14),
         PrimaryButton(
-          label: _result == null ? 'اقترح وجبة' : 'اقترح وجبة أخرى',
+          label: _result == null
+              ? l.suggestions_single_button_first
+              : l.suggestions_single_button_again,
           icon: Icons.lightbulb,
           loading: _loading,
           onPressed: _loading ? null : _fetch,
@@ -128,6 +131,7 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,9 +173,9 @@ class _ResultCard extends StatelessWidget {
           ],
           if (suggestion.componentsAr.isNotEmpty) ...[
             const SizedBox(height: 14),
-            const Text(
-              'المكونات',
-              style: TextStyle(
+            Text(
+              l.suggestions_components,
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: TColors.primary,
               ),
@@ -258,19 +262,19 @@ class _PlanTabState extends State<_PlanTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         CardContainer(
           child: Row(
-            children: const [
-              Icon(Icons.calendar_today, color: TColors.primary),
-              SizedBox(width: 10),
+            children: [
+              const Icon(Icons.calendar_today, color: TColors.primary),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'ولّد خطة وجبات لسبعة أيام مرّتبة (سبت ← جمعة) مع الفطور '
-                  'والغداء والعشاء لكل يوم — من الطيبات فقط.',
-                  style: TextStyle(height: 1.55),
+                  l.suggestions_plan_intro,
+                  style: const TextStyle(height: 1.55),
                 ),
               ),
             ],
@@ -278,7 +282,9 @@ class _PlanTabState extends State<_PlanTab>
         ),
         const SizedBox(height: 14),
         PrimaryButton(
-          label: _plan == null ? 'ولّد خطة الأسبوع' : 'ولّد خطة جديدة',
+          label: _plan == null
+              ? l.suggestions_plan_button_first
+              : l.suggestions_plan_button_again,
           icon: Icons.event_note,
           loading: _loading,
           onPressed: _loading ? null : _fetch,

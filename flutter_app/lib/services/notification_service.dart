@@ -27,7 +27,23 @@ extension NotifKindMeta on NotifKind {
     }
   }
 
-  String get labelAr {
+  /// Title used on the notification + Android channel name. Reads the user's
+  /// chosen app language so reminders match the in-app language.
+  String label(String locale) {
+    if (locale == 'en') {
+      switch (this) {
+        case NotifKind.morningTip:
+          return 'Morning tip';
+        case NotifKind.lunchReminder:
+          return 'Lunch reminder';
+        case NotifKind.eveningTip:
+          return 'Evening tip';
+        case NotifKind.endOfDayLog:
+          return 'Log your meals';
+        case NotifKind.weeklyPrep:
+          return 'Weekly prep';
+      }
+    }
     switch (this) {
       case NotifKind.morningTip:
         return 'نصيحة الصباح';
@@ -42,7 +58,22 @@ extension NotifKindMeta on NotifKind {
     }
   }
 
-  String get descriptionAr {
+  /// Android channel description + fallback body when no tip is available.
+  String description(String locale) {
+    if (locale == 'en') {
+      switch (this) {
+        case NotifKind.morningTip:
+          return 'A morning tip from the Tayyibat system.';
+        case NotifKind.lunchReminder:
+          return 'A lunchtime reminder with a daily golden rule.';
+        case NotifKind.eveningTip:
+          return 'An evening tip before dinner.';
+        case NotifKind.endOfDayLog:
+          return 'Reminder to log what you ate today.';
+        case NotifKind.weeklyPrep:
+          return 'Every Saturday morning — a weekly prep checklist.';
+      }
+    }
     switch (this) {
       case NotifKind.morningTip:
         return 'تذكير صباحي بنصيحة من نظام الطيبات.';
@@ -216,6 +247,15 @@ class NotificationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String> _currentLocale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('app_locale') == 'en' ? 'en' : 'ar';
+    } catch (_) {
+      return 'ar';
+    }
+  }
+
   Future<void> _schedule(NotifKind kind) async {
     final (h, m) = kind.defaultTime;
     final now = tz.TZDateTime.now(tz.local);
@@ -230,19 +270,23 @@ class NotificationService extends ChangeNotifier {
       }
     }
 
+    final locale = await _currentLocale();
     final tip = await _pickTip(kind.tipSlot);
-    final body = tip?.textAr ?? kind.descriptionAr;
+    // Tip content stays Arabic in v1 (documented in the partial-English note);
+    // the title still adapts to the user's chosen language.
+    final body = tip?.textAr ?? kind.description(locale);
+    final title = kind.label(locale);
 
     await _plugin.zonedSchedule(
       kind.id,
-      kind.labelAr,
+      title,
       body,
       when,
       NotificationDetails(
         android: AndroidNotificationDetails(
           'tayyibat_${kind.name}',
-          kind.labelAr,
-          channelDescription: kind.descriptionAr,
+          title,
+          channelDescription: kind.description(locale),
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),
@@ -281,20 +325,20 @@ class NotificationService extends ChangeNotifier {
   }
 
   /// إشعار اختباري لمرة واحدة بعد ٥ ثوانٍ — مفيد للتأكد من إذن النظام.
-  Future<void> showTest() async {
+  Future<void> showTest(String title, String body) async {
     if (!_permissionGranted) await requestPermission();
     if (!_permissionGranted) return;
     final when = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
     await _plugin.zonedSchedule(
       9999,
-      'الطيبات',
-      'هذا إشعار اختباري. لو وصلك معناه التذكيرات شغّالة.',
+      title,
+      body,
       when,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'tayyibat_test',
-          'اختبار',
-          channelDescription: 'إشعار اختباري لمرة واحدة',
+          'Test',
+          channelDescription: 'One-off test notification',
           importance: Importance.high,
           priority: Priority.high,
         ),
