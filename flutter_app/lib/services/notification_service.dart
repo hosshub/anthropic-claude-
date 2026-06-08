@@ -127,6 +127,9 @@ extension NotifKindMeta on NotifKind {
 class NotificationService extends ChangeNotifier {
   static const String _kEnabled = 'notif_enabled_';
   static const String _kRecent = 'notif_recent_'; // ذيل آخر النصائح لكل تصنيف
+  static const String _kBodyFollowupEnabled = 'notif_body_followup_enabled';
+  static const String _kBodyFollowupIds = 'notif_body_followup_ids';
+  static const Duration _bodyFollowupDelay = Duration(hours: 3);
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -135,8 +138,10 @@ class NotificationService extends ChangeNotifier {
   bool _ready = false;
   bool _permissionGranted = false;
   final Map<NotifKind, bool> _enabled = {};
+  bool _bodyFollowupEnabled = true;
 
   bool get isReady => _ready;
+  bool get bodyFollowupEnabled => _bodyFollowupEnabled;
   bool get permissionGranted => _permissionGranted;
   bool enabled(NotifKind k) => _enabled[k] ?? false;
 
@@ -162,6 +167,8 @@ class NotificationService extends ChangeNotifier {
     for (final k in NotifKind.values) {
       _enabled[k] = prefs.getBool('$_kEnabled${k.name}') ?? false;
     }
+    // Body-followup is opt-in but defaults to true on first launch.
+    _bodyFollowupEnabled = prefs.getBool(_kBodyFollowupEnabled) ?? true;
     _permissionGranted = await _checkPermission();
     _ready = true;
     notifyListeners();
@@ -320,6 +327,124 @@ class NotificationService extends ChangeNotifier {
   /// إلغاء كل ما هو مجدول (يفيد عند تسجيل الخروج).
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Body-response followup — one-shot reminder ~3h after each meal.
+  // ---------------------------------------------------------------------------
+
+  Future<void> setBodyFollowupEnabled(bool on) async {
+    _bodyFollowupEnabled = on;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kBodyFollowupEnabled, on);
+    if (!on) {
+      await cancelAllBodyFollowups();
+    }
+    notifyListeners();
+  }
+
+  int _bodyFollowupId(String mealId) =>
+      (mealId.hashCode & 0x7FFFFFFF) % 100000000 + 10000;
+
+  /// Schedule a one-shot "how did you feel?" nudge ~3 hours after the meal.
+  /// Silently no-ops if the feature is off, permission isn't granted, or the
+  /// meal was captured long enough ago that the scheduled time is already past.
+  Future<void> scheduleBodyFollowup(
+    String mealId,
+    DateTime capturedAt, {
+    Duration? delay,
+  }) async {
+    if (!_ready) await initialize();
+    if (!_bodyFollowupEnabled || !_permissionGranted) return;
+
+    final fireAt = capturedAt.add(delay ?? _bodyFollowupDelay);
+    final now = DateTime.now();
+    if (fireAt.isBefore(now.add(const Duration(seconds: 30)))) return;
+
+    final locale = await _currentLocale();
+    final timeLabel = _formatTime(capturedAt);
+    final (title, body) = _bodyFollowupCopy(locale, timeLabel);
+
+    final tzWhen = tz.TZDateTime.from(fireAt, tz.local);
+    final id = _bodyFollowupId(mealId);
+
+    await _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tzWhen,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'tayyibat_body_followup',
+          'Body response',
+          channelDescription: 'How did you feel after the meal?',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'body-response:$mealId',
+    );
+
+    await _rememberFollowup(mealId);
+  }
+
+  Future<void> cancelBodyFollowup(String mealId) async {
+    await _plugin.cancel(_bodyFollowupId(mealId));
+    await _forgetFollowup(mealId);
+  }
+
+  Future<void> cancelAllBodyFollowups() async {
+    final ids = await _loadFollowupIds();
+    for (final mealId in ids) {
+      await _plugin.cancel(_bodyFollowupId(mealId));
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kBodyFollowupIds);
+  }
+
+  Future<List<String>> _loadFollowupIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kBodyFollowupIds) ?? const [];
+  }
+
+  Future<void> _rememberFollowup(String mealId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = (prefs.getStringList(_kBodyFollowupIds) ?? const <String>[]).toList();
+    if (!list.contains(mealId)) {
+      list.add(mealId);
+      await prefs.setStringList(_kBodyFollowupIds, list);
+    }
+  }
+
+  Future<void> _forgetFollowup(String mealId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = (prefs.getStringList(_kBodyFollowupIds) ?? const <String>[]).toList();
+    if (list.remove(mealId)) {
+      await prefs.setStringList(_kBodyFollowupIds, list);
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    final l = dt.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(l.hour)}:${two(l.minute)}';
+  }
+
+  (String, String) _bodyFollowupCopy(String locale, String timeLabel) {
+    if (locale == 'en') {
+      return (
+        'How did you feel after your $timeLabel meal?',
+        'Open Tayyibat to log your body response.',
+      );
+    }
+    return (
+      'كيف شعرت بعد وجبة الساعة $timeLabel؟',
+      'افتح تطبيق الطيبات وسجّل ملاحظاتك.',
+    );
   }
 
   /// إشعار اختباري لمرة واحدة بعد ٥ ثوانٍ — مفيد للتأكد من إذن النظام.

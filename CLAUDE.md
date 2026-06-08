@@ -215,7 +215,7 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 8. CI on push | ✅ wired (v1.0.1) | `.github/workflows/flutter-ci.yml` runs `flutter analyze` + `flutter test` on every push that touches `flutter_app/**`. Flutter pinned to 3.24.5 (matches Dart 3.5 floor). |
 | 9. Crash reporting | ✅ wired (v1.0.1) | `sentry_flutter` 8.x in `main.dart`, gated on `--dart-define=SENTRY_DSN=...` (empty default = no events sent). PII collection, screenshots, view-hierarchy capture, traces, and profiling all disabled. EU region picked at the Sentry org level. |
 | 10. Onboarding refinements | ❌ pending | name + age + height collection (currently skipped) |
-| 11. Body-response notifications | ❌ pending | nudge X hours after a meal to log how you felt |
+| 11. Body-response notifications | ✅ wired (v1.0.1) | one-shot ~3h after each meal via `scheduleBodyFollowup`. Auto-cancels when the user logs the response, deletes the meal, or deletes the account. Toggle in Notification Settings; defaults on. Locale-aware title using the meal's `HH:MM` capture time. |
 | 12. App Preview video | ❌ pending | optional Apple slot; ~1 min QuickTime recording |
 | 13. Apple Watch companion | ❌ future | not v1 |
 | 14. iPad layout | ❌ future | currently iPhone-only (portrait locked) |

@@ -240,6 +240,8 @@
   "notif_kind_evening_desc": "An evening tip before dinner.",
   "notif_kind_endOfDay_desc": "Reminder to log what you ate today.",
   "notif_kind_weeklyPrep_desc": "Every Saturday morning — a weekly prep checklist.",
+  "notif_bodyFollowup_title": "Body response reminder",
+  "notif_bodyFollowup_subtitle": "3 hours after each meal",
   "notif_dailyAt": "Daily at {time}",
   "@notif_dailyAt": { "placeholders": { "time": { "type": "String" } } },
   "notif_everySaturdayAt": "Every Saturday at {time}",

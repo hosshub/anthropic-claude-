@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../services/account_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/locale_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../onboarding/disclaimer_screen.dart';
@@ -53,6 +54,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _deleting = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      // Tear down any pending body-followup notifications before the
+      // server-side delete; we won't have meal IDs after deleteAll().
+      await context.read<NotificationService>().cancelAllBodyFollowups();
+      if (!mounted) return;
       await context.read<AccountService>().deleteAccount();
       if (!mounted) return;
       await showDialog<void>(

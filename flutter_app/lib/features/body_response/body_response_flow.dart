@@ -6,6 +6,7 @@ import '../../l10n/enum_labels.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
+import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 
 class BodyResponseFlow extends StatefulWidget {
@@ -77,6 +78,10 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
             worthRepeating: _worth,
             notes: _notesCtrl.text,
           );
+      // Response is now logged → cancel any pending ~3h follow-up nudge.
+      if (mounted) {
+        await context.read<NotificationService>().cancelBodyFollowup(widget.meal.id);
+      }
       _go(_totalSteps - 1);
     } catch (e) {
       setState(() => _error = l.bodyResponse_couldNotSave(e.toString()));

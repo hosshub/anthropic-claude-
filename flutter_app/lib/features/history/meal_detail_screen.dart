@@ -7,6 +7,7 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
+import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/zone_badge.dart';
@@ -67,6 +68,8 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       ),
     );
     if (confirm != true) return;
+    await context.read<NotificationService>().cancelBodyFollowup(meal.id);
+    if (!mounted) return;
     await context.read<MealRepository>().delete(meal.id);
     if (mounted) Navigator.of(context).pop();
   }

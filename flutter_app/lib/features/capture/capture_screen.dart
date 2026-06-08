@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/analyze_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
 import 'result_screen.dart';
@@ -48,6 +50,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
           .read<MealRepository>()
           .saveFromAnalysis(result, bytes);
       if (!mounted) return;
+      // Best-effort schedule of the ~3h "how did you feel?" reminder.
+      // No-op if the feature is off or notifications aren't granted.
+      unawaited(context
+          .read<NotificationService>()
+          .scheduleBodyFollowup(saved.id, saved.capturedAt));
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ResultScreen(mealId: saved.id),

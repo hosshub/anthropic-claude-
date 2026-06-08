@@ -48,6 +48,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                                 .setEnabled(kind, v);
                           },
                         ),
+                      _BodyFollowupRow(
+                        enabled: svc.bodyFollowupEnabled,
+                        onToggle: (v) => context
+                            .read<NotificationService>()
+                            .setBodyFollowupEnabled(v),
+                      ),
                     ],
                   ),
                 ),
@@ -238,6 +244,61 @@ class _ToggleRow extends StatelessWidget {
                 ),
                 Text(
                   _time(l),
+                  style: const TextStyle(
+                    color: TColors.textSecondary,
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: enabled,
+            activeColor: TColors.primary,
+            onChanged: onToggle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BodyFollowupRow extends StatelessWidget {
+  final bool enabled;
+  final ValueChanged<bool> onToggle;
+  const _BodyFollowupRow({required this.enabled, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: TColors.primary.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(Icons.favorite, color: TColors.primary, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.notif_bodyFollowup_title,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  l.notif_bodyFollowup_subtitle,
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 11.5,

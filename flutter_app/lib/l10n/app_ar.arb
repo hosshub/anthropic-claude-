@@ -240,6 +240,8 @@
   "notif_kind_evening_desc": "نصيحة المساء قبل العشاء.",
   "notif_kind_endOfDay_desc": "تذكير بتسجيل ما أكلت اليوم.",
   "notif_kind_weeklyPrep_desc": "كل سبت صباحاً — قائمة تحضير الأسبوع.",
+  "notif_bodyFollowup_title": "تذكير متابعة الجسم",
+  "notif_bodyFollowup_subtitle": "بعد ٣ ساعات من كل وجبة",
   "notif_dailyAt": "يومياً {time}",
   "@notif_dailyAt": { "placeholders": { "time": { "type": "String" } } },
   "notif_everySaturdayAt": "كل سبت {time}",
