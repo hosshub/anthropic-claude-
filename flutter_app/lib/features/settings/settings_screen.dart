@@ -36,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // BuildContext across an async gap.
     final notifications = context.read<NotificationService>();
     final account = context.read<AccountService>();
+    final messenger = ScaffoldMessenger.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -56,7 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (confirm != true) return;
     setState(() => _deleting = true);
-    final messenger = ScaffoldMessenger.of(context);
     try {
       // Tear down any pending body-followup notifications before the
       // server-side delete; we won't have meal IDs after deleteAll().
