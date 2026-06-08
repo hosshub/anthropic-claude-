@@ -37,7 +37,7 @@ void main() {
 
   group('BodyResponse map round-trip', () {
     test('toMap -> fromMap preserves all fields', () {
-      final logged = DateTime.fromMillisecondsSinceEpoch(1_700_000_000_000);
+      final logged = DateTime.fromMillisecondsSinceEpoch(1700000000000);
       final original = BodyResponse(
         id: 'r1',
         mealId: 'm1',
@@ -68,7 +68,7 @@ void main() {
       final restored = BodyResponse.fromMap({
         'id': 'r2',
         'meal_id': 'm2',
-        'logged_at': 1_700_000_000_000,
+        'logged_at': 1700000000000,
         // everything else missing
       });
       expect(restored.hoursAfterMeal, 0);

@@ -32,6 +32,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _deleteAccount() async {
     final l = AppLocalizations.of(context)!;
+    // Capture providers before the first await so we don't reach for
+    // BuildContext across an async gap.
+    final notifications = context.read<NotificationService>();
+    final account = context.read<AccountService>();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -56,9 +60,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       // Tear down any pending body-followup notifications before the
       // server-side delete; we won't have meal IDs after deleteAll().
-      await context.read<NotificationService>().cancelAllBodyFollowups();
+      await notifications.cancelAllBodyFollowups();
       if (!mounted) return;
-      await context.read<AccountService>().deleteAccount();
+      await account.deleteAccount();
       if (!mounted) return;
       await showDialog<void>(
         context: context,

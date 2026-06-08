@@ -59,6 +59,10 @@ Future<void> _bootstrap() async {
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
+    // anonKey is the publishable key; newer supabase_flutter renames the
+    // parameter to publishableKey, but anonKey still works across the
+    // versions our floor (^2.5.6) resolves to. Keep it for compatibility.
+    // ignore: deprecated_member_use
     anonKey: AppConfig.supabaseAnonKey,
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce,

@@ -12,7 +12,7 @@ class GuideForbiddenScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final red = GuideData.redZone;
+    const red = GuideData.redZone;
     return Scaffold(
       appBar: AppBar(title: Text(l.guide_section_forbidden)),
       body: ListView(

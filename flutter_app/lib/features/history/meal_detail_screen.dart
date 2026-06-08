@@ -49,6 +49,11 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
   Future<void> _delete(Meal meal) async {
     final l = AppLocalizations.of(context)!;
+    // Capture everything that needs `context` before the first await so we
+    // never touch BuildContext across an async gap.
+    final notifications = context.read<NotificationService>();
+    final meals = context.read<MealRepository>();
+    final navigator = Navigator.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -68,10 +73,9 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       ),
     );
     if (confirm != true) return;
-    await context.read<NotificationService>().cancelBodyFollowup(meal.id);
-    if (!mounted) return;
-    await context.read<MealRepository>().delete(meal.id);
-    if (mounted) Navigator.of(context).pop();
+    await notifications.cancelBodyFollowup(meal.id);
+    await meals.delete(meal.id);
+    navigator.pop();
   }
 
   @override
