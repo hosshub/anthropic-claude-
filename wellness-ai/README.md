@@ -13,6 +13,21 @@ three-zone scoring, freemium caps) but is its own business.
 
 ---
 
+## Repository layout
+
+```
+wellness-ai/
+├── README.md                       # this file
+├── EXTRACTION.md                   # how to lift this into its own repo + Claude Code project
+├── .gitignore
+├── docs/                           # strategy + spec
+│   ├── BRD.md  ·  PRD.md  ·  COMPETITIVE-ANALYSIS.md  ·  ARCHITECTURE.md
+├── app/                            # Flutter scaffold (consumer surface; provider to follow)
+│   ├── pubspec.yaml  ·  lib/…  ·  README.md
+└── backend/                        # Supabase scaffold
+    ├── sql/0001_init.sql  ·  functions/{analyze,provider-link}  ·  README.md
+```
+
 ## Documents
 
 | Doc | What it covers |
@@ -20,6 +35,8 @@ three-zone scoring, freemium caps) but is its own business.
 | **[docs/BRD.md](./docs/BRD.md)** | Business Requirements — vision, market, segments, business model, monetization, partnerships, regulatory strategy, risks, roadmap, unit economics |
 | **[docs/PRD.md](./docs/PRD.md)** | Product Requirements — personas, journeys, IA, functional requirements (consumer + provider), AI/ML, integrations, data model, privacy, freemium gating, MVP scope, milestones |
 | **[docs/COMPETITIVE-ANALYSIS.md](./docs/COMPETITIVE-ANALYSIS.md)** | Market size, competitor map, detailed profiles, feature matrix, pricing tables, gap analysis, positioning, sources |
+| **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | System diagram, key technical decisions, data flow, cost control, build-vs-buy |
+| **[EXTRACTION.md](./EXTRACTION.md)** | Turn `wellness-ai/` into its own repo + start a separate Claude Code project |
 
 ---
 
@@ -118,10 +135,16 @@ communication tool. Mandatory scroll-gated disclaimer; privacy near-clinical
 
 ## Status
 
-Strategy + spec drafted (this folder). Next steps: validate pricing + regional
-go-to-market, choose the meal-recognition build-vs-buy, recruit founding
-providers, and scope the MVP per PRD §15. These are **planning documents**, not
-code — when build starts, the recommended foundation is the same Flutter +
-Supabase + multimodal-AI-proxy stack proven in Tayyibat.
+- ✅ **Strategy + spec** — BRD, PRD, competitive analysis, architecture.
+- ✅ **Scaffold** — Flutter consumer app skeleton (auth → disclaimer → 5-tab
+  shell, capture→analyze wired to the backend stub) + Supabase backend (schema,
+  `analyze` + `provider-link` edge functions). **Not yet compiled** — expect
+  minor fixups on first `flutter run`; build out epics per PRD §15.
+- ⏭️ **Next:** extract into its own repo + Claude Code project (see
+  [EXTRACTION.md](./EXTRACTION.md)); resolve the 8 open questions (PRD §17);
+  recruit founding providers; ship the MVP.
+
+When build starts in earnest, the foundation is the same Flutter + Supabase +
+server-side multimodal-AI-proxy stack proven in Tayyibat.
 
 *Last updated: 2026-06-08.*

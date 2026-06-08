@@ -1,0 +1,64 @@
+name: wellness_ai
+description: Wellness AI — AI wellness platform (consumer + provider). Arabic-first.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Backend (auth, Postgres, storage, edge functions)
+  supabase_flutter: ^2.5.6
+  http: ^1.2.0
+
+  # Meal capture
+  image_picker: ^1.1.1
+
+  # Local persistence + cache
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  uuid: ^4.4.0
+  shared_preferences: ^2.3.2
+
+  # State management
+  provider: ^6.1.2
+
+  # OAuth deep-link return (wellnessai://login-callback)
+  app_links: ^6.3.2
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.5
+
+  # Local notifications (reminders, plan nudges, GLP-1 reminders)
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # Charts + calendar (Wellness Intelligence, history)
+  fl_chart: ^0.69.0
+  table_calendar: ^3.1.2
+
+  # Health / wearable data.
+  # v1: native via `health`. Phase 2: swap to an aggregator (Terra/Spike) SDK
+  # for 500+ devices through one integration (see docs/PRD.md §9).
+  health: ^11.0.0
+
+  # QR for provider invite codes (scan + display)
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/

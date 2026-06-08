@@ -1,0 +1,43 @@
+# --- Flutter / Dart ---
+app/.dart_tool/
+app/.packages
+app/.pub-cache/
+app/.pub/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.metadata
+
+# Generated platform folders (run `flutter create --platforms=ios,android .`)
+app/ios/
+app/android/
+app/macos/
+app/windows/
+app/linux/
+app/web/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# Secrets — NEVER commit
+.env
+.env.*
+**/secrets.*
+**/service-role-key*
+**/*.p8
+app/lib/config.local.dart
+
+# Supabase local
+backend/.branches/
+backend/.temp/
+supabase/.branches/
+supabase/.temp/
+
+# macOS
+.DS_Store
+
+# Submission assets (large binaries kept locally)
+marketing/screenshots/
