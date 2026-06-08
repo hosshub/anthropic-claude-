@@ -1,0 +1,54 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/flutter-ci.yml"
+  pull_request:
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/flutter-ci.yml"
+
+jobs:
+  analyze:
+    name: analyze + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Matches the Dart 3.5+ floor in pubspec.yaml. Bump in lockstep
+          # if you bump pubspec's sdk constraint.
+          flutter-version: "3.24.5"
+          cache: true
+
+      - name: Print versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Generate localizations
+        # Mirrors what `flutter pub get` does on a normal dev machine, but
+        # makes the gen-l10n step explicit so a failure here is loud.
+        run: flutter gen-l10n
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        # No tests yet — this still exits 0 if the test/ dir is empty.
+        run: flutter test --no-pub

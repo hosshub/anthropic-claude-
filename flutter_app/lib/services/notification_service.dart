@@ -272,9 +272,7 @@ class NotificationService extends ChangeNotifier {
 
     final locale = await _currentLocale();
     final tip = await _pickTip(kind.tipSlot);
-    // Tip content stays Arabic in v1 (documented in the partial-English note);
-    // the title still adapts to the user's chosen language.
-    final body = tip?.textAr ?? kind.description(locale);
+    final body = tip?.text(locale) ?? kind.description(locale);
     final title = kind.label(locale);
 
     await _plugin.zonedSchedule(

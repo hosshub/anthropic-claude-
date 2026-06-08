@@ -143,7 +143,7 @@
   "settings_language_english": "English",
   "settings_about": "About",
   "settings_about_body": "Tayyibat — a mindful eating app. Uses the Gemini model for analysis via a secure proxy. Does not provide medical advice and does not replace a doctor or dietitian.",
-  "settings_partialEnglishNote": "Some content (the Guide, Meal Banks, Program, Tips, and AI analysis text) remains in Arabic in this build. It will be translated in an upcoming update.",
+  "settings_partialEnglishNote": "Some content (the Guide, Meal Banks, and the 15-day Program) remains in Arabic in this build and will be translated in an upcoming update.",
 
   "bodyResponse_title": "How did you feel after the meal?",
   "bodyResponse_save": "Save",

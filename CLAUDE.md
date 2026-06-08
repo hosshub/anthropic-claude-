@@ -211,8 +211,8 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 4. Calendar view | ✅ done | toggle in History |
 | 5. Charts | ✅ done | fl_chart 30-day trend |
 | 6. Account deletion API surface | ✅ done | App Store 5.1.1(v) compliant |
-| 7. Localization (English) | 🟡 partial (v1.0.1) | auth/onboarding/today/history/settings/capture/result + body-response flow, suggestions, fasting, notifications, body-intelligence, when-in-doubt all bilingual. Guide tab, Meal Banks, 15-day Program, and tip body bank stay Arabic (~500 content strings; v1.1 candidate). Runtime toggle in Settings + LocaleService. AI prompt (Gemini) also locale-aware via the `locale` field on the analyze function. |
-| 8. CI on push | ❌ pending | recommended: GitHub Actions running `flutter analyze` + `flutter test` |
+| 7. Localization (English) | 🟡 partial (v1.0.1) | auth/onboarding/today/history/settings/capture/result + body-response flow, suggestions, fasting, notifications, body-intelligence, when-in-doubt, and the 35-tip notification bank all bilingual. Guide tab, Meal Banks, and 15-day Program stay Arabic (~500 content strings; v1.1 candidate). Runtime toggle in Settings + LocaleService. AI prompt (Gemini) also locale-aware via the `locale` field on the analyze function. |
+| 8. CI on push | ✅ wired (v1.0.1) | `.github/workflows/flutter-ci.yml` runs `flutter analyze` + `flutter test` on every push that touches `flutter_app/**`. Flutter pinned to 3.24.5 (matches Dart 3.5 floor). |
 | 9. Crash reporting | ✅ wired (v1.0.1) | `sentry_flutter` 8.x in `main.dart`, gated on `--dart-define=SENTRY_DSN=...` (empty default = no events sent). PII collection, screenshots, view-hierarchy capture, traces, and profiling all disabled. EU region picked at the Sentry org level. |
 | 10. Onboarding refinements | ❌ pending | name + age + height collection (currently skipped) |
 | 11. Body-response notifications | ❌ pending | nudge X hours after a meal to log how you felt |
