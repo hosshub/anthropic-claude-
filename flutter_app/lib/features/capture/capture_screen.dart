@@ -76,9 +76,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(l.capture_title)),
-      body: SafeArea(
+    return PopScope(
+      // Block system-back / iOS swipe-back while Gemini is mid-analysis —
+      // popping leaves an orphaned in-flight request that still burns the
+      // user's daily-cap quota even though they'll never see the result.
+      canPop: !_busy,
+      child: Scaffold(
+        appBar: AppBar(title: Text(l.capture_title)),
+        body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -147,6 +152,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

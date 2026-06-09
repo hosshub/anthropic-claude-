@@ -97,10 +97,30 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     _future ??= repo.load(widget.mealId);
 
     final l = AppLocalizations.of(context)!;
+    final postCapture = widget.isPostCapture;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.mealDetail_title),
+        // Post-analysis screen replaces the default back arrow with an
+        // explicit close X — this is the terminal result of an action,
+        // not a navigable node.
+        automaticallyImplyLeading: !postCapture,
+        leading: postCapture
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: l.common_close,
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
+      bottomNavigationBar: postCapture
+          ? _PostCaptureActionBar(
+              onDone: () => Navigator.of(context).pop(),
+              onCaptureAnother: () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const CaptureScreen()),
+              ),
+            )
+          : null,
       body: FutureBuilder<Meal?>(
         future: _future,
         builder: (context, snap) {
@@ -228,12 +248,15 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
             ),
           ],
           const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: () => _delete(meal),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(l.mealDetail_deleteMeal),
-            style: TextButton.styleFrom(foregroundColor: TColors.khabith),
-          ),
+          // Delete only belongs in the History → MealDetail flow, never on the
+          // freshly-captured result screen (avoids accidental one-tap regret).
+          if (!widget.isPostCapture)
+            TextButton.icon(
+              onPressed: () => _delete(meal),
+              icon: const Icon(Icons.delete_outline),
+              label: Text(l.mealDetail_deleteMeal),
+              style: TextButton.styleFrom(foregroundColor: TColors.khabith),
+            ),
           const SizedBox(height: 8),
           Text(
             l.mealDetail_footerDisclaimer,
@@ -350,4 +373,61 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     );
   }
 
+}
+
+/// Sticky bottom action bar shown after a fresh meal analysis. Two CTAs:
+/// "Done" (pops back to Today / wherever the user came from) and
+/// "Capture another" (`pushReplacement` straight into the camera).
+class _PostCaptureActionBar extends StatelessWidget {
+  final VoidCallback onDone;
+  final VoidCallback onCaptureAnother;
+  const _PostCaptureActionBar({
+    required this.onDone,
+    required this.onCaptureAnother,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        decoration: const BoxDecoration(
+          color: TColors.surface,
+          border: Border(
+            top: BorderSide(color: Color(0x14000000), width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onCaptureAnother,
+                icon: const Icon(Icons.camera_alt_outlined),
+                label: Text(l.result_captureAnother),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: TColors.primary,
+                  side: const BorderSide(color: TColors.primary, width: 1.2),
+                  minimumSize: const Size.fromHeight(48),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton(
+                onPressed: onDone,
+                style: FilledButton.styleFrom(
+                  backgroundColor: TColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: Text(l.common_done),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

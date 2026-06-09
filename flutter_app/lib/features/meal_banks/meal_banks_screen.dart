@@ -28,6 +28,8 @@ class MealBanksScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      showDragHandle: true,
       builder: (ctx) => _MealItemSheet(
         item: item,
         zoneColor: _zoneColor(item.zone),

@@ -52,7 +52,11 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
+    return PopScope(
+      // First-run disclaimer is a hard gate — Android system-back must not
+      // bypass it. Read-only mode (re-read from Settings) pops normally.
+      canPop: widget.readOnly,
+      child: Scaffold(
       backgroundColor: TColors.background,
       appBar: widget.readOnly
           ? AppBar(title: Text(l.disclaimer_screenTitle))
@@ -225,6 +229,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
