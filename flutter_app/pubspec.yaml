@@ -12,7 +12,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   # Pinned to match what flutter_localizations expects on Flutter 3.5.
-  intl: ^0.19.0
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
 
   # Crash + error reporting. PII collection disabled; builds without
