@@ -90,31 +90,74 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
     }
   }
 
+  /// Whether the user has progressed past the first question (i.e. has at
+  /// least one tap of effort to lose). The thank-you page (last step) is
+  /// excluded — exiting from there is the natural finish.
+  bool get _hasProgress => _step > 0 && _step < _totalSteps - 1;
+
+  /// Show a confirm-discard dialog. Returns true if user confirms they
+  /// want to exit (i.e. discard).
+  Future<bool> _confirmDiscard(AppLocalizations l) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.bodyResponse_discardTitle),
+        content: Text(l.bodyResponse_discardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.common_cancel),
+          ),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(foregroundColor: TColors.khabith),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.bodyResponse_discardConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: TColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(l),
-            Expanded(
-              child: PageView(
-                controller: _controller,
-                onPageChanged: (i) => setState(() => _step = i),
-                children: [
-                  _satisfactionPage(l),
-                  _bloatingPage(l),
-                  _energyPage(l),
-                  _sleepPage(l),
-                  _worthPage(l),
-                  _thankYouPage(l),
-                ],
+    return PopScope(
+      // Catch system-back / iOS swipe-back. canPop=true on the thank-you
+      // page or before the user starts; otherwise we intercept and ask
+      // whether to discard the in-progress answers.
+      canPop: !_hasProgress,
+      // Flutter 3.24 API (onPopInvokedWithResult is 3.27+).
+      // ignore: deprecated_member_use
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        if (await _confirmDiscard(l) && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: TColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(l),
+              Expanded(
+                child: PageView(
+                  controller: _controller,
+                  onPageChanged: (i) => setState(() => _step = i),
+                  children: [
+                    _satisfactionPage(l),
+                    _bloatingPage(l),
+                    _energyPage(l),
+                    _sleepPage(l),
+                    _worthPage(l),
+                    _thankYouPage(l),
+                  ],
+                ),
               ),
-            ),
-            _buildFooter(l),
-          ],
+              _buildFooter(l),
+            ],
+          ),
         ),
       ),
     );
@@ -131,7 +174,11 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
           Row(
             children: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () async {
+                  if (!_hasProgress || await _confirmDiscard(l)) {
+                    if (mounted) Navigator.of(context).pop();
+                  }
+                },
                 style: TextButton.styleFrom(foregroundColor: TColors.textSecondary),
                 child: Text(l.bodyResponse_later),
               ),

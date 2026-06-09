@@ -220,6 +220,9 @@
   "error_noSession": "No active session.",
 
   "bodyResponse_later": "Later",
+  "bodyResponse_discardTitle": "Discard your answers?",
+  "bodyResponse_discardBody": "They aren't saved yet. Exit without logging body response?",
+  "bodyResponse_discardConfirm": "Discard",
   "bodyResponse_stepIndicator": "{step} / {total}",
   "@bodyResponse_stepIndicator": { "placeholders": { "step": { "type": "int" }, "total": { "type": "int" } } },
 

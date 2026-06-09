@@ -43,16 +43,28 @@ class FastingCalculator {
     return '${date.year}-${two(date.month)}-${two(date.day)}';
   }
 
-  /// عرض هجري مختصر للعرض في الواجهة.
-  static String hijriShort(DateTime date) {
+  /// Compact Hijri label for the UI. Month names + year suffix flip with the
+  /// app locale — Arabic users see "15 ذو القعدة 1447هـ", English users see
+  /// "15 Dhul Qa'dah 1447 AH".
+  static String hijriShort(DateTime date, [String locale = 'ar']) {
     final h = HijriCalendar.fromDate(date);
-    const months = [
-      'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى',
-      'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال',
-      'ذو القعدة', 'ذو الحجة',
-    ];
-    return '${h.hDay} ${months[h.hMonth - 1]} ${h.hYear}هـ';
+    final months = locale == 'en' ? _hijriMonthsEn : _hijriMonthsAr;
+    final suffix = locale == 'en' ? ' AH' : 'هـ';
+    return '${h.hDay} ${months[h.hMonth - 1]} ${h.hYear}$suffix';
   }
+
+  static const List<String> _hijriMonthsAr = [
+    'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى',
+    'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال',
+    'ذو القعدة', 'ذو الحجة',
+  ];
+
+  /// Common transliterations (close to ISO 233 / Library of Congress).
+  static const List<String> _hijriMonthsEn = [
+    'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+    'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', "Sha'ban",
+    'Ramadan', 'Shawwal', "Dhul Qa'dah", 'Dhul Hijjah',
+  ];
 
   /// يجد أقرب يوم صيام مرشّح في الأيام القادمة (حتى ٣٠ يوم).
   static ({DateTime date, List<FastingKind> kinds})? nextRecommended(

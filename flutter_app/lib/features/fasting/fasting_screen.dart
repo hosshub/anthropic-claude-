@@ -136,6 +136,7 @@ class _TodayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final fasting = entry != null;
     final color = fasting ? TColors.zoneGreen : TColors.gold;
     return Container(
@@ -185,7 +186,7 @@ class _TodayCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      FastingCalculator.hijriShort(date),
+                      FastingCalculator.hijriShort(date, locale),
                       style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,
@@ -273,6 +274,7 @@ class _UpcomingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return CardContainer(
       child: Row(
         children: [
@@ -300,7 +302,7 @@ class _UpcomingCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  FastingCalculator.hijriShort(date),
+                  FastingCalculator.hijriShort(date, locale),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 11.5,

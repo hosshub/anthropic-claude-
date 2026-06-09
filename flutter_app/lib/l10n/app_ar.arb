@@ -220,6 +220,9 @@
   "error_noSession": "لا توجد جلسة مفتوحة.",
 
   "bodyResponse_later": "لاحقاً",
+  "bodyResponse_discardTitle": "تجاهل الإجابات؟",
+  "bodyResponse_discardBody": "لم تُحفظ بعد. هل تريد الخروج بدون حفظ متابعة الجسم؟",
+  "bodyResponse_discardConfirm": "تجاهل",
   "bodyResponse_stepIndicator": "{step} / {total}",
   "@bodyResponse_stepIndicator": { "placeholders": { "step": { "type": "int" }, "total": { "type": "int" } } },
 
