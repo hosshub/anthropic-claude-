@@ -14,11 +14,22 @@ import '../../widgets/card_container.dart';
 import '../../widgets/zone_badge.dart';
 import '../body_response/body_response_card.dart';
 import '../body_response/body_response_flow.dart';
+import '../capture/capture_screen.dart';
 
 /// تفاصيل وجبة محفوظة. تُعاد القراءة من المستودع عند العودة من تدفّق الجسم.
+///
+/// When [isPostCapture] is true, the chrome adapts for the just-analyzed
+/// experience: a close-X leading button, a sticky bottom action bar with
+/// "Done" + "Capture another", and the delete affordance is hidden (delete
+/// only belongs on a meal reached from History, to avoid one-tap regret).
 class MealDetailScreen extends StatefulWidget {
   final String mealId;
-  const MealDetailScreen({super.key, required this.mealId});
+  final bool isPostCapture;
+  const MealDetailScreen({
+    super.key,
+    required this.mealId,
+    this.isPostCapture = false,
+  });
 
   @override
   State<MealDetailScreen> createState() => _MealDetailScreenState();

@@ -10,13 +10,15 @@ import 'package:flutter/material.dart';
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool loading;
+  /// Required — pass the locale-aware label from the caller
+  /// (e.g. `AppLocalizations.of(context)!.auth_continueWithGoogle`).
   final String label;
 
   const GoogleSignInButton({
     super.key,
     this.onPressed,
     this.loading = false,
-    this.label = 'متابعة بحساب Google',
+    required this.label,
   });
 
   @override

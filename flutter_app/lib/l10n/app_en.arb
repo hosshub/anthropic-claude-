@@ -50,6 +50,7 @@
   "account_deleteFailedWithCode": "Couldn't delete account (code {code}).",
   "@account_deleteFailedWithCode": { "placeholders": { "code": { "type": "String" } } },
 
+  "result_captureAnother": "Capture another",
   "common_listSeparator": ", ",
   "common_percentValue": "{value}%",
   "@common_percentValue": { "placeholders": { "value": { "type": "int" } } },

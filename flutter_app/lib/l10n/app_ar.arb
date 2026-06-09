@@ -50,6 +50,7 @@
   "account_deleteFailedWithCode": "فشل حذف الحساب (رمز {code}).",
   "@account_deleteFailedWithCode": { "placeholders": { "code": { "type": "String" } } },
 
+  "result_captureAnother": "صوّر وجبة أخرى",
   "common_listSeparator": "، ",
   "common_percentValue": "{value}٪",
   "@common_percentValue": { "placeholders": { "value": { "type": "int" } } },
