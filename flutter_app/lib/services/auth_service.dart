@@ -8,6 +8,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
+import 'app_messages.dart';
 
 /// خدمة المصادقة فوق supabase_flutter. تعمل كـ ChangeNotifier حتى تُعيد الواجهات
 /// رسم نفسها عند تغيّر الجلسة (تسجيل دخول/خروج، تأكيد بريد… إلخ).
@@ -17,8 +18,12 @@ class AuthService extends ChangeNotifier {
 
   bool _restoring = true;
   bool _busy = false;
-  String? _error;
-  String? _info;
+  // Platform-emitted errors stay as raw strings (Supabase / Apple have their
+  // own language). App-owned info and error messages flow through [_infoCode]
+  // and [_errorCode] so the UI can localize at presentation time.
+  String? _platformError;
+  AppMessage? _errorCode;
+  AppMessage? _infoCode;
 
   AuthService() {
     _sub = _client.auth.onAuthStateChange.listen((state) {
@@ -39,8 +44,13 @@ class AuthService extends ChangeNotifier {
   bool get isBusy => _busy;
   bool get isAuthenticated => _client.auth.currentSession != null;
   String? get email => _client.auth.currentUser?.email;
-  String? get error => _error;
-  String? get info => _info;
+
+  /// Raw error message from the platform (Supabase / Apple). Not localized by us.
+  String? get platformError => _platformError;
+
+  /// App-owned error code (translatable). Resolve via [AppException.localize].
+  AppMessage? get errorCode => _errorCode;
+  AppMessage? get infoCode => _infoCode;
 
   // ---------------------------------------------------------------------------
   // البريد وكلمة المرور
@@ -72,7 +82,7 @@ class AuthService extends ChangeNotifier {
         password: password,
       );
       if (res.session == null) {
-        _info = 'أنشأنا حسابك. تحقّق من بريدك لتأكيد الحساب، ثم سجّل الدخول.';
+        _infoCode = AppMessage.authSignupConfirmEmail;
       }
       _finish();
       return true;
@@ -135,7 +145,7 @@ class AuthService extends ChangeNotifier {
 
       final idToken = credential.identityToken;
       if (idToken == null) {
-        _fail('تعذّر الحصول على بيانات Apple.');
+        _failWithCode(AppMessage.authAppleCredentialFailed);
         return false;
       }
 
@@ -147,7 +157,11 @@ class AuthService extends ChangeNotifier {
       _finish();
       return true;
     } on SignInWithAppleAuthorizationException catch (e) {
-      _fail(e.message.isEmpty ? 'أُلغي تسجيل الدخول.' : e.message);
+      if (e.message.isEmpty) {
+        _failWithCode(AppMessage.authAppleSignInCancelled);
+      } else {
+        _fail(e.message);
+      }
       return false;
     } on AuthException catch (e) {
       _fail(e.message);
@@ -170,8 +184,9 @@ class AuthService extends ChangeNotifier {
   }
 
   void clearMessages() {
-    _error = null;
-    _info = null;
+    _platformError = null;
+    _errorCode = null;
+    _infoCode = null;
     notifyListeners();
   }
 
@@ -181,8 +196,9 @@ class AuthService extends ChangeNotifier {
 
   void _start() {
     _busy = true;
-    _error = null;
-    _info = null;
+    _platformError = null;
+    _errorCode = null;
+    _infoCode = null;
     notifyListeners();
   }
 
@@ -193,7 +209,13 @@ class AuthService extends ChangeNotifier {
 
   void _fail(String message) {
     _busy = false;
-    _error = message;
+    _platformError = message;
+    notifyListeners();
+  }
+
+  void _failWithCode(AppMessage code) {
+    _busy = false;
+    _errorCode = code;
     notifyListeners();
   }
 

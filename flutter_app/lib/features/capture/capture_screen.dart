@@ -63,7 +63,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     } on AnalyzeException catch (e) {
       setState(() {
         _busy = false;
-        _error = e.message;
+        _error = e.serverMessage ?? e.localize(l);
       });
     } catch (e) {
       setState(() {

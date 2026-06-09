@@ -34,6 +34,30 @@
   "auth_invalidEmail": "بريد غير صالح",
   "auth_passwordTooShort": "كلمة المرور قصيرة جداً",
   "auth_signUpEmailSent": "أنشأنا حسابك. تحقّق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
+  "auth_appleCredentialFailed": "تعذّر الحصول على بيانات Apple.",
+  "auth_appleSignInCancelled": "أُلغي تسجيل الدخول.",
+
+  "analyze_dailyCapReached": "بلغت الحد اليومي للتحليلات.",
+  "analyze_failedWithCode": "تعذّر التحليل ({code}).",
+  "@analyze_failedWithCode": { "placeholders": { "code": { "type": "String" } } },
+  "analyze_badResponse": "استجابة غير متوقعة من الوسيط.",
+
+  "suggest_failedWithCode": "تعذّر الطلب ({code}).",
+  "@suggest_failedWithCode": { "placeholders": { "code": { "type": "String" } } },
+  "suggest_badResponse": "استجابة غير متوقعة من الوسيط.",
+
+  "account_deleteNotDeployed": "خدمة حذف الحساب غير منشورة على الخادم. أبلغ المطوّر.",
+  "account_deleteFailedWithCode": "فشل حذف الحساب (رمز {code}).",
+  "@account_deleteFailedWithCode": { "placeholders": { "code": { "type": "String" } } },
+
+  "common_listSeparator": "، ",
+  "common_percentValue": "{value}٪",
+  "@common_percentValue": { "placeholders": { "value": { "type": "int" } } },
+
+  "today_greetingWithName": "{greeting}، {name}",
+  "@today_greetingWithName": { "placeholders": { "greeting": { "type": "String" }, "name": { "type": "String" } } },
+
+  "history_calendar_month": "شهر",
 
   "disclaimer_welcome": "أهلاً بك في الطيبات",
   "disclaimer_intro": "قبل البدء، اقرأ التنبيه التالي حتى النهاية.",

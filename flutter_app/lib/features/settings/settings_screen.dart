@@ -83,13 +83,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      final detail = e is AccountException
+          ? (e.serverMessage != null
+              ? '${e.serverMessage} (${e.statusCode ?? ''})'
+              : e.localize(l))
+          : e.toString();
       messenger.showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 6),
           content: Text(
-            l.settings_deleteAccount_failed(
-              e is AccountException ? e.message : e.toString(),
-            ),
+            l.settings_deleteAccount_failed(detail),
           ),
         ),
       );

@@ -73,7 +73,9 @@ class _SuggestionTabState extends State<_SuggestionTab>
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = e is SuggestionException ? e.message : e.toString();
+        _error = e is SuggestionException
+            ? (e.serverMessage ?? e.localize(AppLocalizations.of(context)!))
+            : e.toString();
       });
     }
   }
@@ -254,7 +256,9 @@ class _PlanTabState extends State<_PlanTab>
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = e is SuggestionException ? e.message : e.toString();
+        _error = e is SuggestionException
+            ? (e.serverMessage ?? e.localize(AppLocalizations.of(context)!))
+            : e.toString();
       });
     }
   }

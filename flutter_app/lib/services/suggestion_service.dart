@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/suggestion.dart';
+import 'app_messages.dart';
 
 /// نفس عنوان الوسيط — الفرق فقط في حمولة الطلب (task vs image_base64).
 const String _proxyUrl =
@@ -41,14 +42,17 @@ class SuggestionService {
         .timeout(timeout);
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw SuggestionException(
-        _extractError(res.body) ?? 'تعذّر الطلب (${res.statusCode}).',
+      final serverMsg = _extractError(res.body);
+      if (serverMsg != null) throw SuggestionException.fromServer(serverMsg);
+      throw SuggestionException.code(
+        AppMessage.suggestFailedWithCode,
+        detail: '${res.statusCode}',
       );
     }
 
     final parsed = jsonDecode(res.body);
     if (parsed is! Map<String, dynamic>) {
-      throw SuggestionException('استجابة غير متوقعة من الوسيط.');
+      throw SuggestionException.code(AppMessage.suggestBadResponse);
     }
     return parsed;
   }
@@ -68,11 +72,27 @@ class SuggestionService {
   }
 }
 
-class SuggestionException implements Exception {
-  final String message;
-  SuggestionException(this.message);
-  @override
-  String toString() => message;
+class SuggestionException extends AppException {
+  /// Raw message from the server (already localized by the edge function).
+  final String? serverMessage;
+
+  SuggestionException._({
+    required AppMessage code,
+    String? detail,
+    this.serverMessage,
+  }) : super(code, detail: detail);
+
+  factory SuggestionException.code(AppMessage code, {String? detail}) =>
+      SuggestionException._(code: code, detail: detail);
+
+  factory SuggestionException.fromServer(String serverMessage) =>
+      SuggestionException._(
+        code: AppMessage.suggestBadResponse,
+        serverMessage: serverMessage,
+      );
+
+  /// Backwards-compat — prefer [localize] from the UI layer.
+  String get message => serverMessage ?? toString();
 }
 
 Future<String> _currentLocale() async {

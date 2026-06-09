@@ -34,6 +34,30 @@
   "auth_invalidEmail": "Invalid email",
   "auth_passwordTooShort": "Password is too short",
   "auth_signUpEmailSent": "Account created. Check your email to confirm, then sign in.",
+  "auth_appleCredentialFailed": "Couldn't get your Apple credentials.",
+  "auth_appleSignInCancelled": "Sign-in was cancelled.",
+
+  "analyze_dailyCapReached": "You've hit today's analysis limit.",
+  "analyze_failedWithCode": "Couldn't analyze ({code}).",
+  "@analyze_failedWithCode": { "placeholders": { "code": { "type": "String" } } },
+  "analyze_badResponse": "Unexpected response from the server.",
+
+  "suggest_failedWithCode": "Request failed ({code}).",
+  "@suggest_failedWithCode": { "placeholders": { "code": { "type": "String" } } },
+  "suggest_badResponse": "Unexpected response from the server.",
+
+  "account_deleteNotDeployed": "The account-deletion service isn't deployed on the server. Please contact the developer.",
+  "account_deleteFailedWithCode": "Couldn't delete account (code {code}).",
+  "@account_deleteFailedWithCode": { "placeholders": { "code": { "type": "String" } } },
+
+  "common_listSeparator": ", ",
+  "common_percentValue": "{value}%",
+  "@common_percentValue": { "placeholders": { "value": { "type": "int" } } },
+
+  "today_greetingWithName": "{greeting}, {name}",
+  "@today_greetingWithName": { "placeholders": { "greeting": { "type": "String" }, "name": { "type": "String" } } },
+
+  "history_calendar_month": "Month",
 
   "disclaimer_welcome": "Welcome to Tayyibat",
   "disclaimer_intro": "Before you begin, read the following notice to the end.",

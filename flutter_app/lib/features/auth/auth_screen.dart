@@ -6,6 +6,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../config.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../services/app_messages.dart';
 import '../../services/auth_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/google_sign_in_button.dart';
@@ -166,10 +167,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       loading: auth.isBusy,
                       onPressed: auth.isBusy ? null : _submit,
                     ),
-                    if (auth.info != null) ...[
+                    if (auth.infoCode != null) ...[
                       const SizedBox(height: 14),
                       Text(
-                        auth.info!,
+                        localizeAppMessage(l, auth.infoCode!),
                         style: const TextStyle(
                           color: TColors.primary,
                           fontSize: 13,
@@ -177,10 +178,12 @@ class _AuthScreenState extends State<AuthScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ],
-                    if (auth.error != null) ...[
+                    if (auth.errorCode != null || auth.platformError != null) ...[
                       const SizedBox(height: 14),
                       Text(
-                        auth.error!,
+                        auth.errorCode != null
+                            ? localizeAppMessage(l, auth.errorCode!)
+                            : auth.platformError!,
                         style: const TextStyle(
                           color: TColors.khabith,
                           fontSize: 13,
