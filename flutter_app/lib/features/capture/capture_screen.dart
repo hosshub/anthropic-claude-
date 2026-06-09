@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -50,6 +51,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
           .read<MealRepository>()
           .saveFromAnalysis(result, bytes);
       if (!mounted) return;
+      // Gentle haptic confirms the save landed; bump to medium for a
+      // 90+ score so the app subtly celebrates a great meal.
+      if (saved.overallScore >= 90) {
+        HapticFeedback.mediumImpact();
+      } else {
+        HapticFeedback.lightImpact();
+      }
       // Best-effort schedule of the ~3h "how did you feel?" reminder.
       // No-op if the feature is off or notifications aren't granted.
       unawaited(context

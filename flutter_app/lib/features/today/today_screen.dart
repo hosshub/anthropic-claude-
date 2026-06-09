@@ -194,42 +194,49 @@ class TodayScreen extends StatelessWidget {
     final color = TColors.scoreColor(score);
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 168,
-              height: 168,
-              child: CircularProgressIndicator(
-                value: score / 100,
-                strokeWidth: 11,
-                backgroundColor: color.withOpacity(0.18),
-                color: color,
-                strokeCap: StrokeCap.round,
+        // Single Semantics node — screen readers announce "Today's score,
+        // 78 percent" instead of "78%, Today's score, [progress bar at 78%]".
+        Semantics(
+          label: '${l.today_score}, ${l.common_percentValue(score)}',
+          container: true,
+          excludeSemantics: true,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 168,
+                height: 168,
+                child: CircularProgressIndicator(
+                  value: score / 100,
+                  strokeWidth: 11,
+                  backgroundColor: color.withOpacity(0.18),
+                  color: color,
+                  strokeCap: StrokeCap.round,
+                ),
               ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l.common_percentValue(score),
-                  style: TextStyle(
-                    fontSize: 46,
-                    fontWeight: FontWeight.w800,
-                    color: color,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.common_percentValue(score),
+                    style: TextStyle(
+                      fontSize: 46,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l.today_score,
-                  style: const TextStyle(
-                    color: TColors.textSecondary,
-                    fontSize: 13,
+                  const SizedBox(height: 2),
+                  Text(
+                    l.today_score,
+                    style: const TextStyle(
+                      color: TColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
         Text(

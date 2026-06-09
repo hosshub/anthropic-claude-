@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/enum_labels.dart';
@@ -41,6 +42,7 @@ class _FastingScreenState extends State<FastingScreen> {
       final kind = kinds.isNotEmpty ? kinds.first : FastingKind.general;
       await repo.markFasting(date: _now, kind: kind);
     }
+    HapticFeedback.selectionClick();
     setState(_reload);
   }
 

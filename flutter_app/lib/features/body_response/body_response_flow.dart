@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
@@ -78,6 +79,8 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
             worthRepeating: _worth,
             notes: _notesCtrl.text,
           );
+      // Gentle confirmation that the save landed.
+      HapticFeedback.lightImpact();
       // Response is now logged → cancel any pending ~3h follow-up nudge.
       if (mounted) {
         await context.read<NotificationService>().cancelBodyFollowup(widget.meal.id);
@@ -131,8 +134,9 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
       // ignore: deprecated_member_use
       onPopInvoked: (didPop) async {
         if (didPop) return;
+        final navigator = Navigator.of(context);
         if (await _confirmDiscard(l) && mounted) {
-          Navigator.of(context).pop();
+          navigator.pop();
         }
       },
       child: Scaffold(
@@ -175,8 +179,11 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
             children: [
               TextButton(
                 onPressed: () async {
+                  // Capture before the await so the analyzer is happy and
+                  // we don't reach for BuildContext across an async gap.
+                  final navigator = Navigator.of(context);
                   if (!_hasProgress || await _confirmDiscard(l)) {
-                    if (mounted) Navigator.of(context).pop();
+                    if (mounted) navigator.pop();
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: TColors.textSecondary),
