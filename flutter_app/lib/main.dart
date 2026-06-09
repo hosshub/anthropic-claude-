@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
@@ -21,36 +19,14 @@ import 'services/notification_service.dart';
 import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
 
-Future<void> main() async {
-  if (!AppConfig.crashReportingEnabled) {
-    await _bootstrap();
-    runApp(const TayyibatApp());
-    return;
-  }
+// Sentry was removed from v1.0.2's dependency tree because sentry_flutter
+// 8.14.2's iOS Swift bridge no longer compiles against the current
+// Sentry-Cocoa pod. Will be re-added in v1.0.3 with sentry_flutter 9.x.
+// See pubspec.yaml for the commented-out dep line.
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = AppConfig.sentryDsn;
-      // Privacy-first defaults: ship crashes + Dart errors, nothing else.
-      // We never attach a user manually, so sendDefaultPii=false is enough
-      // — no need for a beforeSend scrubber.
-      options.sendDefaultPii = false;
-      options.attachScreenshot = false;
-      // ignore: experimental_member_use
-      options.attachViewHierarchy = false;
-      options.tracesSampleRate = 0.0;
-      // ignore: experimental_member_use
-      options.profilesSampleRate = 0.0;
-      options.enableUserInteractionTracing = false;
-      options.enableUserInteractionBreadcrumbs = false;
-      options.enableAutoSessionTracking = true;
-      options.environment = kReleaseMode ? 'production' : 'debug';
-    },
-    appRunner: () async {
-      await _bootstrap();
-      runApp(const TayyibatApp());
-    },
-  );
+Future<void> main() async {
+  await _bootstrap();
+  runApp(const TayyibatApp());
 }
 
 Future<void> _bootstrap() async {

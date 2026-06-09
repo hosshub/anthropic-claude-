@@ -15,9 +15,14 @@ dependencies:
   intl: ^0.20.2
   cupertino_icons: ^1.0.8
 
-  # Crash + error reporting. PII collection disabled; builds without
-  # --dart-define=SENTRY_DSN=... silently skip init (no events sent).
-  sentry_flutter: ^8.9.0
+  # Crash reporting is temporarily disabled in v1.0.2 — sentry_flutter
+  # 8.14.2's iOS Swift bridge references SentryBinaryImageCache.image
+  # which the current Sentry-Cocoa pod no longer exposes, breaking
+  # archive on Xcode. Will be re-added in v1.0.3 with sentry_flutter
+  # 9.x (which fixes the bridge). The plumbing in main.dart and
+  # config.dart stays — it short-circuits when no DSN is provided so
+  # is a no-op regardless of whether the package is present.
+  # sentry_flutter: ^9.21.0   # uncomment in v1.0.3
 
   # الواجهة الخلفية
   supabase_flutter: ^2.5.6
