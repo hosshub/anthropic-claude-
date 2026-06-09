@@ -264,6 +264,21 @@ function stripFences(text: string): string {
   return t;
 }
 
+type Locale = "ar" | "en";
+
+/// Bilingual fallback for errors that fire BEFORE we've parsed the request
+/// body (where the locale field lives) — e.g. body-parse failure itself,
+/// missing APP_TOKEN, missing GEMINI_API_KEY. We can't know the user's
+/// language, so we return both. The two halves are separated by " — " so
+/// each side reads naturally on its own.
+function bi(ar: string, en: string): string {
+  return `${en} — ${ar}`;
+}
+
+function tr(locale: Locale, ar: string, en: string): string {
+  return locale === "en" ? en : ar;
+}
+
 const CORS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type,x-app-token,authorization,apikey",
@@ -336,10 +351,14 @@ async function refundDailyUsage(userId: string): Promise<void> {
  * نداء Gemini موحّد للمهام الثلاث (تحليل صورة / اقتراح / خطة).
  * يُعيد Response جاهزاً للإرجاع للعميل. إذا فشلت العملية يستدعي onFailure قبل العودة
  * (يُستخدم لاسترجاع الحصّة في حال تحليل الصور).
+ *
+ * Error strings are localized to [locale]; the user-visible message
+ * matches the device language, not the Arabic-default of older clients.
  */
 async function callGemini(
   parts: unknown[],
   maxTokens: number,
+  locale: Locale,
   onFailure: () => Promise<void> = async () => {},
 ): Promise<Response> {
   const endpoint =
@@ -366,13 +385,30 @@ async function callGemini(
     raw = await upstream.text();
   } catch (e) {
     await onFailure();
-    return json(502, { error: `تعذّر الاتصال بـ Gemini: ${(e as Error).message}` });
+    const detail = (e as Error).message;
+    return json(502, {
+      error: tr(
+        locale,
+        `تعذّر الاتصال بخدمة التحليل: ${detail}`,
+        `Couldn't reach the analysis service: ${detail}`,
+      ),
+    });
   }
 
   if (!upstream.ok) {
     await onFailure();
-    let msg = `خطأ من Gemini (${upstream.status})`;
-    try { msg = JSON.parse(raw)?.error?.message ?? msg; } catch { /* keep default */ }
+    // Gemini error.message is itself an English string from Google. Use it
+    // verbatim when present (it's already English); fall back to a
+    // locale-aware generic when absent.
+    let msg = tr(
+      locale,
+      `خطأ من خدمة التحليل (${upstream.status})`,
+      `Analysis service error (${upstream.status})`,
+    );
+    try {
+      const fromGoogle = JSON.parse(raw)?.error?.message;
+      if (typeof fromGoogle === "string" && fromGoogle.length > 0) msg = fromGoogle;
+    } catch { /* keep default */ }
     return json(upstream.status, { error: msg });
   }
 
@@ -385,29 +421,53 @@ async function callGemini(
     if (!text) {
       await onFailure();
       const reason = candidate?.finishReason ?? data.promptFeedback?.blockReason;
-      // رسالة ألطف عند رفض مرشّح الأمان لصورة طعام.
       if (reason === "SAFETY") {
-        return json(502, { error: "تعذّر تحليل الطلب. جرّب صياغة أو زاوية مختلفة." });
+        return json(502, {
+          error: tr(
+            locale,
+            "تعذّر تحليل هذه الصورة. جرّب زاوية أو إضاءة مختلفة.",
+            "Couldn't analyze this photo. Try a different angle or better lighting.",
+          ),
+        });
       }
-      return json(502, { error: `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}` });
+      return json(502, {
+        error: tr(
+          locale,
+          `لم يُرجِع النموذج نتيجة${reason ? ` (${reason})` : ""}`,
+          `The AI returned no result${reason ? ` (${reason})` : ""}`,
+        ),
+      });
     }
     return json(200, JSON.parse(stripFences(text)));
   } catch {
     await onFailure();
-    return json(502, { error: "تعذّر تحليل نتيجة النموذج" });
+    return json(502, {
+      error: tr(
+        locale,
+        "تعذّر تحليل ردّ النموذج",
+        "Couldn't parse the AI response",
+      ),
+    });
   }
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method === "GET") return json(200, { ok: true });
-  if (req.method !== "POST") return json(404, { error: "غير موجود" });
+  if (req.method !== "POST") {
+    return json(404, { error: bi("غير موجود", "Not found") });
+  }
 
   if (APP_TOKEN && req.headers.get("x-app-token") !== APP_TOKEN) {
-    return json(401, { error: "غير مصرّح" });
+    return json(401, { error: bi("غير مصرّح", "Unauthorized") });
   }
   if (!GEMINI_API_KEY) {
-    return json(500, { error: "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود" });
+    return json(500, {
+      error: bi(
+        "الخادم غير مهيّأ: متغيّر GEMINI_API_KEY مفقود",
+        "Server is not configured: GEMINI_API_KEY is missing",
+      ),
+    });
   }
 
   let payload: {
@@ -419,25 +479,35 @@ Deno.serve(async (req: Request) => {
   try {
     payload = await req.json();
   } catch {
-    return json(400, { error: "جسم الطلب غير صالح" });
+    return json(400, {
+      error: bi("جسم الطلب غير صالح", "Invalid request body"),
+    });
   }
 
-  const locale: "ar" | "en" = payload.locale === "en" ? "en" : "ar";
+  const locale: Locale = payload.locale === "en" ? "en" : "ar";
 
   // 1) اقتراح وجبة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "suggest") {
-    return await callGemini([{ text: buildSuggestPrompt(locale) }], 1024);
+    return await callGemini([{ text: buildSuggestPrompt(locale) }], 1024, locale);
   }
 
   // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "plan") {
-    return await callGemini([{ text: buildPlanPrompt(locale) }], 4096);
+    return await callGemini([{ text: buildPlanPrompt(locale) }], 4096, locale);
   }
 
   // 3) تحليل صورة وجبة (الافتراضي — يخضع للحدّ اليومي).
   const imageBase64 = payload.image_base64;
   const mediaType = payload.media_type ?? "image/jpeg";
-  if (!imageBase64) return json(400, { error: "image_base64 أو task مطلوب" });
+  if (!imageBase64) {
+    return json(400, {
+      error: tr(
+        locale,
+        "image_base64 أو task مطلوب",
+        "image_base64 or task is required",
+      ),
+    });
+  }
 
   const userId = userIdFromJWT(req.headers.get("authorization"));
   let counted = false;
@@ -445,9 +515,11 @@ Deno.serve(async (req: Request) => {
     const used = await bumpDailyUsage(userId);
     if (used !== null && used < 0) {
       return json(429, {
-        error: locale === "en"
-          ? `Daily analysis limit reached (${DAILY_LIMIT}). Try again tomorrow.`
-          : `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
+        error: tr(
+          locale,
+          `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
+          `Daily analysis limit reached (${DAILY_LIMIT}). Try again tomorrow.`,
+        ),
       });
     }
     counted = used !== null && used > 0;
@@ -463,6 +535,7 @@ Deno.serve(async (req: Request) => {
       { text: buildPrompt(locale) },
     ],
     2048,
+    locale,
     refundIfCounted,
   );
 });
