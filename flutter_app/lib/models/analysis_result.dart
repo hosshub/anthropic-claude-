@@ -1,18 +1,8 @@
 /// إشارة المنطقة الثلاثية (تطابق FoodZone في SwiftUI).
+/// Locale-aware labels live in lib/l10n/enum_labels.dart — use those.
 enum FoodZone { green, yellow, red }
 
 extension FoodZoneX on FoodZone {
-  String get labelAr {
-    switch (this) {
-      case FoodZone.green:
-        return 'أخضر';
-      case FoodZone.yellow:
-        return 'أصفر';
-      case FoodZone.red:
-        return 'أحمر';
-    }
-  }
-
   /// قراءة آمنة من نص (مثل FoodZone.from(_:) في SwiftUI).
   static FoodZone? fromString(String? raw) {
     if (raw == null || raw.isEmpty) return null;

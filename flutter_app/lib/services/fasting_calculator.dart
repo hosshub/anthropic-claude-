@@ -10,38 +10,8 @@ enum FastingKind {
   general,      // صيام تطوع آخر سجّله المستخدم يدوياً
 }
 
-extension FastingKindMeta on FastingKind {
-  String get labelAr {
-    switch (this) {
-      case FastingKind.monday:
-        return 'اثنين';
-      case FastingKind.thursday:
-        return 'خميس';
-      case FastingKind.whiteDay13:
-        return 'الأيام البيض — ١٣';
-      case FastingKind.whiteDay14:
-        return 'الأيام البيض — ١٤';
-      case FastingKind.whiteDay15:
-        return 'الأيام البيض — ١٥';
-      case FastingKind.general:
-        return 'صيام تطوّع';
-    }
-  }
-
-  String get hintAr {
-    switch (this) {
-      case FastingKind.monday:
-      case FastingKind.thursday:
-        return 'مستحب لمن استطاع — رحمة لا فرض.';
-      case FastingKind.whiteDay13:
-      case FastingKind.whiteDay14:
-      case FastingKind.whiteDay15:
-        return 'الأيام البيض من السنن المؤكدة.';
-      case FastingKind.general:
-        return 'يوم صيام إضافي اخترته أنت.';
-    }
-  }
-}
+// Locale-aware labels live in lib/l10n/enum_labels.dart (fastingKindLabel,
+// fastingKindHint) — use those.
 
 /// يحسب ما هي أنواع الصيام المرشّحة لتاريخ معيّن.
 class FastingCalculator {

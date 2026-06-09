@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/enum_labels.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/analysis_result.dart';
 import '../theme/theme.dart';
 
@@ -23,6 +25,7 @@ class ZoneBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = _color();
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -39,7 +42,7 @@ class ZoneBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            zone.labelAr,
+            foodZoneLabel(l, zone),
             style: TextStyle(
               color: c,
               fontWeight: FontWeight.w600,

@@ -1,20 +1,8 @@
 /// تأثير الوجبة على النوم (يُسأل صباح اليوم التالي عادة).
+/// Locale-aware labels live in lib/l10n/enum_labels.dart — use those.
 enum SleepImpact { positive, neutral, negative, unknown }
 
 extension SleepImpactX on SleepImpact {
-  String get labelAr {
-    switch (this) {
-      case SleepImpact.positive:
-        return 'نوم مريح';
-      case SleepImpact.neutral:
-        return 'لم ألاحظ فرقاً';
-      case SleepImpact.negative:
-        return 'تأثر سلباً';
-      case SleepImpact.unknown:
-        return 'لا أعلم';
-    }
-  }
-
   String get raw => name;
 
   static SleepImpact fromRaw(String? raw) {
@@ -26,20 +14,10 @@ extension SleepImpactX on SleepImpact {
 }
 
 /// هل تستحق هذه الوجبة التكرار؟
+/// Locale-aware labels live in lib/l10n/enum_labels.dart — use those.
 enum WorthRepeating { yes, maybe, no }
 
 extension WorthRepeatingX on WorthRepeating {
-  String get labelAr {
-    switch (this) {
-      case WorthRepeating.yes:
-        return 'نعم، أحبها';
-      case WorthRepeating.maybe:
-        return 'ربما';
-      case WorthRepeating.no:
-        return 'لا، تجنّبها';
-    }
-  }
-
   String get emoji {
     switch (this) {
       case WorthRepeating.yes:

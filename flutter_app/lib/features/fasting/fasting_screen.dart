@@ -293,7 +293,7 @@ class _UpcomingCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  kinds.map((k) => fastingKindLabel(l, k)).join('، '),
+                  kinds.map((k) => fastingKindLabel(l, k)).join(l.common_listSeparator),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 12.5,

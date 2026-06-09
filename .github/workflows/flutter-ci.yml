@@ -49,6 +49,29 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      - name: Ban hardcoded Arabic in services/widgets
+        # User-visible strings in services/ and widgets/ must flow through ARB
+        # keys, not be hardcoded as Arabic literals — otherwise English-mode
+        # users see Arabic in error toasts and badges. The grep is scoped to
+        # those two directories; data/, l10n/, comments, and the rest of the
+        # app are unaffected. Excludes .arb files (which are intentionally
+        # bilingual) and source comments.
+        run: |
+          set +e
+          # Strip line comments first, then look for Arabic codepoints.
+          MATCHES=$(find lib/services lib/widgets -name '*.dart' \
+            -exec sh -c "sed 's|//.*||' \"\$1\" | grep -nP '[\\x{0600}-\\x{06FF}]' \
+                          | sed 's|^|'\"\$1\"':|'" sh {} \;)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Found hardcoded Arabic in lib/services or lib/widgets."
+            echo "$MATCHES"
+            echo ""
+            echo "Move user-visible strings to lib/l10n/app_*.arb and reference"
+            echo "them via AppLocalizations, or throw an AppMessage code (see"
+            echo "lib/services/app_messages.dart)."
+            exit 1
+          fi
+
       - name: Test
         # Pure-logic + localization tests live under flutter_app/test/.
         # --no-pub: deps + gen-l10n already ran in the steps above.

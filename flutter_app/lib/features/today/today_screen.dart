@@ -26,7 +26,7 @@ class TodayScreen extends StatelessWidget {
         hour < 12 ? l.today_greetingMorning : l.today_greetingEvening;
     final email = auth.email;
     if (email == null || email.isEmpty) return period;
-    return '$period، ${email.split('@').first}';
+    return l.today_greetingWithName(period, email.split('@').first);
   }
 
   DateTime get _dayStart {
@@ -212,7 +212,7 @@ class TodayScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '$score%',
+                  l.common_percentValue(score),
                   style: TextStyle(
                     fontSize: 46,
                     fontWeight: FontWeight.w800,
@@ -255,6 +255,7 @@ class _MealThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = TColors.scoreColor(meal.overallScore);
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       width: 140,
       child: Material(
@@ -309,7 +310,7 @@ class _MealThumb extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${meal.overallScore}%',
+                  l.common_percentValue(meal.overallScore),
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w700,

@@ -9,6 +9,7 @@ import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
+import '../../util/format.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/zone_badge.dart';
 import '../body_response/body_response_card.dart';
@@ -119,7 +120,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
             child: Column(
               children: [
                 Text(
-                  '${meal.overallScore}%',
+                  l.common_percentValue(meal.overallScore),
                   style: TextStyle(
                     fontSize: 50,
                     fontWeight: FontWeight.w800,
@@ -137,7 +138,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                   ),
                 const SizedBox(height: 4),
                 Text(
-                  _formatDateTime(meal.capturedAt),
+                  TFormat.dateTime(context, meal.capturedAt),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 12,
@@ -338,9 +339,4 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     );
   }
 
-  String _formatDateTime(DateTime dt) {
-    final local = dt.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${local.year}/${two(local.month)}/${two(local.day)} • ${two(local.hour)}:${two(local.minute)}';
-  }
 }

@@ -9,6 +9,7 @@ import '../../models/analysis_result.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
+import '../../util/format.dart';
 import '../../widgets/card_container.dart';
 import 'meal_detail_screen.dart';
 
@@ -350,7 +351,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            _shortDate(m.capturedAt),
+                            TFormat.dateTime(context, m.capturedAt),
                             style: const TextStyle(
                               color: TColors.textSecondary,
                               fontSize: 11,
@@ -608,11 +609,6 @@ class BodyIntelligenceSection extends StatelessWidget {
     );
   }
 
-  String _shortDate(DateTime dt) {
-    final l = dt.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${l.year}/${two(l.month)}/${two(l.day)} • ${two(l.hour)}:${two(l.minute)}';
-  }
 }
 
 // ---------------------------------------------------------------------------

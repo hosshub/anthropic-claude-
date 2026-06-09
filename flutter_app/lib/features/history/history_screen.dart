@@ -8,6 +8,7 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
+import '../../util/format.dart';
 import 'body_intelligence_section.dart';
 import 'meal_detail_screen.dart';
 
@@ -178,6 +179,8 @@ class _CalendarViewState extends State<_CalendarView> {
   Widget build(BuildContext context) {
     final selected = _selected ?? _normalize(_focused);
     final selectedMeals = _mealsOn(selected);
+    final l = AppLocalizations.of(context)!;
+    final localeCode = Localizations.localeOf(context).languageCode;
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
       children: [
@@ -191,9 +194,10 @@ class _CalendarViewState extends State<_CalendarView> {
             firstDay: DateTime.utc(2024, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focused,
+            locale: localeCode,
             selectedDayPredicate: (d) =>
                 _selected != null && isSameDay(_selected, d),
-            availableCalendarFormats: const {CalendarFormat.month: 'شهر'},
+            availableCalendarFormats: {CalendarFormat.month: l.history_calendar_month},
             calendarFormat: CalendarFormat.month,
             startingDayOfWeek: StartingDayOfWeek.saturday,
             eventLoader: _mealsOn,
@@ -321,7 +325,7 @@ class _DaySummary extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              avg == null ? '—' : '$avg٪',
+              avg == null ? '—' : l.common_percentValue(avg),
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w800,
@@ -335,7 +339,7 @@ class _DaySummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _dateAr(date),
+                  TFormat.longDate(context, date),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -365,23 +369,6 @@ class _DaySummary extends StatelessWidget {
     );
   }
 
-  String _dateAr(DateTime d) {
-    const months = [
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -395,6 +382,7 @@ class _MealRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scoreColor = TColors.scoreColor(meal.overallScore);
+    final l = AppLocalizations.of(context)!;
     return Material(
       color: TColors.surface,
       elevation: 0,
@@ -465,7 +453,7 @@ class _MealRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Text(
-                  '${meal.overallScore}%',
+                  l.common_percentValue(meal.overallScore),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: scoreColor,
@@ -514,12 +502,11 @@ class _MealRow extends StatelessWidget {
     final local = dt.toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final mealDay = DateTime(local.year, local.month, local.day);
-    String two(int n) => n.toString().padLeft(2, '0');
-    final time = '${two(local.hour)}:${two(local.minute)}';
+    final time = TFormat.time(context, local);
     if (mealDay == today) return '${l.history_today} • $time';
     if (mealDay == today.subtract(const Duration(days: 1))) {
       return '${l.history_yesterday} • $time';
     }
-    return '${local.year}/${two(local.month)}/${two(local.day)} • $time';
+    return TFormat.dateTime(context, local);
   }
 }
