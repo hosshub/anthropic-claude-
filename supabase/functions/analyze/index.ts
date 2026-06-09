@@ -279,6 +279,28 @@ function tr(locale: Locale, ar: string, en: string): string {
   return locale === "en" ? en : ar;
 }
 
+/// Resolve the locale to use for error messages.
+/// Priority:
+///   1. Explicit `locale` field in the request body (v1.0.2+ clients).
+///   2. The HTTP Accept-Language header (older clients, including the
+///      v1.0.0+2 build under Apple review — iOS URLSession populates this
+///      from the device's language setting automatically).
+///   3. Default to Arabic.
+function resolveLocale(
+  bodyLocale: string | undefined,
+  acceptLanguage: string | null,
+): Locale {
+  if (bodyLocale === "en" || bodyLocale === "ar") return bodyLocale;
+  if (acceptLanguage) {
+    // Accept-Language can look like "en-US,en;q=0.9,ar;q=0.8" — first
+    // language tag wins, since browsers/iOS list in preference order.
+    const primary = acceptLanguage.split(",")[0]?.trim().toLowerCase() ?? "";
+    if (primary.startsWith("en")) return "en";
+    if (primary.startsWith("ar")) return "ar";
+  }
+  return "ar";
+}
+
 const CORS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type,x-app-token,authorization,apikey",
@@ -484,7 +506,10 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const locale: Locale = payload.locale === "en" ? "en" : "ar";
+  const locale: Locale = resolveLocale(
+    payload.locale,
+    req.headers.get("accept-language"),
+  );
 
   // 1) اقتراح وجبة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "suggest") {
