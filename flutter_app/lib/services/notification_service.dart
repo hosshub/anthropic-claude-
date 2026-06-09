@@ -300,7 +300,7 @@ class NotificationService extends ChangeNotifier {
           // lives in android/app/src/main/res/drawable/ic_notification.png
           // (see submission/android-shell.md step 4).
           icon: '@drawable/ic_notification',
-          color: Color(0xFFC9A35B), // gold tint for the icon dot
+          color: const Color(0xFFC9A35B), // gold tint for the icon dot
         ),
         iOS: const DarwinNotificationDetails(),
       ),
