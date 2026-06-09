@@ -266,7 +266,10 @@ flutter run -d <iphone-udid>      # current: 00008150-00092D8602C0401C
 ### Build release IPA for App Store
 ```bash
 cd ~/anthropic-claude-/flutter_app
-flutter pub run flutter_launcher_icons      # regen icons (do not skip)
+git checkout claude/tayyibat-ios-app-ftYsJ && git pull --ff-only
+flutter pub get
+cd ios && pod install && cd ..             # picks up sentry_flutter native bits
+flutter pub run flutter_launcher_icons     # regen icons (do not skip)
 flutter build ipa --release \
   --dart-define=SENTRY_DSN=https://...@o....ingest.de.sentry.io/...
 # IPA at build/ios/ipa/tayyibat.ipa → drag into Transporter → Deliver.
