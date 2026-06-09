@@ -36,8 +36,10 @@ Future<void> main() async {
       // — no need for a beforeSend scrubber.
       options.sendDefaultPii = false;
       options.attachScreenshot = false;
+      // ignore: experimental_member_use
       options.attachViewHierarchy = false;
       options.tracesSampleRate = 0.0;
+      // ignore: experimental_member_use
       options.profilesSampleRate = 0.0;
       options.enableUserInteractionTracing = false;
       options.enableUserInteractionBreadcrumbs = false;

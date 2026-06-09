@@ -48,7 +48,13 @@ jobs:
         run: flutter gen-l10n
 
       - name: Analyze
-        run: flutter analyze
+        # --no-fatal-infos: tracking latest stable means newer Flutter
+        # releases keep introducing fresh deprecations (withOpacity →
+        # withValues, Switch.activeColor → .activeThumbColor, etc.).
+        # Mechanical to fix but we don't want every upstream version bump
+        # to red-light the PR. Infos stay visible in the log; only
+        # genuine errors and warnings still block.
+        run: flutter analyze --no-fatal-infos
 
       - name: Ban hardcoded Arabic in services/widgets
         # User-visible strings in services/ and widgets/ must flow through ARB
