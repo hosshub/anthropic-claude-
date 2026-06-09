@@ -28,10 +28,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Bumped from 3.24.5 → 3.27.4: newer flutter_localizations pulls
-          # intl 0.20.x which our pubspec now requires. Bump in lockstep if
-          # you bump pubspec's intl/sdk constraint.
-          flutter-version: "3.27.4"
+          # Flutter 3.27.x still pinned flutter_localizations → intl 0.19.x;
+          # the intl 0.20.x switch landed in Flutter 3.29.x. Our pubspec
+          # now requires intl ^0.20.2, so CI must be on 3.29+.
+          flutter-version: "3.29.0"
           cache: true
 
       - name: Print versions
