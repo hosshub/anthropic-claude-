@@ -5,7 +5,35 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
-## v1.0.1 — current draft
+## v1.0.2 — current draft
+
+### Arabic (ar)
+
+```
+تحديث v1.0.2 🌿
+
+• شاشة النتيجة بعد التحليل صارت أوضح: زر "تم" وزر "صوّر وجبة أخرى" دائماً تحت أصبعك.
+• ترجمات أعمق للإنجليزية — رسائل الأخطاء والنسب المئوية والتواريخ صارت بلغتك المختارة دون استثناء.
+• حماية البيانات: لا يمكن الخروج من شاشة التنبيه الطبي أو من شاشة التحليل أثناء العمل، فلا تُهدر حصّتك اليومية بالخطأ.
+• تجهيز كامل لإصدار Android (الإصدار التجريبي قريباً).
+• تحسينات ثبات وتنسيق.
+```
+
+### English (en-US)
+
+```
+v1.0.2 update 🌿
+
+• Cleaner post-analysis screen: a clear "Done" + "Capture another" sit on every meal result.
+• Deeper English coverage — error messages, percentages, and dates now follow your chosen language everywhere.
+• Safer flows: you can't accidentally back out of the medical disclaimer or interrupt an analysis mid-flight and lose your daily quota.
+• Full preparation work for the upcoming Android release.
+• Stability and polish.
+```
+
+---
+
+## v1.0.1
 
 ### Arabic (ar)
 

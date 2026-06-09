@@ -196,7 +196,7 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 
 | Store | State |
 |---|---|
-| **App Store** | App record created (bundle `ai.tayyibat.tayyibat`). v1.0.0 build 1 uploaded via Transporter (build id `5a832f4f-f5d8-4ed4-93a6-187fa95f5d81`). App Privacy labels filled. Six artistic 1320×2868 screenshots ready in `/tmp/appstore/` (re-render via `/tmp/compose2.py` if needed). Pending: final screenshot upload + Submit for Review. |
+| **App Store** | App record created (bundle `ai.tayyibat.tayyibat`). v1.0.0 build 1 uploaded via Transporter (build id `5a832f4f-f5d8-4ed4-93a6-187fa95f5d81`). v1.0.2+5 prepared in `claude/tayyibat-ios-app-ftYsJ` (PR #1, CI green) — covers bilingual cleanup, result-screen UX redesign, PopScope safety net, edge-to-edge layout, Android shell prep. App Privacy labels filled. Six artistic 1320×2868 screenshots ready in `/tmp/appstore/` (re-render via `/tmp/compose2.py` if needed). Pending: build IPA on Mac → Transporter upload → Submit for Review. |
 | **Google Play** | Not yet started. `submission/play-store/` has the full kit (listing copy, data-safety answers, internal-testing setup). Recommended sequence: $25 Play Console signup → Internal Testing track → invite up to 100 friends → eventual Production. |
 | **Apple Sign in setup** | Done. Services ID `ai.tayyibat.web-signin` configured; Apple Key (`.p8`) JWT signed and uploaded as the Apple provider secret in Supabase. |
 | **Apple Developer enrollment** | Active under personal Apple ID `hossnasef@gmail.com`. The earlier Workspace account `hossam@oryxlab.com` was blocked by Apple and abandoned. |
