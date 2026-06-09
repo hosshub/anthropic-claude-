@@ -96,9 +96,4 @@ class AccountException extends AppException {
         serverMessage: serverMessage,
         statusCode: statusCode,
       );
-
-  /// Backwards-compat — prefer [localize] from the UI layer.
-  String get message => serverMessage != null
-      ? '$serverMessage (${statusCode ?? ''})'
-      : toString();
 }

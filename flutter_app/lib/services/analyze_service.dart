@@ -97,10 +97,6 @@ class AnalyzeException extends AppException {
         code: AppMessage.analyzeBadResponse,
         serverMessage: serverMessage,
       );
-
-  /// Backwards-compat accessor for any caller still reading `.message`.
-  /// Prefer [localize] from the UI layer.
-  String get message => serverMessage ?? toString();
 }
 
 Future<String> _currentLocale() async {

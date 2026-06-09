@@ -90,9 +90,6 @@ class SuggestionException extends AppException {
         code: AppMessage.suggestBadResponse,
         serverMessage: serverMessage,
       );
-
-  /// Backwards-compat — prefer [localize] from the UI layer.
-  String get message => serverMessage ?? toString();
 }
 
 Future<String> _currentLocale() async {

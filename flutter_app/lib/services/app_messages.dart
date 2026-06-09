@@ -26,16 +26,16 @@ enum AppMessage {
 /// [detail] for placeholder substitution (e.g. a status code or an error
 /// message bubbled up from the server).
 class AppException implements Exception {
-  final AppMessage message;
+  final AppMessage code;
   final String? detail;
 
-  AppException(this.message, {this.detail});
+  AppException(this.code, {this.detail});
 
   /// Resolve to a user-visible string in the current app locale.
-  String localize(AppLocalizations l) => _resolve(l, message, detail);
+  String localize(AppLocalizations l) => _resolve(l, code, detail);
 
   @override
-  String toString() => 'AppException($message${detail == null ? '' : ', "$detail"'})';
+  String toString() => 'AppException($code${detail == null ? '' : ', "$detail"'})';
 }
 
 /// Pure lookup. Keep it switch-exhaustive so adding an [AppMessage] without
