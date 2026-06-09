@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -154,7 +155,7 @@ class NotificationService extends ChangeNotifier {
     _setLocalTimezoneBestEffort();
 
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      android: AndroidInitializationSettings('@drawable/ic_notification'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -294,6 +295,12 @@ class NotificationService extends ChangeNotifier {
           channelDescription: kind.description(locale),
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          // White-silhouette resource on Android. Without this Android
+          // renders a generic white square in the status bar. The PNG
+          // lives in android/app/src/main/res/drawable/ic_notification.png
+          // (see submission/android-shell.md step 4).
+          icon: '@drawable/ic_notification',
+          color: Color(0xFFC9A35B), // gold tint for the icon dot
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -380,6 +387,8 @@ class NotificationService extends ChangeNotifier {
           channelDescription: 'How did you feel after the meal?',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          icon: '@drawable/ic_notification',
+          color: Color(0xFFC9A35B),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -464,6 +473,8 @@ class NotificationService extends ChangeNotifier {
           channelDescription: 'One-off test notification',
           importance: Importance.high,
           priority: Priority.high,
+          icon: '@drawable/ic_notification',
+          color: Color(0xFFC9A35B),
         ),
         iOS: DarwinNotificationDetails(),
       ),

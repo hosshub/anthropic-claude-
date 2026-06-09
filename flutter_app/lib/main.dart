@@ -56,6 +56,17 @@ Future<void> _bootstrap() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+  // Edge-to-edge layout: required on Android 15+ (Play Store deprecation
+  // warning otherwise) and lets the ivory background flow under the
+  // translucent status / nav bars on both platforms.
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark, // dark icons on ivory bg
+    statusBarBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
