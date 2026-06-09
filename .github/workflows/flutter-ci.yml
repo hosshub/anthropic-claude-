@@ -28,9 +28,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Matches the Dart 3.5+ floor in pubspec.yaml. Bump in lockstep
-          # if you bump pubspec's sdk constraint.
-          flutter-version: "3.24.5"
+          # Bumped from 3.24.5 → 3.27.4: newer flutter_localizations pulls
+          # intl 0.20.x which our pubspec now requires. Bump in lockstep if
+          # you bump pubspec's intl/sdk constraint.
+          flutter-version: "3.27.4"
           cache: true
 
       - name: Print versions
