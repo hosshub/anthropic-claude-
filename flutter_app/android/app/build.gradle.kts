@@ -18,12 +18,21 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "ai.tayyibat.tayyibat"
-    compileSdk = 35
+    // compileSdk = 36: plugin transitive deps (app_links, image_picker_android,
+    // flutter_local_notifications + every androidx-* they pull in) link against
+    // SDK 36. compileSdk and targetSdk are independent contracts; keeping
+    // targetSdk at 35 means we don't opt in to Android 16 runtime behavior
+    // yet (will revisit when the Play Store deadline hits).
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications uses java.time APIs that need
+        // backporting to the minSdk 21 floor. Without this the build
+        // fails with "core library desugaring is not enabled."
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -74,4 +83,11 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Backports java.time + other Java 8/11 APIs to minSdk 21 so
+    // flutter_local_notifications compiles. Required by AGP when
+    // isCoreLibraryDesugaringEnabled = true (see compileOptions above).
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
