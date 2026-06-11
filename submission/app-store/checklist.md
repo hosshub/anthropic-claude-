@@ -31,7 +31,7 @@ Sidebar → **App Information**.
 - **Notes for the reviewer**: copy from `review-notes.md`
 
 ## 3. Pricing and Availability
-- **Price**: Free
+- **Price**: Paid — $4.99 USD base tier; regional prices set per country (US/UAE/KSA/Egypt/EU). Mirror the same model on Google Play.
 - **Availability**: all countries where Saudi Arabia, Egypt, UAE, US are
   included — easiest is "All territories".
 
