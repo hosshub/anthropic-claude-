@@ -419,19 +419,37 @@ async function callGemini(
 
   if (!upstream.ok) {
     await onFailure();
-    // Gemini error.message is itself an English string from Google. Use it
-    // verbatim when present (it's already English); fall back to a
-    // locale-aware generic when absent.
-    let msg = tr(
-      locale,
-      `خطأ من خدمة التحليل (${upstream.status})`,
-      `Analysis service error (${upstream.status})`,
-    );
+    // NEVER surface Google's raw error.message to the user. It can contain
+    // billing/quota/project text and dashboard URLs (e.g. "Your prepayment
+    // credits are depleted. Please go to AI Studio at ...") that look like a
+    // broken app and leak internal account state. Apple rejected 1.0.2(5)
+    // under Guideline 2.1(a) for exactly this. We log the real message
+    // server-side for debugging and show the user a clean, localized,
+    // status-appropriate message instead.
+    let googleMsg = "";
     try {
       const fromGoogle = JSON.parse(raw)?.error?.message;
-      if (typeof fromGoogle === "string" && fromGoogle.length > 0) msg = fromGoogle;
-    } catch { /* keep default */ }
-    return json(upstream.status, { error: msg });
+      if (typeof fromGoogle === "string") googleMsg = fromGoogle;
+    } catch { /* not JSON */ }
+    console.error(`Gemini upstream ${upstream.status}: ${googleMsg || raw}`);
+
+    // 429 (RESOURCE_EXHAUSTED — rate limit / quota / depleted credits) reads
+    // to the user as "busy, try again shortly"; everything else is a generic
+    // temporary outage. Neither exposes Google's wording.
+    const msg = upstream.status === 429
+      ? tr(
+        locale,
+        "الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.",
+        "The service is busy right now. Please try again in a little while.",
+      )
+      : tr(
+        locale,
+        "خدمة التحليل غير متاحة مؤقتاً. حاول مرة أخرى لاحقاً.",
+        "The analysis service is temporarily unavailable. Please try again later.",
+      );
+    // Collapse upstream 4xx/5xx into 502 so the client treats it as a
+    // transient server-side failure, not a client error to "fix".
+    return json(502, { error: msg });
   }
 
   try {
