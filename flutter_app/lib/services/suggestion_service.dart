@@ -62,9 +62,9 @@ class SuggestionService {
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) {
         final err = decoded['error'];
-        if (err is String) return err;
+        if (err is String) return sanitizeServerMessage(err);
         if (err is Map && err['message'] is String) {
-          return err['message'] as String;
+          return sanitizeServerMessage(err['message'] as String);
         }
       }
     } catch (_) {/* ليس JSON */}
@@ -73,23 +73,11 @@ class SuggestionService {
 }
 
 class SuggestionException extends AppException {
-  /// Raw message from the server (already localized by the edge function).
-  final String? serverMessage;
+  SuggestionException.code(AppMessage code, {String? detail})
+      : super(code, detail: detail);
 
-  SuggestionException._({
-    required AppMessage code,
-    String? detail,
-    this.serverMessage,
-  }) : super(code, detail: detail);
-
-  factory SuggestionException.code(AppMessage code, {String? detail}) =>
-      SuggestionException._(code: code, detail: detail);
-
-  factory SuggestionException.fromServer(String serverMessage) =>
-      SuggestionException._(
-        code: AppMessage.suggestBadResponse,
-        serverMessage: serverMessage,
-      );
+  SuggestionException.fromServer(String serverMessage)
+      : super(AppMessage.suggestBadResponse, serverMessage: serverMessage);
 }
 
 Future<String> _currentLocale() async {

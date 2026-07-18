@@ -37,9 +37,18 @@ class AccountService {
         },
       ).timeout(const Duration(seconds: 30));
     } catch (e) {
+      // Keep the parenthesised detail short and technical-looking ("timeout",
+      // "offline") — e.toString() dumps a full English exception description
+      // into the middle of a localized sentence.
+      final kind = e.toString().toLowerCase();
+      final detail = kind.contains('timeout')
+          ? 'timeout'
+          : kind.contains('socket')
+              ? 'offline'
+              : 'network';
       throw AccountException.code(
         AppMessage.accountServerUnreachable,
-        detail: e.toString(),
+        detail: detail,
       );
     }
 
@@ -52,7 +61,7 @@ class AccountService {
       try {
         final decoded = jsonDecode(res.body);
         if (decoded is Map && decoded['error'] is String) {
-          serverMsg = decoded['error'] as String;
+          serverMsg = sanitizeServerMessage(decoded['error'] as String);
         }
       } catch (_) {}
       if (serverMsg != null) {
@@ -74,26 +83,18 @@ class AccountService {
 }
 
 class AccountException extends AppException {
-  /// Server-emitted message (already in the requesting locale), optionally
-  /// suffixed with the status code in the UI.
-  final String? serverMessage;
+  /// HTTP status the delete call failed with, shown as a suffix in Settings.
   final String? statusCode;
 
-  AccountException._({
-    required AppMessage code,
-    String? detail,
-    this.serverMessage,
-    this.statusCode,
-  }) : super(code, detail: detail);
+  AccountException.code(AppMessage code, {String? detail})
+      : statusCode = null,
+        super(code, detail: detail);
 
-  factory AccountException.code(AppMessage code, {String? detail}) =>
-      AccountException._(code: code, detail: detail);
-
-  factory AccountException.fromServer(String serverMessage, String statusCode) =>
-      AccountException._(
-        code: AppMessage.accountDeleteFailedWithCode,
-        detail: statusCode,
-        serverMessage: serverMessage,
-        statusCode: statusCode,
-      );
+  AccountException.fromServer(String serverMessage, String status)
+      : statusCode = status,
+        super(
+          AppMessage.accountDeleteFailedWithCode,
+          detail: status,
+          serverMessage: serverMessage,
+        );
 }

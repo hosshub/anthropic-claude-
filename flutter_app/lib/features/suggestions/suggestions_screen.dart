@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/suggestion.dart';
+import '../../services/app_messages.dart';
 import '../../services/suggestion_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
@@ -71,11 +72,10 @@ class _SuggestionTabState extends State<_SuggestionTab>
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = e is SuggestionException
-            ? (e.serverMessage ?? e.localize(AppLocalizations.of(context)!))
-            : e.toString();
+        _error = describeError(AppLocalizations.of(context)!, e);
       });
     }
   }
@@ -254,11 +254,10 @@ class _PlanTabState extends State<_PlanTab>
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = e is SuggestionException
-            ? (e.serverMessage ?? e.localize(AppLocalizations.of(context)!))
-            : e.toString();
+        _error = describeError(AppLocalizations.of(context)!, e);
       });
     }
   }

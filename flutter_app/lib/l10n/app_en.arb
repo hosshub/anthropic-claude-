@@ -217,6 +217,8 @@
 
   "error_couldNotReachServer": "Couldn't reach the server. Check your connection. ({error})",
   "@error_couldNotReachServer": { "placeholders": { "error": { "type": "String" } } },
+  "error_network": "Couldn't reach the server. Check your internet connection and try again.",
+  "error_unexpected": "Something went wrong. Please try again.",
   "error_noSession": "No active session.",
 
   "bodyResponse_later": "Later",

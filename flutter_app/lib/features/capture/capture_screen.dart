@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/analyze_service.dart';
+import '../../services/app_messages.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
@@ -67,15 +68,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
           builder: (_) => ResultScreen(mealId: saved.id),
         ),
       );
-    } on AnalyzeException catch (e) {
-      setState(() {
-        _busy = false;
-        _error = e.serverMessage ?? e.localize(l);
-      });
     } catch (e) {
       setState(() {
         _busy = false;
-        _error = '${l.capture_unexpectedError}: $e';
+        _error = describeError(l, e);
       });
     }
   }

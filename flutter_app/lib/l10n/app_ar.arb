@@ -217,6 +217,8 @@
 
   "error_couldNotReachServer": "تعذّر الوصول للخادم. تأكّد من اتصالك بالإنترنت. ({error})",
   "@error_couldNotReachServer": { "placeholders": { "error": { "type": "String" } } },
+  "error_network": "تعذّر الوصول للخادم. تأكّد من اتصالك بالإنترنت وحاول مرة أخرى.",
+  "error_unexpected": "حدث خطأ غير متوقع. حاول مرة أخرى.",
   "error_noSession": "لا توجد جلسة مفتوحة.",
 
   "bodyResponse_later": "لاحقاً",

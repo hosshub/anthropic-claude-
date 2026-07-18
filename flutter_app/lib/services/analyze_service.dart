@@ -67,9 +67,9 @@ class AnalyzeService {
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) {
         final err = decoded['error'];
-        if (err is String) return err;
+        if (err is String) return sanitizeServerMessage(err);
         if (err is Map && err['message'] is String) {
-          return err['message'] as String;
+          return sanitizeServerMessage(err['message'] as String);
         }
       }
     } catch (_) {/* غير قابل للقراءة كـ JSON */}
@@ -78,25 +78,14 @@ class AnalyzeService {
 }
 
 /// Thrown by [AnalyzeService]. Carries either a localizable [AppMessage] code
-/// or a passthrough server-emitted message (already localized by the proxy).
+/// or a passthrough server-emitted message (sanitized + already localized by
+/// the proxy) via the base [AppException.serverMessage].
 class AnalyzeException extends AppException {
-  /// Raw message from the server, already localized by the edge function.
-  final String? serverMessage;
+  AnalyzeException.code(AppMessage code, {String? detail})
+      : super(code, detail: detail);
 
-  AnalyzeException._({
-    required AppMessage code,
-    String? detail,
-    this.serverMessage,
-  }) : super(code, detail: detail);
-
-  factory AnalyzeException.code(AppMessage code, {String? detail}) =>
-      AnalyzeException._(code: code, detail: detail);
-
-  factory AnalyzeException.fromServer(String serverMessage) =>
-      AnalyzeException._(
-        code: AppMessage.analyzeBadResponse,
-        serverMessage: serverMessage,
-      );
+  AnalyzeException.fromServer(String serverMessage)
+      : super(AppMessage.analyzeBadResponse, serverMessage: serverMessage);
 }
 
 Future<String> _currentLocale() async {

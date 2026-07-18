@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/account_service.dart';
+import '../../services/app_messages.dart';
 import '../../services/auth_service.dart';
 import '../../services/locale_service.dart';
 import '../../services/notification_service.dart';
@@ -83,11 +84,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      final detail = e is AccountException
-          ? (e.serverMessage != null
-              ? '${e.serverMessage} (${e.statusCode ?? ''})'
-              : e.localize(l))
-          : e.toString();
+      final detail = e is AccountException && e.serverMessage != null
+          ? '${e.serverMessage} (${e.statusCode ?? ''})'
+          : describeError(l, e);
       messenger.showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 6),

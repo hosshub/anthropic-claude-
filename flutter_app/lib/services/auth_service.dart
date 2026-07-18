@@ -69,7 +69,7 @@ class AuthService extends ChangeNotifier {
       _fail(e.message);
       return false;
     } catch (e) {
-      _fail(e.toString());
+      _failWithCode(_classifyUnexpected(e));
       return false;
     }
   }
@@ -90,7 +90,7 @@ class AuthService extends ChangeNotifier {
       _fail(e.message);
       return false;
     } catch (e) {
-      _fail(e.toString());
+      _failWithCode(_classifyUnexpected(e));
       return false;
     }
   }
@@ -118,7 +118,7 @@ class AuthService extends ChangeNotifier {
       _fail(e.message);
       return false;
     } catch (e) {
-      _fail(e.toString());
+      _failWithCode(_classifyUnexpected(e));
       return false;
     }
   }
@@ -167,7 +167,7 @@ class AuthService extends ChangeNotifier {
       _fail(e.message);
       return false;
     } catch (e) {
-      _fail(e.toString());
+      _failWithCode(_classifyUnexpected(e));
       return false;
     }
   }
@@ -211,6 +211,17 @@ class AuthService extends ChangeNotifier {
     _busy = false;
     _platformError = message;
     notifyListeners();
+  }
+
+  /// Map a non-Auth exception (network drop, timeout, anything else) to a
+  /// localizable code — never surface raw Dart exception text to the UI.
+  static AppMessage _classifyUnexpected(Object e) {
+    final s = e.toString().toLowerCase();
+    final isNetwork = s.contains('timeout') ||
+        s.contains('socket') ||
+        s.contains('connection') ||
+        s.contains('clientexception');
+    return isNetwork ? AppMessage.authNetworkError : AppMessage.authUnexpectedError;
   }
 
   void _failWithCode(AppMessage code) {

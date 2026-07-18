@@ -7,6 +7,7 @@ import '../../l10n/enum_labels.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
+import '../../services/app_messages.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 
@@ -87,7 +88,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
       }
       _go(_totalSteps - 1);
     } catch (e) {
-      setState(() => _error = l.bodyResponse_couldNotSave(e.toString()));
+      setState(() => _error = l.bodyResponse_couldNotSave(describeError(l, e)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
