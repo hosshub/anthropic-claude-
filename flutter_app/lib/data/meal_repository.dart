@@ -71,6 +71,11 @@ class MealRepository extends ChangeNotifier {
           'estimated_portion': item.estimatedPortion,
           'rule_violated': item.ruleViolated,
           'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
         });
       }
     });
@@ -180,6 +185,11 @@ class MealRepository extends ChangeNotifier {
         category: (r['category'] as String?) ?? 'عام',
         reasoningAr: (r['reasoning'] as String?) ?? '',
         ruleViolated: r['rule_violated'] as String?,
+        caloriesKcal: (r['calories_kcal'] as num?)?.round(),
+        proteinG: (r['protein_g'] as num?)?.toDouble(),
+        carbsG: (r['carbs_g'] as num?)?.toDouble(),
+        fatG: (r['fat_g'] as num?)?.toDouble(),
+        micros: _decodeStringList(r['micros']),
       );
 
   List<String> _decodeStringList(Object? raw) {
@@ -460,6 +470,27 @@ class MealRepository extends ChangeNotifier {
       ),
     ];
 
+    // تقديرات تغذية للبيانات التجريبية حتى تعرض شاشة اليوم عدّاد السعرات
+    // في لقطات المتجر. (kcal، بروتين، كارب، دهون)
+    const demoNutrition = <String, List<num>>{
+      'بطاطس مسلوقة': [140, 3, 31, 0.2],
+      'بطاطس مشوية': [160, 3.5, 33, 1],
+      'سمن بلدي': [110, 0, 0, 12],
+      'زبدة طبيعية': [100, 0.1, 0, 11],
+      'زيت زيتون': [120, 0, 0, 13.5],
+      'زيتون': [45, 0.3, 1.5, 4.5],
+      'قهوة': [5, 0.3, 0.5, 0],
+      'شاي': [30, 0, 7.5, 0],
+      'تمر': [90, 0.7, 24, 0.1],
+      'أرز بسمتي': [210, 4.5, 45, 0.5],
+      'أرز أبيض': [205, 4.2, 44, 0.4],
+      'سمك مشوي': [180, 26, 0, 8],
+      'كبدة بلدي': [190, 27, 4, 6],
+      'لحم أحمر': [250, 26, 0, 16],
+      'ماء': [0, 0, 0, 0],
+      'بسكوت مصنّع': [240, 3, 32, 11],
+    };
+
     var inserted = 0;
     await db.transaction((tx) async {
       for (final meal in samples) {
@@ -476,6 +507,7 @@ class MealRepository extends ChangeNotifier {
         });
         for (var i = 0; i < meal.items.length; i++) {
           final item = meal.items[i];
+          final n = demoNutrition[item.nameAr];
           await tx.insert('food_items', {
             'id': _uuid.v4(),
             'meal_id': mealId,
@@ -493,6 +525,11 @@ class MealRepository extends ChangeNotifier {
             'estimated_portion': 'متوسطة',
             'rule_violated': null,
             'item_order': i,
+            'calories_kcal': n?[0].round(),
+            'protein_g': n?[1].toDouble(),
+            'carbs_g': n?[2].toDouble(),
+            'fat_g': n?[3].toDouble(),
+            'micros': null,
           });
         }
         final br = meal.bodyResponse;

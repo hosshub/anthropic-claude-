@@ -44,4 +44,8 @@ class Meal {
   /// عنوان مختصر للوجبة (اسم أول عنصر، أو "وجبة").
   String get primaryLabel =>
       items.isNotEmpty ? items.first.nameAr : 'وجبة';
+
+  /// مجاميع التغذية مشتقة من العناصر — null لوجبات ما قبل v1.1 التي لا
+  /// تحمل أرقام تغذية.
+  MealNutrition? get nutrition => MealNutrition.fromItems(items);
 }

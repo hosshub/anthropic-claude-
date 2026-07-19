@@ -111,9 +111,15 @@ Analyze the attached image and return JSON only (no markdown, no preamble) with 
       "verdict": "tayyib | conditional | khabith   (for compatibility: green=tayyib, yellow=conditional, red=khabith)",
       "category": "starch | protein | fat | cheese | fruit | etc.",
       "reasoning_ar": "same as zone_reason_ar or a slightly broader description, in English",
-      "rule_violated": "name of violated rule, in English, or null"
+      "rule_violated": "name of violated rule, in English, or null",
+      "calories_kcal": 0,
+      "protein_g": 0.0,
+      "carbs_g": 0.0,
+      "fat_g": 0.0,
+      "micros_ar": ["up to 3 notable micronutrients in English, e.g. \\"Iron\\", \\"Vitamin B12\\""]
     }
   ],
+  "total_nutrition": { "calories_kcal": 0, "protein_g": 0.0, "carbs_g": 0.0, "fat_g": 0.0 },
   "overall_score": 0,
   "score_label_ar": "Excellent | Good | Average | Weak",
   "score_explanation_ar": "two or three sentences in English",
@@ -127,6 +133,11 @@ Scoring logic (v2):
 - Each red item: 0 and a deduction proportional to its share.
 - If a red item from the explicit red list is clearly present with high confidence, cap the overall score at 50.
 - If the plate is entirely green, give full points and say "fully Tayyib meal" in score_explanation_ar.
+
+Nutrition estimates:
+- Estimate calories_kcal (integer) and protein_g / carbs_g / fat_g (one decimal) for each item from its visible portion size. These are rough visual estimates — be conservative and realistic.
+- micros_ar: up to 3 notable micronutrients the item meaningfully provides (e.g. "Iron", "Vitamin C", "Omega-3"). Empty array if nothing notable.
+- total_nutrition = the sums across all items.
 
 ${SAFETY_PREAMBLE_EN}
 Stay aligned with the guide's wording when possible; be conservative — if unsure about an item, set confidence under 0.7 and warn the user in warnings.`;
@@ -156,9 +167,15 @@ ${RULES_JSON}
       "verdict": "tayyib | conditional | khabith   (للتوافق: أخضر=tayyib، أصفر=conditional، أحمر=khabith)",
       "category": "نشويات | بروتينات | دهون | أجبان | فواكه | إلخ",
       "reasoning_ar": "نفس zone_reason_ar أو وصف أوسع",
-      "rule_violated": "اسم القاعدة المخالفة أو null"
+      "rule_violated": "اسم القاعدة المخالفة أو null",
+      "calories_kcal": 0,
+      "protein_g": 0.0,
+      "carbs_g": 0.0,
+      "fat_g": 0.0,
+      "micros_ar": ["حتى 3 عناصر دقيقة بارزة بالعربية، مثل \\"حديد\\" و\\"فيتامين ب12\\""]
     }
   ],
+  "total_nutrition": { "calories_kcal": 0, "protein_g": 0.0, "carbs_g": 0.0, "fat_g": 0.0 },
   "overall_score": 0,
   "score_label_ar": "ممتاز | جيد | متوسط | ضعيف",
   "score_explanation_ar": "جملتان أو ثلاث بالعربية",
@@ -172,6 +189,11 @@ ${RULES_JSON}
 - كل عنصر أحمر: 0 + خصم بنسبة ظهوره.
 - إذا ظهر عنصر أحمر مذكور صراحة في القائمة الحمراء بثقة عالية، الحد الأقصى للنتيجة = 50.
 - إذا كان الطبق كله أخضر، أعطِ النقاط الكاملة واذكر "وجبة طيبة كاملة" في score_explanation_ar.
+
+تقديرات التغذية:
+- قدّر calories_kcal (عدد صحيح) وprotein_g / carbs_g / fat_g (رقم عشري واحد) لكل عنصر بحسب حجم الحصة الظاهرة. هذه تقديرات بصرية تقريبية — كن متحفظاً وواقعياً.
+- micros_ar: حتى 3 عناصر غذائية دقيقة بارزة يوفرها العنصر فعلياً (مثل "حديد"، "فيتامين ج"، "أوميغا-3"). مصفوفة فارغة إن لم يوجد ما يستحق الذكر.
+- total_nutrition = مجموع القيم عبر كل العناصر.
 
 ${SAFETY_PREAMBLE}
 التزم بصياغة الدليل عند الإمكان، وكن متحفظاً — إذا لم تكن متأكداً من عنصر، ضع confidence أقل من 0.7 ونبّه المستخدم للمراجعة في warnings.`;
@@ -577,7 +599,9 @@ Deno.serve(async (req: Request) => {
       { inlineData: { mimeType: mediaType, data: imageBase64 } },
       { text: buildPrompt(locale) },
     ],
-    2048,
+    // v1.1: nutrition fields (~6 extra fields per item) need more headroom
+    // than the 2048 the pre-nutrition schema used.
+    3072,
     locale,
     refundIfCounted,
   );

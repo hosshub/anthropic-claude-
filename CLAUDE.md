@@ -219,6 +219,8 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 12. App Preview video | ❌ pending | optional Apple slot; ~1 min QuickTime recording |
 | 13. Apple Watch companion | ❌ future | not v1 |
 | 14. iPad layout | ❌ future | currently iPhone-only (portrait locked) |
+| 15. Nutrition (v1.1.0) | ✅ built | analyze returns per-item kcal/macros/micros + totals (`total_nutrition`); SQLite v3 adds nutrition columns; NutritionCard on meal detail; daily calorie tracker on Today vs goal (NutritionGoalService, Settings editor); needs `supabase functions deploy analyze` + Mac build 1.1.0+7 |
+| 16. Meal guidebook (v1.1.0) | ✅ built | `guidebook_data.dart` (26 bilingual meals × 5 categories, zone-compliant) + GuidebookScreen (search/filter/detail sheet/capture CTA), Guide section 8 of 10 |
 
 ## 8. Conventions
 

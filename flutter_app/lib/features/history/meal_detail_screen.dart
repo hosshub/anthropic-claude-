@@ -11,6 +11,7 @@ import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../util/format.dart';
 import '../../widgets/card_container.dart';
+import '../../widgets/nutrition_summary.dart';
 import '../../widgets/zone_badge.dart';
 import '../body_response/body_response_card.dart';
 import '../body_response/body_response_flow.dart';
@@ -190,6 +191,10 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               ],
             ),
           ),
+          if (meal.nutrition != null) ...[
+            const SizedBox(height: 14),
+            NutritionCard(nutrition: meal.nutrition!),
+          ],
           const SizedBox(height: 22),
           Text(
             l.mealDetail_items,
@@ -366,6 +371,29 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                   height: 1.55,
                 ),
               ),
+            ],
+            if (item.caloriesKcal != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.local_fire_department,
+                      color: TColors.gold, size: 15),
+                  const SizedBox(width: 4),
+                  Text(
+                    AppLocalizations.of(context)!
+                        .nutrition_kcalValue(item.caloriesKcal!),
+                    style: const TextStyle(
+                      color: TColors.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (item.micros.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              MicrosWrap(micros: item.micros),
             ],
           ],
         ),

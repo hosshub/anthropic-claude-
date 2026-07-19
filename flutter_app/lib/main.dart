@@ -16,6 +16,7 @@ import 'services/auth_service.dart';
 import 'services/fasting_repository.dart';
 import 'services/locale_service.dart';
 import 'services/notification_service.dart';
+import 'services/nutrition_goal_service.dart';
 import 'services/onboarding_service.dart';
 import 'theme/theme.dart';
 
@@ -86,6 +87,7 @@ class TayyibatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => OnboardingService()),
         ChangeNotifierProvider(create: (_) => LocaleService()),
+        ChangeNotifierProvider(create: (_) => NutritionGoalService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
         ChangeNotifierProvider(create: (_) => FastingRepository()),
         ChangeNotifierProvider(

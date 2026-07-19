@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 /// قاعدة بيانات SQLite محلية لوجبات الطيبات.
 class TayyibatDatabase {
   TayyibatDatabase._();
-  static const _schemaVersion = 2;
+  static const _schemaVersion = 3;
   static Database? _db;
 
   /// يفتح قاعدة البيانات (مرة واحدة) ويعيد نفس الكائن في كل استدعاء لاحق.
@@ -27,6 +27,18 @@ class TayyibatDatabase {
 
   static Future<void> _onUpgrade(Database db, int from, int to) async {
     if (from < 2) await _createFastingTable(db);
+    if (from < 3) await _addNutritionColumns(db);
+  }
+
+  /// v3 — أعمدة التغذية (سعرات/ماكروز/عناصر دقيقة) على عناصر الطعام.
+  /// قيم null تعني وجبة حُلِّلت قبل v1.1 — الواجهة تتعامل مع غيابها.
+  static Future<void> _addNutritionColumns(Database db) async {
+    await db.execute(
+        'ALTER TABLE food_items ADD COLUMN calories_kcal INTEGER');
+    await db.execute('ALTER TABLE food_items ADD COLUMN protein_g REAL');
+    await db.execute('ALTER TABLE food_items ADD COLUMN carbs_g REAL');
+    await db.execute('ALTER TABLE food_items ADD COLUMN fat_g REAL');
+    await db.execute('ALTER TABLE food_items ADD COLUMN micros TEXT');
   }
 
   static Future<void> _createFastingTable(Database db) async {
@@ -72,6 +84,11 @@ class TayyibatDatabase {
         estimated_portion  TEXT NOT NULL,
         rule_violated      TEXT,
         item_order         INTEGER NOT NULL DEFAULT 0,
+        calories_kcal      INTEGER,
+        protein_g          REAL,
+        carbs_g            REAL,
+        fat_g              REAL,
+        micros             TEXT,
         FOREIGN KEY(meal_id) REFERENCES meals(id) ON DELETE CASCADE
       );
     ''');

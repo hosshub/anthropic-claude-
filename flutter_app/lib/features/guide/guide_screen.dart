@@ -13,6 +13,7 @@ import 'guide_philosophy.dart';
 import 'guide_plate.dart';
 import 'guide_program_wrapper.dart';
 import 'guide_weekly_prep.dart';
+import 'guidebook_screen.dart';
 
 /// تبويب الدليل — الفهرس الذكي ٣×٣ (٩ أقسام).
 class GuideScreen extends StatelessWidget {
@@ -91,6 +92,7 @@ enum _GuideSection {
   plate,
   program15,
   mealBanks,
+  guidebook,
   weeklyPrep,
   mistakes,
 }
@@ -117,6 +119,8 @@ extension _SectionMeta on _GuideSection {
         return l.guide_section_program15;
       case _GuideSection.mealBanks:
         return l.guide_section_mealBanks;
+      case _GuideSection.guidebook:
+        return l.guide_section_guidebook;
       case _GuideSection.weeklyPrep:
         return l.guide_section_weeklyPrep;
       case _GuideSection.mistakes:
@@ -133,6 +137,7 @@ extension _SectionMeta on _GuideSection {
       _GuideSection.plate: Icons.restaurant,
       _GuideSection.program15: Icons.calendar_today,
       _GuideSection.mealBanks: Icons.inbox,
+      _GuideSection.guidebook: Icons.menu_book,
       _GuideSection.weeklyPrep: Icons.checklist,
       _GuideSection.mistakes: Icons.warning_amber,
     };
@@ -155,6 +160,8 @@ extension _SectionMeta on _GuideSection {
         return const GuideProgramWrapper();
       case _GuideSection.mealBanks:
         return const GuideMealBanksWrapper();
+      case _GuideSection.guidebook:
+        return const GuidebookScreen();
       case _GuideSection.weeklyPrep:
         return const GuideWeeklyPrepScreen();
       case _GuideSection.mistakes:

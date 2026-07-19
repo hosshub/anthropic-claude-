@@ -5,10 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
 import '../../services/auth_service.dart';
+import '../../services/nutrition_goal_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
+import '../../widgets/nutrition_summary.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
 import '../fasting/fasting_screen.dart';
@@ -86,6 +89,8 @@ class TodayScreen extends StatelessWidget {
                       loading: loading,
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  _DailyCaloriesCard(meals: meals),
                   const SizedBox(height: 20),
                   PrimaryButton(
                     label: l.today_photoYourMeal,
@@ -251,6 +256,95 @@ class TodayScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// عدّاد السعرات اليومي: مجموع سعرات وجبات اليوم مقابل الهدف القابل
+/// للتعديل من الإعدادات، مع صف الماكروز. يظهر فقط عندما تحمل وجبة واحدة
+/// على الأقل أرقام تغذية (وجبات v1.1+).
+class _DailyCaloriesCard extends StatelessWidget {
+  final List<Meal> meals;
+  const _DailyCaloriesCard({required this.meals});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final goalService = context.watch<NutritionGoalService>();
+
+    final totals = meals
+        .map((m) => m.nutrition)
+        .whereType<MealNutrition>()
+        .toList();
+    if (totals.isEmpty) return const SizedBox.shrink();
+
+    final consumed = totals.fold<int>(0, (a, n) => a + n.caloriesKcal);
+    final combined = MealNutrition(
+      caloriesKcal: consumed,
+      proteinG: totals.fold(0.0, (a, n) => a + n.proteinG),
+      carbsG: totals.fold(0.0, (a, n) => a + n.carbsG),
+      fatG: totals.fold(0.0, (a, n) => a + n.fatG),
+    );
+    final goal = goalService.goal;
+    final remaining = goal - consumed;
+    final progress = (consumed / goal).clamp(0.0, 1.0);
+    final over = remaining < 0;
+    final barColor = over ? TColors.khabith : TColors.gold;
+
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department,
+                  color: TColors.gold, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                l.today_caloriesTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Text(
+                l.today_caloriesOf(consumed, goal),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: TColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Semantics(
+            label:
+                '${l.today_caloriesTitle}: ${l.today_caloriesOf(consumed, goal)}',
+            container: true,
+            excludeSemantics: true,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: barColor.withOpacity(0.15),
+                color: barColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            over
+                ? l.today_caloriesOver(-remaining)
+                : l.today_caloriesRemaining(remaining),
+            style: TextStyle(
+              fontSize: 12,
+              color: over ? TColors.khabith : TColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MacroRow(nutrition: combined),
+        ],
+      ),
     );
   }
 }
