@@ -5,6 +5,38 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## v1.1.0 — nutrition + guidebook (fast-follow after 1.0.2)
+
+### Arabic (ar)
+
+```
+تحديث v1.1.0 🌿 — التغذية بين يديك
+
+• تحليل الوجبة صار يعرض السعرات والماكروز (بروتين/كارب/دهون) والعناصر الدقيقة لكل صنف.
+• عدّاد سعرات يومي في شاشة "اليوم": ما استهلكته مقابل هدفك، مع شريط تقدّم وتوزّع الماكروز.
+• اضبط هدف السعرات اليومي من الإعدادات — رقم مرجعي تختاره بنفسك.
+• دليل وجبات كامل جديد: وجبات طيبة جاهزة (فطور/غداء/عشاء/سناك/أيام الصيام) مع المكوّنات وطريقة التحضير والقيم التقريبية، مع بحث وتصفية.
+• تحسينات ثبات.
+
+القيم الغذائية تقديرات بصرية للوعي العام، وليست قياساً دقيقاً ولا استشارة طبية.
+```
+
+### English (en-US)
+
+```
+v1.1.0 update 🌿 — nutrition at a glance
+
+• Meal analysis now shows calories, macros (protein/carbs/fat), and key micronutrients for every item.
+• A daily calorie counter on the Today screen: consumed vs. your goal, with a progress bar and macro breakdown.
+• Set your own daily calorie goal in Settings — a personal reference number you choose.
+• New full meal guidebook: ready Tayyib meals (breakfast/lunch/dinner/snacks/fasting days) with components, prep steps, and approximate nutrition — searchable and filterable.
+• Stability improvements.
+
+Nutrition figures are visual estimates for general awareness — not a precise measurement or medical advice.
+```
+
+---
+
 ## v1.0.2 — current draft
 
 ### Arabic (ar)

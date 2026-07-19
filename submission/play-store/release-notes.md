@@ -1,4 +1,34 @@
-# Release notes — version 1.0.0
+# Release notes
+
+Max 500 characters per locale on Play.
+
+## version 1.1.0
+
+### Arabic (ar)
+
+```
+تحديث الطيبات — التغذية بين يديك:
+• تحليل الوجبة يعرض السعرات والماكروز والعناصر الدقيقة لكل صنف.
+• عدّاد سعرات يومي في شاشة اليوم مقابل هدف تضبطه بنفسك.
+• دليل وجبات كامل: وجبات طيبة جاهزة (فطور/غداء/عشاء/سناك/صيام) مع المكوّنات وطريقة التحضير والقيم التقريبية.
+• تحسينات ثبات.
+القيم تقديرات للوعي العام وليست استشارة طبية.
+```
+
+### English (en-US)
+
+```
+Tayyibat update — nutrition at a glance:
+• Meal analysis now shows calories, macros, and key micronutrients per item.
+• A daily calorie counter on Today vs. a goal you set yourself.
+• New full meal guidebook: ready Tayyib meals (breakfast/lunch/dinner/snacks/fasting) with components, prep, and approximate nutrition.
+• Stability improvements.
+Figures are estimates for awareness, not medical advice.
+```
+
+---
+
+## version 1.0.0
 
 Max 500 characters per locale on Play.
 
