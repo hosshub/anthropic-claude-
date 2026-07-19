@@ -37,7 +37,7 @@ android {
 
     defaultConfig {
         applicationId = "ai.tayyibat.tayyibat"
-        minSdk = 21               // flutter_local_notifications + image_picker floor
+        minSdk = flutter.minSdkVersion               // flutter_local_notifications + image_picker floor
         targetSdk = 35            // Play Store requirement since Aug 2025
         versionCode = flutter.versionCode
         versionName = flutter.versionName
