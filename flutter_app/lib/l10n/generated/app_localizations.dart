@@ -692,6 +692,96 @@ abstract class AppLocalizations {
   /// **'غير محدد'**
   String get settings_displayName_empty;
 
+  /// No description provided for @foodBank_title.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنك الطعام'**
+  String get foodBank_title;
+
+  /// No description provided for @foodBank_searchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث عن صنف أو مكوّن…'**
+  String get foodBank_searchHint;
+
+  /// No description provided for @foodBank_empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد أصناف تطابق بحثك.'**
+  String get foodBank_empty;
+
+  /// No description provided for @foodBank_cat_all.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get foodBank_cat_all;
+
+  /// No description provided for @foodBank_cat_breakfast.
+  ///
+  /// In ar, this message translates to:
+  /// **'فطور'**
+  String get foodBank_cat_breakfast;
+
+  /// No description provided for @foodBank_cat_lunch.
+  ///
+  /// In ar, this message translates to:
+  /// **'غداء'**
+  String get foodBank_cat_lunch;
+
+  /// No description provided for @foodBank_cat_dinner.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشاء'**
+  String get foodBank_cat_dinner;
+
+  /// No description provided for @foodBank_cat_street.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكل شارع'**
+  String get foodBank_cat_street;
+
+  /// No description provided for @foodBank_cat_drink.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشروبات'**
+  String get foodBank_cat_drink;
+
+  /// No description provided for @foodBank_cat_sweet.
+  ///
+  /// In ar, this message translates to:
+  /// **'حلويات'**
+  String get foodBank_cat_sweet;
+
+  /// No description provided for @foodBank_log.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل هذه الوجبة'**
+  String get foodBank_log;
+
+  /// No description provided for @foodBank_logged.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم التسجيل في اليوم.'**
+  String get foodBank_logged;
+
+  /// No description provided for @foodBank_portions.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الحصص'**
+  String get foodBank_portions;
+
+  /// No description provided for @foodBank_approxNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيم تقريبية لحصة متوسطة.'**
+  String get foodBank_approxNote;
+
+  /// No description provided for @today_logFromBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل من بنك الطعام'**
+  String get today_logFromBank;
+
   /// No description provided for @today_greetingMorning.
   ///
   /// In ar, this message translates to:

@@ -18,6 +18,9 @@ class Meal {
   /// v1.2 — هل عدّل المستخدم عناصر الوجبة يدوياً بعد التحليل؟
   final bool wasEdited;
 
+  /// v1.3 — مصدر الوجبة: 'ai' (تحليل صورة)، 'food_bank'، 'manual'.
+  final String source;
+
   const Meal({
     required this.id,
     required this.capturedAt,
@@ -30,6 +33,7 @@ class Meal {
     required this.items,
     this.bodyResponse,
     this.wasEdited = false,
+    this.source = 'ai',
   });
 
   Meal copyWith({BodyResponse? bodyResponse}) => Meal(

@@ -338,6 +338,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_displayName_empty => 'غير محدد';
 
   @override
+  String get foodBank_title => 'بنك الطعام';
+
+  @override
+  String get foodBank_searchHint => 'ابحث عن صنف أو مكوّن…';
+
+  @override
+  String get foodBank_empty => 'لا توجد أصناف تطابق بحثك.';
+
+  @override
+  String get foodBank_cat_all => 'الكل';
+
+  @override
+  String get foodBank_cat_breakfast => 'فطور';
+
+  @override
+  String get foodBank_cat_lunch => 'غداء';
+
+  @override
+  String get foodBank_cat_dinner => 'عشاء';
+
+  @override
+  String get foodBank_cat_street => 'أكل شارع';
+
+  @override
+  String get foodBank_cat_drink => 'مشروبات';
+
+  @override
+  String get foodBank_cat_sweet => 'حلويات';
+
+  @override
+  String get foodBank_log => 'سجّل هذه الوجبة';
+
+  @override
+  String get foodBank_logged => 'تم التسجيل في اليوم.';
+
+  @override
+  String get foodBank_portions => 'عدد الحصص';
+
+  @override
+  String get foodBank_approxNote => 'قيم تقريبية لحصة متوسطة.';
+
+  @override
+  String get today_logFromBank => 'سجّل من بنك الطعام';
+
+  @override
   String get today_greetingMorning => 'صباح الخير';
 
   @override

@@ -15,6 +15,7 @@ import '../../widgets/card_container.dart';
 import '../../widgets/nutrition_summary.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
+import '../food_bank/food_bank_screen.dart';
 import '../fasting/fasting_screen.dart';
 import '../history/meal_detail_screen.dart';
 import '../suggestions/suggestions_screen.dart';
@@ -130,6 +131,21 @@ class _TodayScreenState extends State<TodayScreen> {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FoodBankScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.restaurant_menu, size: 18),
+                    label: Text(l.today_logFromBank),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(

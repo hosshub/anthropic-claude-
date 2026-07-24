@@ -345,6 +345,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_displayName_empty => 'Not set';
 
   @override
+  String get foodBank_title => 'Food bank';
+
+  @override
+  String get foodBank_searchHint => 'Search dishes or ingredients…';
+
+  @override
+  String get foodBank_empty => 'No dishes match your search.';
+
+  @override
+  String get foodBank_cat_all => 'All';
+
+  @override
+  String get foodBank_cat_breakfast => 'Breakfast';
+
+  @override
+  String get foodBank_cat_lunch => 'Lunch';
+
+  @override
+  String get foodBank_cat_dinner => 'Dinner';
+
+  @override
+  String get foodBank_cat_street => 'Street food';
+
+  @override
+  String get foodBank_cat_drink => 'Drinks';
+
+  @override
+  String get foodBank_cat_sweet => 'Sweets';
+
+  @override
+  String get foodBank_log => 'Log this meal';
+
+  @override
+  String get foodBank_logged => 'Logged to today.';
+
+  @override
+  String get foodBank_portions => 'Portions';
+
+  @override
+  String get foodBank_approxNote => 'Approximate values for a medium portion.';
+
+  @override
+  String get today_logFromBank => 'Log from the food bank';
+
+  @override
   String get today_greetingMorning => 'Good morning';
 
   @override

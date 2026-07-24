@@ -10,7 +10,9 @@ import 'package:uuid/uuid.dart';
 import '../models/analysis_result.dart';
 import '../models/body_response.dart';
 import '../models/meal.dart';
+import '../services/score_engine.dart';
 import 'database.dart';
+import 'food_bank_data.dart';
 
 /// مستودع الوجبات: حفظ/قراءة/حذف للوجبات وعناصرها ومتابعات الجسم.
 class MealRepository extends ChangeNotifier {
@@ -212,8 +214,86 @@ class MealRepository extends ChangeNotifier {
         items: itemsByMeal[id] ?? const [],
         bodyResponse: responsesByMeal[id],
         wasEdited: (r['was_edited'] as int? ?? 0) != 0,
+        source: (r['source'] as String?) ?? 'ai',
       );
     }).toList();
+  }
+
+  // -------------------------------------------------------------------------
+  // التسجيل من بنك الطعام (v1.3)
+  // -------------------------------------------------------------------------
+
+  /// يسجّل صنفاً من بنك الطعام كوجبة الآن — بلا صورة ولا تحليل ذكاء اصطناعي.
+  /// النتيجة تُحسب من منطقة الصنف عبر محرّك النقاط، والتغذية تُضرب في [portions].
+  Future<Meal> logFromFoodBank(FoodBankItem item, {int portions = 1}) async {
+    final p = portions.clamp(1, 10);
+    final foodItem = FoodItem(
+      nameAr: item.nameAr,
+      confidence: 1.0,
+      estimatedPortion: item.portionAr,
+      verdict: switch (item.zone) {
+        FoodZone.green => 'tayyib',
+        FoodZone.yellow => 'conditional',
+        FoodZone.red => 'khabith',
+      },
+      zoneRaw: item.zone.name,
+      category: item.categoryLabelAr,
+      reasoningAr: item.noteAr ?? '',
+      caloriesKcal: item.caloriesKcal * p,
+      proteinG: item.proteinG * p,
+      carbsG: item.carbsG * p,
+      fatG: item.fatG * p,
+    );
+    final score = recomputeScore([foodItem]);
+    final id = _uuid.v4();
+    final capturedAt = DateTime.now();
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.insert('meals', {
+        'id': id,
+        'captured_at': capturedAt.millisecondsSinceEpoch,
+        'image_path': null,
+        'overall_score': score,
+        'score_label_ar': item.nameAr,
+        'score_explanation_ar': '',
+        'suggestions': jsonEncode(<String>[]),
+        'warnings': jsonEncode(<String>[]),
+        'was_edited': 0,
+        'source': 'food_bank',
+      });
+      await tx.insert('food_items', {
+        'id': _uuid.v4(),
+        'meal_id': id,
+        'name_ar': foodItem.nameAr,
+        'verdict': foodItem.verdict,
+        'zone': foodItem.zoneRaw,
+        'caution_ar': null,
+        'category': foodItem.category,
+        'reasoning': foodItem.reasoningAr,
+        'confidence': 1.0,
+        'estimated_portion': foodItem.estimatedPortion,
+        'rule_violated': null,
+        'item_order': 0,
+        'calories_kcal': foodItem.caloriesKcal,
+        'protein_g': foodItem.proteinG,
+        'carbs_g': foodItem.carbsG,
+        'fat_g': foodItem.fatG,
+        'micros': null,
+      });
+    });
+    notifyListeners();
+    return Meal(
+      id: id,
+      capturedAt: capturedAt,
+      imagePath: null,
+      overallScore: score,
+      scoreLabelAr: item.nameAr,
+      scoreExplanationAr: '',
+      suggestions: const [],
+      warnings: const [],
+      items: [foodItem],
+      source: 'food_bank',
+    );
   }
 
   // -------------------------------------------------------------------------
