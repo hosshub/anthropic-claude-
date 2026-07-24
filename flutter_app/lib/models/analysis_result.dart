@@ -73,6 +73,35 @@ class FoodItem {
   FoodZone get zone =>
       FoodZoneX.fromString(zoneRaw) ?? FoodZoneX.fromVerdict(verdict);
 
+  /// نسخة معدّلة — تُستخدم عند تصحيح المستخدم للاسم أو المنطقة (v1.2).
+  /// تغيير المنطقة يزامن verdict القديم حفاظاً على اتساق البيانات.
+  FoodItem copyWith({String? nameAr, FoodZone? newZone}) {
+    final zoneStr = newZone == null ? zoneRaw : newZone.name;
+    final verdictStr = newZone == null
+        ? verdict
+        : switch (newZone) {
+            FoodZone.green => 'tayyib',
+            FoodZone.yellow => 'conditional',
+            FoodZone.red => 'khabith',
+          };
+    return FoodItem(
+      nameAr: nameAr ?? this.nameAr,
+      confidence: confidence,
+      estimatedPortion: estimatedPortion,
+      verdict: verdictStr,
+      zoneRaw: zoneStr,
+      cautionAr: cautionAr,
+      category: category,
+      reasoningAr: reasoningAr,
+      ruleViolated: ruleViolated,
+      caloriesKcal: caloriesKcal,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+      micros: micros,
+    );
+  }
+
   factory FoodItem.fromJson(Map<String, dynamic> json) {
     return FoodItem(
       nameAr: (json['name_ar'] as String?) ?? 'غير معروف',

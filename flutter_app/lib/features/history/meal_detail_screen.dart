@@ -16,6 +16,7 @@ import '../../widgets/zone_badge.dart';
 import '../body_response/body_response_card.dart';
 import '../body_response/body_response_flow.dart';
 import '../capture/capture_screen.dart';
+import 'edit_items_sheet.dart';
 
 /// تفاصيل وجبة محفوظة. تُعاد القراءة من المستودع عند العودة من تدفّق الجسم.
 ///
@@ -47,6 +48,17 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
   void _reload() {
     _future = context.read<MealRepository>().load(widget.mealId);
+  }
+
+  Future<void> _openEditItems(Meal meal) async {
+    final l = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final saved = await showEditItemsSheet(context, meal);
+    if (!mounted) return;
+    if (saved) {
+      setState(_reload);
+      messenger.showSnackBar(SnackBar(content: Text(l.editItems_saved)));
+    }
   }
 
   Future<void> _openBodyResponse(Meal meal) async {
@@ -168,6 +180,32 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                       color: scoreColor,
                     ),
                   ),
+                if (meal.wasEdited) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: TColors.gold.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit, size: 12, color: TColors.gold),
+                        const SizedBox(width: 4),
+                        Text(
+                          l.mealDetail_editedBadge,
+                          style: const TextStyle(
+                            color: TColors.gold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   TFormat.dateTime(context, meal.capturedAt),
@@ -196,9 +234,25 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
             NutritionCard(nutrition: meal.nutrition!),
           ],
           const SizedBox(height: 22),
-          Text(
-            l.mealDetail_items,
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.mealDetail_items,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              if (meal.items.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => _openEditItems(meal),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(l.mealDetail_editItems),
+                  style: TextButton.styleFrom(
+                    foregroundColor: TColors.primary,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 10),
           ...meal.items.map(_itemCard),

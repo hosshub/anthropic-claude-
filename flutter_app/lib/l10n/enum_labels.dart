@@ -2,7 +2,21 @@ import '../models/analysis_result.dart';
 import '../models/body_response.dart';
 import '../services/fasting_calculator.dart';
 import '../services/notification_service.dart';
+import '../services/score_engine.dart';
 import 'generated/app_localizations.dart';
+
+String scoreBandLabel(AppLocalizations l, int score) {
+  switch (scoreBand(score)) {
+    case ScoreBand.excellent:
+      return l.scoreBand_excellent;
+    case ScoreBand.good:
+      return l.scoreBand_good;
+    case ScoreBand.average:
+      return l.scoreBand_average;
+    case ScoreBand.weak:
+      return l.scoreBand_weak;
+  }
+}
 
 String sleepImpactLabel(AppLocalizations l, SleepImpact v) {
   switch (v) {
