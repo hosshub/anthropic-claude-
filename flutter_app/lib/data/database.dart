@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 /// قاعدة بيانات SQLite محلية لوجبات الطيبات.
 class TayyibatDatabase {
   TayyibatDatabase._();
-  static const _schemaVersion = 4;
+  static const _schemaVersion = 5;
   static Database? _db;
 
   /// يفتح قاعدة البيانات (مرة واحدة) ويعيد نفس الكائن في كل استدعاء لاحق.
@@ -26,16 +26,48 @@ class TayyibatDatabase {
   }
 
   static Future<void> upgradeSchema(Database db, int from, int to) async {
-    if (from < 2) await _createFastingTable(db);
-    if (from < 3) await _addNutritionColumns(db);
-    if (from < 4) await _addV4Schema(db);
+    // Run each version's migration only when it falls in (from, to].
+    if (from < 2 && to >= 2) await _createFastingTable(db);
+    if (from < 3 && to >= 3) await _addNutritionColumns(db);
+    if (from < 4 && to >= 4) await _addV4Schema(db);
+    if (from < 5 && to >= 5) await _addV5Schema(db);
+  }
+
+  /// v5 — مصدر الوجبة (تحليل/بنك طعام/يدوي) + تثبيت بداية الخطة الأسبوعية.
+  static Future<void> _addV5Schema(Database db) async {
+    await db.execute(
+        "ALTER TABLE meals ADD COLUMN source TEXT NOT NULL DEFAULT 'ai'");
+    await db.execute('ALTER TABLE meal_plans ADD COLUMN started_at INTEGER');
   }
 
   /// v4 — علامة تعديل الوجبة يدوياً + جداول الخطة الأسبوعية المحفوظة.
+  /// يُنشئ جداول الخطة بشكلها الأصلي في v4 (بلا started_at)؛ عمود
+  /// started_at يضيفه _addV5Schema لاحقاً حتى لا يتكرر في ترقية v3→v5.
   static Future<void> _addV4Schema(Database db) async {
     await db.execute(
         'ALTER TABLE meals ADD COLUMN was_edited INTEGER NOT NULL DEFAULT 0');
-    await _createPlanTables(db);
+    await db.execute('''
+      CREATE TABLE meal_plans (
+        id          TEXT PRIMARY KEY,
+        created_at  INTEGER NOT NULL,
+        intro       TEXT NOT NULL
+      );
+    ''');
+    await db.execute('''
+      CREATE TABLE plan_days (
+        id          TEXT PRIMARY KEY,
+        plan_id     TEXT NOT NULL,
+        day_order   INTEGER NOT NULL,
+        day_label   TEXT NOT NULL,
+        note        TEXT NOT NULL,
+        meals       TEXT NOT NULL,
+        done_flags  TEXT NOT NULL,
+        FOREIGN KEY(plan_id) REFERENCES meal_plans(id) ON DELETE CASCADE
+      );
+    ''');
+    await db.execute(
+      'CREATE INDEX idx_plan_days_plan ON plan_days(plan_id, day_order)',
+    );
   }
 
   static Future<void> _createPlanTables(Database db) async {
@@ -43,7 +75,8 @@ class TayyibatDatabase {
       CREATE TABLE meal_plans (
         id          TEXT PRIMARY KEY,
         created_at  INTEGER NOT NULL,
-        intro       TEXT NOT NULL
+        intro       TEXT NOT NULL,
+        started_at  INTEGER
       );
     ''');
     await db.execute('''
@@ -101,7 +134,8 @@ class TayyibatDatabase {
         score_explanation_ar  TEXT NOT NULL,
         suggestions           TEXT NOT NULL,
         warnings              TEXT NOT NULL,
-        was_edited            INTEGER NOT NULL DEFAULT 0
+        was_edited            INTEGER NOT NULL DEFAULT 0,
+        source                TEXT NOT NULL DEFAULT 'ai'
       );
     ''');
     await db.execute('''
