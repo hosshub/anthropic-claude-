@@ -336,6 +336,7 @@ class MealRepository extends ChangeNotifier {
         'suggestions': jsonEncode(original.suggestions),
         'warnings': jsonEncode(original.warnings),
         'was_edited': original.wasEdited ? 1 : 0,
+        'source': original.source,
       });
       for (var i = 0; i < original.items.length; i++) {
         final item = original.items[i];
@@ -373,6 +374,7 @@ class MealRepository extends ChangeNotifier {
       warnings: original.warnings,
       items: original.items,
       wasEdited: original.wasEdited,
+      source: original.source,
     );
   }
 

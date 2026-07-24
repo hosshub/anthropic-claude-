@@ -94,7 +94,7 @@ class TayyibatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MealRepository()),
         ChangeNotifierProvider(create: (_) => PlanRepository()),
         ChangeNotifierProvider(create: (_) => ProfileService()),
-        ChangeNotifierProvider(create: (_) => HealthService()..refresh()),
+        ChangeNotifierProvider(create: (_) => HealthService()),
         ChangeNotifierProvider(create: (_) => FastingRepository()),
         ChangeNotifierProvider(
           create: (_) => NotificationService()..initialize(),

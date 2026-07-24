@@ -37,7 +37,9 @@ android {
 
     defaultConfig {
         applicationId = "ai.tayyibat.tayyibat"
-        minSdk = flutter.minSdkVersion               // flutter_local_notifications + image_picker floor
+        // health 13.x (Health Connect) requires minSdk 26; that dominates the
+        // flutter_local_notifications / image_picker floor of 24.
+        minSdk = maxOf(flutter.minSdkVersion, 26)
         targetSdk = 35            // Play Store requirement since Aug 2025
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -52,6 +52,34 @@ void main() {
     await db.close();
   });
 
+  test('upgrade v3 → v5 in one step is duplicate-free and adds all columns',
+      () async {
+    // The riskiest path: a v1.1 user jumping straight to v1.3. v4 creates the
+    // plan tables (without started_at) and v5 must ALTER it in without a
+    // duplicate-column error.
+    final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
+    // Minimal v3 shape: meals (no was_edited/source), no plan tables.
+    await db.execute('''
+      CREATE TABLE meals (
+        id TEXT PRIMARY KEY, captured_at INTEGER NOT NULL, image_path TEXT,
+        overall_score INTEGER NOT NULL, score_label_ar TEXT NOT NULL,
+        score_explanation_ar TEXT NOT NULL, suggestions TEXT NOT NULL,
+        warnings TEXT NOT NULL
+      );
+    ''');
+    await TayyibatDatabase.upgradeSchema(db, 3, 5);
+    final mealCols =
+        (await db.rawQuery('PRAGMA table_info(meals)')).map((c) => c['name']);
+    expect(mealCols, containsAll(['was_edited', 'source']));
+    final planCols = (await db.rawQuery('PRAGMA table_info(meal_plans)'))
+        .map((c) => c['name'])
+        .toList();
+    expect(planCols, contains('started_at'));
+    // exactly one started_at (no duplicate)
+    expect(planCols.where((c) => c == 'started_at').length, 1);
+    await db.close();
+  });
+
   test('PlanRepository.commitPlan sets started_at; loadLatest returns it',
       () async {
     final db = await freshDb();

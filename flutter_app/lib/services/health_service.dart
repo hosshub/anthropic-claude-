@@ -1,15 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// v1.3.0 — قراءة الخطوات والسعرات المحروقة من Apple Health (وHealth Connect
 /// على أندرويد). قراءة فقط. كل شيء مغلّف بحماية: أي فشل أو منصّة غير مدعومة
 /// تعني قيم null دون تعطّل، والميزة تختفي بهدوء من الواجهة.
+///
+/// ملاحظة iOS مهمّة: HealthKit لا يكشف حالة إذن القراءة إطلاقاً، فـ
+/// [Health.hasPermissions] يُرجع null دائماً لأذونات القراءة على iOS. لذا لا
+/// نعتمد عليها كبوابة؛ بل نحفظ أن المستخدم ربَط الحساب ونحاول القراءة مباشرة،
+/// ونعرض ما يعود (قد يكون صفراً إن رفض المستخدم في حوار الصحة).
 class HealthService extends ChangeNotifier {
+  static const _kConnected = 'health_connected';
+
   final Health _health = Health();
   bool _configured = false;
-  bool _authorized = false;
+  bool _connected = false;
   int? _steps;
   int? _activeEnergyKcal;
+
+  HealthService() {
+    _load();
+  }
 
   static const List<HealthDataType> _types = [
     HealthDataType.STEPS,
@@ -20,12 +32,23 @@ class HealthService extends ChangeNotifier {
     HealthDataAccess.READ,
   ];
 
-  bool get authorized => _authorized;
+  /// هل ربَط المستخدم Apple Health؟ (مصدر الحقيقة للعرض والمقاصّة.)
+  bool get authorized => _connected;
   int? get steps => _steps;
   int? get activeEnergyKcal => _activeEnergyKcal;
 
-  /// هل توجد بيانات صحية لعرضها (مصرّح ومتوفّرة)؟
-  bool get hasData => _authorized && (_steps != null || _activeEnergyKcal != null);
+  /// هل توجد بيانات صحية لعرضها؟
+  bool get hasData =>
+      _connected && (_steps != null || _activeEnergyKcal != null);
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _connected = prefs.getBool(_kConnected) ?? false;
+    } catch (_) {}
+    if (_connected) await refresh();
+    notifyListeners();
+  }
 
   Future<void> _ensureConfigured() async {
     if (_configured) return;
@@ -41,27 +64,31 @@ class HealthService extends ChangeNotifier {
     try {
       final granted =
           await _health.requestAuthorization(_types, permissions: _perms);
-      _authorized = granted;
-      if (granted) await refresh();
+      if (!granted) return false;
+      _connected = true;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_kConnected, true);
+      } catch (_) {}
+      await _fetch();
       notifyListeners();
-      return granted;
+      return true;
     } catch (_) {
       return false;
     }
   }
 
-  /// يجلب خطوات وسعرات اليوم إن كان الإذن ممنوحاً — بلا طلب إذن جديد.
-  /// يُستدعى عند فتح شاشة اليوم لتحديث الأرقام.
+  /// يجلب بيانات اليوم إن كان المستخدم قد ربَط الحساب. لا يطلب إذناً جديداً
+  /// ولا يعتمد على hasPermissions (التي تُرجع null على iOS للقراءة).
   Future<void> refresh() async {
+    if (!_connected) return;
+    await _fetch();
+    notifyListeners();
+  }
+
+  Future<void> _fetch() async {
     await _ensureConfigured();
     try {
-      final has =
-          await _health.hasPermissions(_types, permissions: _perms) ?? false;
-      _authorized = has;
-      if (!has) {
-        notifyListeners();
-        return;
-      }
       final now = DateTime.now();
       final midnight = DateTime(now.year, now.month, now.day);
       _steps = await _health.getTotalStepsInInterval(midnight, now);
@@ -76,17 +103,18 @@ class HealthService extends ChangeNotifier {
         if (v is NumericHealthValue) kcal += v.numericValue.toDouble();
       }
       _activeEnergyKcal = kcal.round();
-      notifyListeners();
-    } catch (_) {
-      notifyListeners();
-    }
+    } catch (_) {/* اترك القيم كما هي */}
   }
 
-  /// عند فصل المستخدم للربط من الإعدادات — ننسى القيم محلياً.
-  void disconnect() {
-    _authorized = false;
+  /// عند فصل المستخدم للربط من الإعدادات.
+  Future<void> disconnect() async {
+    _connected = false;
     _steps = null;
     _activeEnergyKcal = null;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kConnected, false);
+    } catch (_) {}
   }
 }

@@ -88,6 +88,17 @@ void main() {
       await db.close();
     });
 
+    test('re-logging a food_bank meal keeps its source', () async {
+      final db = await freshDb();
+      final repo = MealRepository(dbOpener: () async => db);
+      final item = foodBankItems.firstWhere((i) => i.zone == FoodZone.green);
+      final logged = await repo.logFromFoodBank(item);
+      final clone = await repo.relogMeal(logged.id);
+      final reloaded = await repo.load(clone!.id);
+      expect(reloaded!.source, 'food_bank');
+      await db.close();
+    });
+
     test('a red dish scores 0', () async {
       final db = await freshDb();
       final repo = MealRepository(dbOpener: () async => db);
