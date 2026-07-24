@@ -199,12 +199,31 @@ ${SAFETY_PREAMBLE}
 التزم بصياغة الدليل عند الإمكان، وكن متحفظاً — إذا لم تكن متأكداً من عنصر، ضع confidence أقل من 0.7 ونبّه المستخدم للمراجعة في warnings.`;
 }
 
-function buildSuggestPrompt(locale: "ar" | "en" = "ar"): string {
+const MEAL_TYPE_AR: Record<string, string> = {
+  breakfast: "فطور",
+  lunch: "غداء",
+  dinner: "عشاء خفيف",
+};
+const MEAL_TYPE_EN: Record<string, string> = {
+  breakfast: "breakfast",
+  lunch: "lunch",
+  dinner: "a light dinner",
+};
+
+function buildSuggestPrompt(
+  locale: "ar" | "en" = "ar",
+  mealType?: string,
+): string {
+  // Variety seed so "regenerate" returns a genuinely different set each time.
+  const seed = Math.floor(Math.random() * 100000);
   if (locale === "en") {
+    const focus = mealType && MEAL_TYPE_EN[mealType]
+      ? ` All five must suit ${MEAL_TYPE_EN[mealType]}.`
+      : "";
     return `You are an assistant for the "Tayyibat" eating system. System rules (the three zones — keys are in Arabic, keep them as-is when grounding your judgment):
 ${RULES_JSON}
 
-Suggest THREE distinct, complete, balanced Tayyib meals built from the green zone only (or with a measured yellow touch), and avoid every item from the red zone entirely. Make the three meaningfully different from each other (different proteins / starches / times of day). Honor the golden rules: simplify ingredients, stop before fullness, one fruit type per sitting, prefer cooked over raw.
+Suggest FIVE distinct, complete, balanced Tayyib meals built from the green zone only (or with a measured yellow touch), and avoid every item from the red zone entirely. Make all five meaningfully different from each other (different proteins / starches / cooking styles / times of day) and reach for less-obvious combinations, not only the most common ones.${focus} Honor the golden rules: simplify ingredients, stop before fullness, one fruit type per sitting, prefer cooked over raw. (Variety seed ${seed} — use it to vary your picks; do not mention it.)
 
 Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is historical — keep it). All natural-language string VALUES must be in clear, natural English:
 {
@@ -217,15 +236,18 @@ Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is
     }
   ]
 }
-"suggestions" must contain exactly 3 entries.
+"suggestions" must contain exactly 5 entries.
 
 ${SAFETY_PREAMBLE_EN}`;
   }
 
+  const focusAr = mealType && MEAL_TYPE_AR[mealType]
+    ? ` يجب أن تناسب الخمس وجبات وقت ${MEAL_TYPE_AR[mealType]}.`
+    : "";
   return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
 ${RULES_JSON}
 
-اقترح ثلاث وجبات طيبة متكاملة ومختلفة عن بعضها بوضوح (بروتينات/نشويات/أوقات مختلفة) من المنطقة الخضراء فقط (أو مع لمسة صفراء بحساب)، وتجنّب تماماً أي عنصر من المنطقة الحمراء. راعِ القواعد الذهبية: تبسيط المكونات، التوقف قبل الامتلاء، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ.
+اقترح خمس وجبات طيبة متكاملة ومختلفة عن بعضها بوضوح (بروتينات/نشويات/طرق طهي/أوقات مختلفة)، وابتكر تركيبات أقل شيوعاً لا الأكثر تكراراً، من المنطقة الخضراء فقط (أو مع لمسة صفراء بحساب)، وتجنّب تماماً أي عنصر من المنطقة الحمراء.${focusAr} راعِ القواعد الذهبية: تبسيط المكونات، التوقف قبل الامتلاء، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ. (بذرة تنويع ${seed} — استخدمها لتنويع اختياراتك دون ذكرها.)
 
 أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
 {
@@ -238,17 +260,18 @@ ${RULES_JSON}
     }
   ]
 }
-يجب أن تحتوي suggestions على ٣ وجبات بالضبط.
+يجب أن تحتوي suggestions على ٥ وجبات بالضبط.
 
 ${SAFETY_PREAMBLE}`;
 }
 
 function buildPlanPrompt(locale: "ar" | "en" = "ar"): string {
+  const seed = Math.floor(Math.random() * 100000);
   if (locale === "en") {
     return `You are an assistant for the "Tayyibat" eating system. System rules (the three zones — keys are in Arabic, keep them as-is):
 ${RULES_JSON}
 
-Generate a full week of meals (7 days, Saturday through Friday) built mostly from the green zone, with measured yellow touches, and avoid every red-zone item entirely. Honor: alternate protein day-to-day, one fruit type per sitting, prefer cooked, and the recommended fasting days (Monday and Thursday) with a Tayyib iftar.
+Generate a full week of meals (7 days, Saturday through Friday) built mostly from the green zone, with measured yellow touches, and avoid every red-zone item entirely. Make this week genuinely varied and different from a typical plan — rotate proteins, starches, and cooking styles so no two days feel the same (variety seed ${seed}; use it to vary picks, do not mention it). Honor: alternate protein day-to-day, one fruit type per sitting, prefer cooked, and the recommended fasting days (Monday and Thursday) with a Tayyib iftar.
 
 For each day suggest breakfast, lunch, and dinner from Tayyibat foods. Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is historical). String VALUES must be in clear, natural English; day names must be the English weekday names ("Saturday" .. "Friday"):
 {
@@ -269,7 +292,7 @@ ${SAFETY_PREAMBLE_EN}`;
   return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
 ${RULES_JSON}
 
-ولّد خطة وجبات لأسبوع كامل (٧ أيام تبدأ بالسبت وتنتهي بالجمعة) من المنطقة الخضراء أساساً، مع لمسات صفراء بحساب، وتجنّب كل عناصر المنطقة الحمراء تماماً. راعِ: البروتين يوماً بعد يوم، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ، وأيام الصيام المستحبة (الإثنين والخميس) بإفطار على طعام طيّب.
+ولّد خطة وجبات لأسبوع كامل (٧ أيام تبدأ بالسبت وتنتهي بالجمعة) من المنطقة الخضراء أساساً، مع لمسات صفراء بحساب، وتجنّب كل عناصر المنطقة الحمراء تماماً. اجعل هذا الأسبوع متنوعاً فعلاً ومختلفاً عن الخطة المعتادة — نوّع البروتينات والنشويات وطرق الطهي حتى لا يتشابه يومان (بذرة تنويع ${seed}؛ استخدمها لتنويع الاختيارات دون ذكرها). راعِ: البروتين يوماً بعد يوم، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ، وأيام الصيام المستحبة (الإثنين والخميس) بإفطار على طعام طيّب.
 
 لكل يوم اقترح فطوراً وغداءً وعشاءً من الطيبات. أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
 {
@@ -547,6 +570,7 @@ Deno.serve(async (req: Request) => {
     media_type?: string;
     task?: string;
     locale?: string;
+    meal_type?: string;
   };
   try {
     payload = await req.json();
@@ -561,9 +585,13 @@ Deno.serve(async (req: Request) => {
     req.headers.get("accept-language"),
   );
 
-  // 1) اقتراح ٣ وجبات دفعة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
+  // 1) اقتراح ٥ وجبات دفعة واحدة مع تصفية اختيارية بنوع الوجبة (نصّي).
   if (payload.task === "suggest") {
-    return await callGemini([{ text: buildSuggestPrompt(locale) }], 2048, locale);
+    return await callGemini(
+      [{ text: buildSuggestPrompt(locale, payload.meal_type) }],
+      3072,
+      locale,
+    );
   }
 
   // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).

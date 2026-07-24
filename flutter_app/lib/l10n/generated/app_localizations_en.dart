@@ -1086,6 +1086,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestions_components => 'Components';
 
   @override
+  String get suggestions_anyTime => 'Any time';
+
+  @override
   String suggestions_optionN(int n) {
     return 'Option $n';
   }

@@ -1072,6 +1072,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get suggestions_components => 'المكونات';
 
   @override
+  String get suggestions_anyTime => 'أي وقت';
+
+  @override
   String suggestions_optionN(int n) {
     return 'خيار $n';
   }

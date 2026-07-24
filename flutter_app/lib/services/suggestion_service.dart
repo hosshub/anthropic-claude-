@@ -15,10 +15,14 @@ class SuggestionService {
   final http.Client _http;
   SuggestionService({http.Client? client}) : _http = client ?? http.Client();
 
-  /// v1.2: ثلاث وجبات مقترحة دفعة واحدة. يقبل أيضاً رد الخادم القديم
-  /// (كائن واحد) فيغلّفه في قائمة من عنصر واحد.
-  Future<List<MealSuggestion>> suggestMeals() async {
-    final body = await _postTask('suggest', const Duration(seconds: 45));
+  /// v1.3: عدة وجبات مقترحة دفعة واحدة مع تصفية اختيارية بنوع الوجبة
+  /// (breakfast/lunch/dinner). يقبل أيضاً رد الخادم القديم (كائن واحد).
+  Future<List<MealSuggestion>> suggestMeals({String? mealType}) async {
+    final body = await _postTask(
+      'suggest',
+      const Duration(seconds: 45),
+      extra: {if (mealType != null) 'meal_type': mealType},
+    );
     final list = MealSuggestion.listFromJson(body);
     if (list.isEmpty) {
       throw SuggestionException.code(AppMessage.suggestBadResponse);
@@ -31,8 +35,17 @@ class SuggestionService {
     return WeeklyPlan.fromJson(body);
   }
 
-  Future<Map<String, dynamic>> _postTask(String task, Duration timeout) async {
-    final session = Supabase.instance.client.auth.currentSession;
+  Future<Map<String, dynamic>> _postTask(
+    String task,
+    Duration timeout, {
+    Map<String, dynamic> extra = const {},
+  }) async {
+    Session? session;
+    try {
+      session = Supabase.instance.client.auth.currentSession;
+    } catch (_) {
+      // Supabase not initialized (e.g. in tests) — proceed without a token.
+    }
     final locale = await _currentLocale();
     final headers = <String, String>{
       'content-type': 'application/json',
@@ -43,7 +56,7 @@ class SuggestionService {
         .post(
           Uri.parse(_proxyUrl),
           headers: headers,
-          body: jsonEncode({'task': task, 'locale': locale}),
+          body: jsonEncode({'task': task, 'locale': locale, ...extra}),
         )
         .timeout(timeout);
 

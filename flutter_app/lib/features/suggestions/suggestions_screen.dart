@@ -58,6 +58,7 @@ class _SuggestionTabState extends State<_SuggestionTab>
   List<MealSuggestion>? _results;
   bool _loading = false;
   String? _error;
+  String? _mealType; // null = any
 
   @override
   bool get wantKeepAlive => true;
@@ -68,7 +69,7 @@ class _SuggestionTabState extends State<_SuggestionTab>
       _error = null;
     });
     try {
-      final r = await _svc.suggestMeals();
+      final r = await _svc.suggestMeals(mealType: _mealType);
       if (!mounted) return;
       setState(() {
         _results = r;
@@ -105,7 +106,12 @@ class _SuggestionTabState extends State<_SuggestionTab>
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
+        _MealTypeChips(
+          selected: _mealType,
+          onSelected: (v) => setState(() => _mealType = v),
+        ),
+        const SizedBox(height: 12),
         PrimaryButton(
           label: results == null
               ? l.suggestions_single_button_first
@@ -125,6 +131,40 @@ class _SuggestionTabState extends State<_SuggestionTab>
             const SizedBox(height: 12),
           ],
         ],
+      ],
+    );
+  }
+}
+
+class _MealTypeChips extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+  const _MealTypeChips({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final options = <String?, String>{
+      null: l.suggestions_anyTime,
+      'breakfast': l.foodBank_cat_breakfast,
+      'lunch': l.foodBank_cat_lunch,
+      'dinner': l.foodBank_cat_dinner,
+    };
+    return Wrap(
+      spacing: 8,
+      children: [
+        for (final e in options.entries)
+          ChoiceChip(
+            label: Text(e.value),
+            selected: selected == e.key,
+            onSelected: (_) => onSelected(e.key),
+            selectedColor: TColors.primary.withValues(alpha: 0.15),
+            labelStyle: TextStyle(
+              color: selected == e.key ? TColors.primary : TColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
       ],
     );
   }

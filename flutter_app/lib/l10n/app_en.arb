@@ -374,6 +374,7 @@
   "suggestions_single_button_first": "Suggest 3 meals",
   "suggestions_single_button_again": "Suggest 3 more",
   "suggestions_components": "Components",
+  "suggestions_anyTime": "Any time",
   "suggestions_optionN": "Option {n}",
   "@suggestions_optionN": { "placeholders": { "n": { "type": "int" } } },
   "suggestions_plan_intro": "Generate a 7-day plan (Sat → Fri) with breakfast, lunch, and dinner for each day — Tayyibat only.",

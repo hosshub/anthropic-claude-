@@ -2048,6 +2048,12 @@ abstract class AppLocalizations {
   /// **'المكونات'**
   String get suggestions_components;
 
+  /// No description provided for @suggestions_anyTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'أي وقت'**
+  String get suggestions_anyTime;
+
   /// No description provided for @suggestions_optionN.
   ///
   /// In ar, this message translates to:
