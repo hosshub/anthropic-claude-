@@ -160,6 +160,17 @@ void main() {
       await db.close();
     });
 
+    test('deleteAll wipes the saved plan (account-deletion teardown)',
+        () async {
+      final db = await freshDb();
+      final repo = PlanRepository(dbOpener: () async => db);
+      await repo.savePlan(plan());
+      await repo.deleteAll();
+      expect(await repo.loadLatest(), isNull);
+      expect(await db.query('plan_days'), isEmpty);
+      await db.close();
+    });
+
     test('setMealDone toggles one meal and survives reload', () async {
       final db = await freshDb();
       final repo = PlanRepository(dbOpener: () async => db);

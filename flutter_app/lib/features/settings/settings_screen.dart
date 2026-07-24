@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
+import '../../data/plan_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/account_service.dart';
 import '../../services/app_messages.dart';
@@ -40,6 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final notifications = context.read<NotificationService>();
     final account = context.read<AccountService>();
     final profile = context.read<ProfileService>();
+    final plans = context.read<PlanRepository>();
     final messenger = ScaffoldMessenger.of(context);
     final confirm = await showDialog<bool>(
       context: context,
@@ -67,6 +69,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await notifications.cancelAllBodyFollowups();
       if (!mounted) return;
       await account.deleteAccount();
+      // الخطة الأسبوعية والملف الشخصي محليان — يُمسحان مع الحساب حتى لا
+      // تظهر بيانات المستخدم السابق لمن يسجّل بعده على نفس الجهاز.
+      await plans.deleteAll();
       await profile.reset();
       if (!mounted) return;
       await showDialog<void>(
@@ -167,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2, color: TColors.khabith),
+                                  strokeWidth: 2, color: TColors.khabith),
                             )
                           : const Icon(Icons.delete_forever),
                       label: Text(l.settings_deleteAccount),
@@ -368,8 +373,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           foregroundColor: TColors.gold,
                           alignment: AlignmentDirectional.centerStart,
                           minimumSize: const Size.fromHeight(46),
-                          side: const BorderSide(
-                              color: TColors.gold, width: 1.2),
+                          side:
+                              const BorderSide(color: TColors.gold, width: 1.2),
                         ),
                       ),
                     ],
@@ -392,47 +397,50 @@ class _DisplayNameRow extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
     final profile = context.read<ProfileService>();
-    final controller =
-        TextEditingController(text: profile.displayName ?? '');
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.settings_displayName_dialogTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+    final controller = TextEditingController(text: profile.displayName ?? '');
+    try {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.settings_displayName_dialogTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                l.settings_displayName_note,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: TColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l.common_cancel),
             ),
-            const SizedBox(height: 8),
-            Text(
-              l.settings_displayName_note,
-              style: const TextStyle(
-                fontSize: 11.5,
-                color: TColors.textSecondary,
-                height: 1.6,
-              ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text),
+              child: Text(l.common_save),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text),
-            child: Text(l.common_save),
-          ),
-        ],
-      ),
-    );
-    if (result != null) await profile.setDisplayName(result);
+      );
+      if (result != null) await profile.setDisplayName(result);
+    } finally {
+      controller.dispose();
+    }
   }
 
   @override
@@ -477,47 +485,51 @@ class _CalorieGoalCard extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final service = context.read<NutritionGoalService>();
     final controller = TextEditingController(text: service.goal.toString());
-    final result = await showDialog<int>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.settings_calorieGoal_dialogTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                suffixText: l.nutrition_kcalUnit,
-                border: const OutlineInputBorder(),
+    try {
+      final result = await showDialog<int>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.settings_calorieGoal_dialogTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  suffixText: l.nutrition_kcalUnit,
+                  border: const OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                l.settings_calorieGoal_note,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: TColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l.common_cancel),
             ),
-            const SizedBox(height: 8),
-            Text(
-              l.settings_calorieGoal_note,
-              style: const TextStyle(
-                fontSize: 11.5,
-                color: TColors.textSecondary,
-                height: 1.6,
-              ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(ctx).pop(int.tryParse(controller.text.trim())),
+              child: Text(l.common_save),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(int.tryParse(controller.text.trim())),
-            child: Text(l.common_save),
-          ),
-        ],
-      ),
-    );
-    if (result != null) await service.setGoal(result);
+      );
+      if (result != null) await service.setGoal(result);
+    } finally {
+      controller.dispose();
+    }
   }
 
   @override
