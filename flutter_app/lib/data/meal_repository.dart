@@ -484,7 +484,44 @@ class MealRepository extends ChangeNotifier {
   /// يزرع وجبات وهمية موزّعة على آخر ١٤ يوماً مع تنويع المنطقة والدرجات
   /// ومتابعات الجسم — حتى تظهر شاشتا التقويم وBody Intelligence بمحتوى
   /// حقيقي عند التقاط الصور للمتجر. أزل البيانات لاحقاً بـ "حذف الحساب".
-  Future<int> seedDemoData() async {
+  /// [locale] == 'en' يترجم أسماء العناصر والتسميات إلى الإنجليزية حتى
+  /// تُلتقط لقطات المتجر الإنجليزية بمحتوى إنجليزي متّسق مع الواجهة.
+  Future<int> seedDemoData({String locale = 'ar'}) async {
+    const enNames = <String, String>{
+      'بطاطس مسلوقة': 'Boiled potatoes',
+      'بطاطس مشوية': 'Roasted potatoes',
+      'سمن بلدي': 'Ghee',
+      'زبدة طبيعية': 'Natural butter',
+      'زيت زيتون': 'Olive oil',
+      'زيتون': 'Olives',
+      'قهوة': 'Coffee',
+      'شاي': 'Tea',
+      'تمر': 'Dates',
+      'أرز بسمتي': 'Basmati rice',
+      'أرز أبيض': 'White rice',
+      'سمك مشوي': 'Grilled fish',
+      'كبدة بلدي': 'Liver',
+      'لحم أحمر': 'Red meat',
+      'ماء': 'Water',
+      'بسكوت مصنّع': 'Processed biscuits',
+    };
+    const enLabels = <String, String>{
+      'ممتاز': 'Excellent',
+      'جيد': 'Good',
+      'متوسط': 'Average',
+      'بعيدة عن نظام الطيبات': 'Off the Tayyibat system',
+    };
+    final en = locale == 'en';
+    String nm(String ar) => en ? (enNames[ar] ?? ar) : ar;
+    String lbl(String ar) => en ? (enLabels[ar] ?? ar) : ar;
+    return _seedDemoData(en: en, nm: nm, lbl: lbl);
+  }
+
+  Future<int> _seedDemoData({
+    required bool en,
+    required String Function(String) nm,
+    required String Function(String) lbl,
+  }) async {
     final db = await _db;
     final now = DateTime.now();
     DateTime daysAgo(int d, int hour, int minute) {
@@ -673,8 +710,8 @@ class MealRepository extends ChangeNotifier {
           'captured_at': meal.capturedAt.millisecondsSinceEpoch,
           'image_path': null,
           'overall_score': meal.score,
-          'score_label_ar': meal.label,
-          'score_explanation_ar': meal.explanation,
+          'score_label_ar': lbl(meal.label),
+          'score_explanation_ar': en ? '' : meal.explanation,
           'suggestions': jsonEncode(<String>[]),
           'warnings': jsonEncode(<String>[]),
         });
@@ -684,18 +721,19 @@ class MealRepository extends ChangeNotifier {
           await tx.insert('food_items', {
             'id': _uuid.v4(),
             'meal_id': mealId,
-            'name_ar': item.nameAr,
+            'name_ar': nm(item.nameAr),
             'verdict': item.zoneRaw == 'green'
                 ? 'tayyib'
                 : item.zoneRaw == 'red'
                     ? 'khabith'
                     : 'conditional',
             'zone': item.zoneRaw,
-            'caution_ar': item.zoneRaw == 'yellow' ? item.reasoning : null,
+            'caution_ar':
+                (!en && item.zoneRaw == 'yellow') ? item.reasoning : null,
             'category': item.category,
-            'reasoning': item.reasoning,
+            'reasoning': en ? '' : item.reasoning,
             'confidence': 0.92,
-            'estimated_portion': 'متوسطة',
+            'estimated_portion': en ? 'medium portion' : 'متوسطة',
             'rule_violated': null,
             'item_order': i,
             'calories_kcal': n?[0].round(),

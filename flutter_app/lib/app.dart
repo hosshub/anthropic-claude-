@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,12 @@ import 'services/onboarding_service.dart';
 import 'services/profile_service.dart';
 import 'shell/main_shell.dart';
 
+/// وضع لقطات المتجر (تطوير فقط): يتخطى الدخول والتنبيه والترحيب مباشرةً إلى
+/// الإطار الرئيسي لالتقاط الصور ببيانات تجريبية. مُقيَّد بـ kDebugMode
+/// و‑dart-define معاً، فلا يمكن أن يمسّ إصدار الإنتاج (release) إطلاقاً.
+const bool kScreenshotMode =
+    kDebugMode && bool.fromEnvironment('SCREENSHOT');
+
 /// نقطة التفرّع: دخول → تنبيه طبي (إن لم يُقبل) → جولة الترحيب (مرة واحدة،
 /// قابلة للتخطي) → الإطار الرئيسي.
 class AppRoot extends StatelessWidget {
@@ -16,6 +23,9 @@ class AppRoot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: dead_code
+    if (kScreenshotMode) return const MainShell();
+
     final auth = context.watch<AuthService>();
     final onboarding = context.watch<OnboardingService>();
     final profile = context.watch<ProfileService>();

@@ -65,6 +65,9 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   # In-memory SQLite for unit-testing schema migrations and repositories.
   sqflite_common_ffi: ^2.3.3
+  # Drives the app on a simulator to capture App Store screenshots.
+  integration_test:
+    sdk: flutter
   flutter_launcher_icons: ^0.14.1
 
 flutter:
