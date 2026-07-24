@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'config.dart';
 import 'data/meal_repository.dart';
+import 'data/plan_repository.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
@@ -18,6 +19,7 @@ import 'services/locale_service.dart';
 import 'services/notification_service.dart';
 import 'services/nutrition_goal_service.dart';
 import 'services/onboarding_service.dart';
+import 'services/profile_service.dart';
 import 'theme/theme.dart';
 
 // Sentry was removed from v1.0.2's dependency tree because sentry_flutter
@@ -89,6 +91,8 @@ class TayyibatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleService()),
         ChangeNotifierProvider(create: (_) => NutritionGoalService()),
         ChangeNotifierProvider(create: (_) => MealRepository()),
+        ChangeNotifierProvider(create: (_) => PlanRepository()),
+        ChangeNotifierProvider(create: (_) => ProfileService()),
         ChangeNotifierProvider(create: (_) => FastingRepository()),
         ChangeNotifierProvider(
           create: (_) => NotificationService()..initialize(),

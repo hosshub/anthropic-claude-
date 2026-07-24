@@ -204,15 +204,20 @@ function buildSuggestPrompt(locale: "ar" | "en" = "ar"): string {
     return `You are an assistant for the "Tayyibat" eating system. System rules (the three zones — keys are in Arabic, keep them as-is when grounding your judgment):
 ${RULES_JSON}
 
-Suggest one complete, balanced Tayyib meal built from the green zone only (or with a measured yellow touch), and avoid every item from the red zone entirely. Honor the golden rules: simplify ingredients, stop before fullness, one fruit type per sitting, prefer cooked over raw.
+Suggest THREE distinct, complete, balanced Tayyib meals built from the green zone only (or with a measured yellow touch), and avoid every item from the red zone entirely. Make the three meaningfully different from each other (different proteins / starches / times of day). Honor the golden rules: simplify ingredients, stop before fullness, one fruit type per sitting, prefer cooked over raw.
 
 Return JSON only (no markdown). Use EXACTLY these field names (the _ar suffix is historical — keep it). All natural-language string VALUES must be in clear, natural English:
 {
-  "name_ar": "short name of the suggested meal, in English",
-  "components_ar": ["component 1", "component 2", "component 3"],
-  "reasoning_ar": "one or two sentences in English explaining why this meal is Tayyib",
-  "best_time_ar": "appropriate time of day (e.g., breakfast, lunch, light dinner)"
+  "suggestions": [
+    {
+      "name_ar": "short name of the suggested meal, in English",
+      "components_ar": ["component 1", "component 2", "component 3"],
+      "reasoning_ar": "one or two sentences in English explaining why this meal is Tayyib",
+      "best_time_ar": "appropriate time of day (e.g., breakfast, lunch, light dinner)"
+    }
+  ]
 }
+"suggestions" must contain exactly 3 entries.
 
 ${SAFETY_PREAMBLE_EN}`;
   }
@@ -220,15 +225,20 @@ ${SAFETY_PREAMBLE_EN}`;
   return `أنت مساعد في نظام "الطيبات" الغذائي. قواعد النظام (المناطق الثلاث):
 ${RULES_JSON}
 
-اقترح وجبة طيبة واحدة متكاملة من المنطقة الخضراء فقط (أو مع لمسة صفراء بحساب)، وتجنّب تماماً أي عنصر من المنطقة الحمراء. راعِ القواعد الذهبية: تبسيط المكونات، التوقف قبل الامتلاء، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ.
+اقترح ثلاث وجبات طيبة متكاملة ومختلفة عن بعضها بوضوح (بروتينات/نشويات/أوقات مختلفة) من المنطقة الخضراء فقط (أو مع لمسة صفراء بحساب)، وتجنّب تماماً أي عنصر من المنطقة الحمراء. راعِ القواعد الذهبية: تبسيط المكونات، التوقف قبل الامتلاء، صنف فاكهة واحد في الجلسة، تفضيل المطبوخ.
 
 أرجع JSON فقط (بدون markdown) بهذه البنية بالضبط:
 {
-  "name_ar": "اسم مختصر للوجبة المقترحة",
-  "components_ar": ["مكوّن 1", "مكوّن 2", "مكوّن 3"],
-  "reasoning_ar": "جملة أو جملتان عن سبب كون الوجبة طيبة وفق النظام",
-  "best_time_ar": "وقت مناسب للوجبة (مثلاً: فطور، غداء، عشاء خفيف)"
+  "suggestions": [
+    {
+      "name_ar": "اسم مختصر للوجبة المقترحة",
+      "components_ar": ["مكوّن 1", "مكوّن 2", "مكوّن 3"],
+      "reasoning_ar": "جملة أو جملتان عن سبب كون الوجبة طيبة وفق النظام",
+      "best_time_ar": "وقت مناسب للوجبة (مثلاً: فطور، غداء، عشاء خفيف)"
+    }
+  ]
 }
+يجب أن تحتوي suggestions على ٣ وجبات بالضبط.
 
 ${SAFETY_PREAMBLE}`;
 }
@@ -551,9 +561,9 @@ Deno.serve(async (req: Request) => {
     req.headers.get("accept-language"),
   );
 
-  // 1) اقتراح وجبة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
+  // 1) اقتراح ٣ وجبات دفعة واحدة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "suggest") {
-    return await callGemini([{ text: buildSuggestPrompt(locale) }], 1024, locale);
+    return await callGemini([{ text: buildSuggestPrompt(locale) }], 2048, locale);
   }
 
   // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).

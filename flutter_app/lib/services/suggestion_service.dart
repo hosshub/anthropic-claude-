@@ -15,9 +15,15 @@ class SuggestionService {
   final http.Client _http;
   SuggestionService({http.Client? client}) : _http = client ?? http.Client();
 
-  Future<MealSuggestion> suggestMeal() async {
-    final body = await _postTask('suggest', const Duration(seconds: 30));
-    return MealSuggestion.fromJson(body);
+  /// v1.2: ثلاث وجبات مقترحة دفعة واحدة. يقبل أيضاً رد الخادم القديم
+  /// (كائن واحد) فيغلّفه في قائمة من عنصر واحد.
+  Future<List<MealSuggestion>> suggestMeals() async {
+    final body = await _postTask('suggest', const Duration(seconds: 45));
+    final list = MealSuggestion.listFromJson(body);
+    if (list.isEmpty) {
+      throw SuggestionException.code(AppMessage.suggestBadResponse);
+    }
+    return list;
   }
 
   Future<WeeklyPlan> generateWeeklyPlan() async {
