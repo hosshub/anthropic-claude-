@@ -41,7 +41,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final period =
         hour < 12 ? l.today_greetingMorning : l.today_greetingEvening;
     // v1.2: التحية بالاسم المعروض الذي اختاره المستخدم — لا مقطع البريد.
-    final name = profile.displayName;
+    final name = profile.greetingName;
     if (name == null || name.isEmpty) return period;
     return l.today_greetingWithName(period, name);
   }

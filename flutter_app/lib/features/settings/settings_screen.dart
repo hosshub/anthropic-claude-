@@ -389,57 +389,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// صف الاسم المعروض داخل بطاقة الحساب — يفتح حوار تعديل. الاسم يغذّي
-/// تحية شاشة اليوم ويبقى على الجهاز.
+/// صف الاسم داخل بطاقة الحساب — يفتح حوار تعديل الاسم الأول والأخير واللقب.
+/// الاسم يغذّي تحية شاشة اليوم ويبقى على الجهاز.
 class _DisplayNameRow extends StatelessWidget {
   const _DisplayNameRow();
 
   Future<void> _edit(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
     final profile = context.read<ProfileService>();
-    final controller = TextEditingController(text: profile.displayName ?? '');
+    final first = TextEditingController(text: profile.firstName ?? '');
+    final last = TextEditingController(text: profile.lastName ?? '');
+    final nickname = TextEditingController(text: profile.nickname ?? '');
     try {
-      final result = await showDialog<String>(
+      final saved = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(l.settings_displayName_dialogTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+          title: Text(l.settings_name_dialogTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: first,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(labelText: l.settings_firstName),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l.settings_displayName_note,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  color: TColors.textSecondary,
-                  height: 1.6,
+                const SizedBox(height: 10),
+                TextField(
+                  controller: last,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(labelText: l.settings_lastName),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                TextField(
+                  controller: nickname,
+                  decoration: InputDecoration(labelText: l.settings_nickname),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l.settings_displayName_note,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: TColors.textSecondary,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
+              onPressed: () => Navigator.of(ctx).pop(false),
               child: Text(l.common_cancel),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text),
+              onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(l.common_save),
             ),
           ],
         ),
       );
-      if (result != null) await profile.setDisplayName(result);
+      if (saved == true) {
+        await profile.setFirstName(first.text);
+        await profile.setLastName(last.text);
+        await profile.setNickname(nickname.text);
+      }
     } finally {
-      controller.dispose();
+      first.dispose();
+      last.dispose();
+      nickname.dispose();
     }
   }
 
@@ -453,7 +472,7 @@ class _DisplayNameRow extends StatelessWidget {
       label: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l.settings_displayName),
+          Text(l.settings_name),
           Flexible(
             child: Text(
               name ?? l.settings_displayName_empty,

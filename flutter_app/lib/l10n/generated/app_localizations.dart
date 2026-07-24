@@ -620,6 +620,54 @@ abstract class AppLocalizations {
   /// **'ابدأ الآن'**
   String get onboarding_start;
 
+  /// No description provided for @settings_name.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم'**
+  String get settings_name;
+
+  /// No description provided for @settings_firstName.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الأول'**
+  String get settings_firstName;
+
+  /// No description provided for @settings_lastName.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الأخير'**
+  String get settings_lastName;
+
+  /// No description provided for @settings_nickname.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللقب'**
+  String get settings_nickname;
+
+  /// No description provided for @settings_name_dialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمك'**
+  String get settings_name_dialogTitle;
+
+  /// No description provided for @onboarding_firstName_hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الأول'**
+  String get onboarding_firstName_hint;
+
+  /// No description provided for @onboarding_lastName_hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الأخير'**
+  String get onboarding_lastName_hint;
+
+  /// No description provided for @onboarding_nickname_hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللقب (اختياري)'**
+  String get onboarding_nickname_hint;
+
   /// No description provided for @settings_displayName.
   ///
   /// In ar, this message translates to:

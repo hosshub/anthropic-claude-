@@ -17,23 +17,32 @@ class WelcomeFlow extends StatefulWidget {
 
 class _WelcomeFlowState extends State<WelcomeFlow> {
   final PageController _pages = PageController();
-  final TextEditingController _name = TextEditingController();
+  final TextEditingController _first = TextEditingController();
+  final TextEditingController _last = TextEditingController();
+  final TextEditingController _nickname = TextEditingController();
   final TextEditingController _age = TextEditingController();
   int _index = 0;
 
   @override
   void dispose() {
     _pages.dispose();
-    _name.dispose();
+    _first.dispose();
+    _last.dispose();
+    _nickname.dispose();
     _age.dispose();
     super.dispose();
   }
 
   Future<void> _finish() async {
     final profile = context.read<ProfileService>();
-    final name = _name.text.trim();
+    if (_first.text.trim().isNotEmpty) {
+      await profile.setFirstName(_first.text);
+    }
+    if (_last.text.trim().isNotEmpty) await profile.setLastName(_last.text);
+    if (_nickname.text.trim().isNotEmpty) {
+      await profile.setNickname(_nickname.text);
+    }
     final age = int.tryParse(_age.text.trim());
-    if (name.isNotEmpty) await profile.setDisplayName(name);
     if (age != null) await profile.setAge(age);
     await profile.completeOnboarding();
   }
@@ -80,7 +89,13 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
                 onPageChanged: (i) => setState(() => _index = i),
                 children: [
                   _WelcomePage(l: l),
-                  _AboutYouPage(l: l, name: _name, age: _age),
+                  _AboutYouPage(
+                    l: l,
+                    first: _first,
+                    last: _last,
+                    nickname: _nickname,
+                    age: _age,
+                  ),
                   _DonePage(l: l),
                 ],
               ),
@@ -263,11 +278,15 @@ class _FeatureCard extends StatelessWidget {
 
 class _AboutYouPage extends StatelessWidget {
   final AppLocalizations l;
-  final TextEditingController name;
+  final TextEditingController first;
+  final TextEditingController last;
+  final TextEditingController nickname;
   final TextEditingController age;
   const _AboutYouPage({
     required this.l,
-    required this.name,
+    required this.first,
+    required this.last,
+    required this.nickname,
     required this.age,
   });
 
@@ -298,11 +317,31 @@ class _AboutYouPage extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         TextField(
-          controller: name,
+          controller: first,
+          textInputAction: TextInputAction.next,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: l.onboarding_firstName_hint,
+            prefixIcon: const Icon(Icons.badge_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: last,
+          textInputAction: TextInputAction.next,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: l.onboarding_lastName_hint,
+            prefixIcon: const Icon(Icons.badge_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: nickname,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            labelText: l.onboarding_name_hint,
-            prefixIcon: const Icon(Icons.badge_outlined),
+            labelText: l.onboarding_nickname_hint,
+            prefixIcon: const Icon(Icons.tag),
           ),
         ),
         const SizedBox(height: 14),

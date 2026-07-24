@@ -301,6 +301,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboarding_start => 'ابدأ الآن';
 
   @override
+  String get settings_name => 'الاسم';
+
+  @override
+  String get settings_firstName => 'الاسم الأول';
+
+  @override
+  String get settings_lastName => 'الاسم الأخير';
+
+  @override
+  String get settings_nickname => 'اللقب';
+
+  @override
+  String get settings_name_dialogTitle => 'اسمك';
+
+  @override
+  String get onboarding_firstName_hint => 'الاسم الأول';
+
+  @override
+  String get onboarding_lastName_hint => 'الاسم الأخير';
+
+  @override
+  String get onboarding_nickname_hint => 'اللقب (اختياري)';
+
+  @override
   String get settings_displayName => 'الاسم المعروض';
 
   @override

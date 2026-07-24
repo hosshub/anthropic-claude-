@@ -308,6 +308,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_start => 'Get started';
 
   @override
+  String get settings_name => 'Name';
+
+  @override
+  String get settings_firstName => 'First name';
+
+  @override
+  String get settings_lastName => 'Last name';
+
+  @override
+  String get settings_nickname => 'Nickname';
+
+  @override
+  String get settings_name_dialogTitle => 'Your name';
+
+  @override
+  String get onboarding_firstName_hint => 'First name';
+
+  @override
+  String get onboarding_lastName_hint => 'Last name';
+
+  @override
+  String get onboarding_nickname_hint => 'Nickname (optional)';
+
+  @override
   String get settings_displayName => 'Display name';
 
   @override
