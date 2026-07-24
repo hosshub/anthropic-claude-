@@ -2,6 +2,20 @@
 
 Max 500 characters per locale on Play.
 
+## version 1.3.0
+
+### Arabic (ar)
+
+```
+بنك طعام مصري/عربي للتسجيل بلا تصوير، ربط Apple Health لعرض الخطوات والسعرات المحروقة وإضافتها لميزانيتك، ٥ اقتراحات وجبات مع تصفية بالنوع، متابعة الالتزام بالخطة الأسبوعية (مخطط مقابل فعلي)، واسم ولقب مخصّص.
+```
+
+### English (en-US)
+
+```
+An Egyptian/Arabic food bank to log without a photo, Apple Health for steps and burned calories that offset your budget, 5 meal suggestions with a meal-type filter, weekly-plan adherence tracking (planned vs actual), and a custom name/nickname.
+```
+
 ## version 1.2.1
 
 ### Arabic (ar)

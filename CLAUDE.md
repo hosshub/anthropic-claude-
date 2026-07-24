@@ -24,7 +24,7 @@ before first use.
 |---|---|
 | **Mobile** | Flutter (Dart 3.5+) → iOS + Android from one codebase |
 | **State mgmt** | `provider` (ChangeNotifier services) |
-| **Local DB** | `sqflite` (schema v4; tables: meals, food_items, body_responses, fasting_days, meal_plans, plan_days) |
+| **Local DB** | `sqflite` (schema v5; tables: meals[+source], food_items, body_responses, fasting_days, meal_plans[+started_at], plan_days) |
 | **Auth** | Supabase Auth — email/password, Google OAuth (PKCE), Sign in with Apple |
 | **Backend proxy** | Supabase Edge Functions (Deno/TypeScript) — `analyze`, `delete-account` |
 | **AI** | Google **Gemini 2.5 Flash-Lite** via Generative Language API, proxied through `analyze` function. Daily per-user cap with refund-on-failure (PostgreSQL `bump_usage` / `refund_usage` RPCs) |
@@ -223,6 +223,7 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 16. Meal guidebook (v1.1.0) | ✅ built | `guidebook_data.dart` (26 bilingual meals × 5 categories, zone-compliant) + GuidebookScreen (search/filter/detail sheet/capture CTA), Guide section 8 of 10 |
 | 17. v1.2.0 post-launch fixes | ✅ built (1.2.0+8) | Triaged from launch reviews (see V1.2_PLAN.md in the handoff folder): editable analyzed items with client-side score recompute (`score_engine.dart`, tested), 3 suggestions per request (server envelope + legacy fallback), persisted weekly plans with per-meal done tracking (schema v4: `meal_plans`/`plan_days` + `meals.was_edited`), welcome onboarding flow + display name (ProfileService), design-system pass (component themes, capture preview, zero analyzer issues), copy audit + mounted-guard hardening. Deploy `analyze` for the 3-suggestion prompt; ship as 1.2.1+9. |
 | 18. v1.2.1 competitive features | ✅ built (1.2.1+9) | Benchmarked against Cal AI / MyFitnessPal / Yazio table stakes: logging streak on Today (`streak.dart`, tested), one-tap re-log of a past meal without an AI analysis (`MealRepository.relogMeal`, tested), history search by item/label, WelcomeFlow + edit-sheet widget tests, Today cache key tuple-compare. |
+| 19. v1.3.0 feature expansion | ✅ built (1.3.0+10) | Schema v5 (`meals.source`, `meal_plans.started_at`). (a) Food bank: `food_bank_data.dart` (148 Egyptian/Arabic dishes, honest zones + nutrition) + `FoodBankScreen` + `MealRepository.logFromFoodBank` (no AI). (b) Profile first/last/nickname (`ProfileService`, migrates old displayName). (c) Apple Health: `health` 13.3.1 + HealthKit entitlement + NSHealthShare/Update — `HealthService` reads steps/active energy, `calorie_math.dart` offsets the budget (tested). (d) 5 suggestions + `meal_type` filter + variety seed (server `buildSuggestPrompt`). (e) Plan adherence: `plan_adherence.dart` blends manual check-off + auto logged-day (tested), `PlanRepository.commitPlan`. **Submission needs:** deploy `analyze` (5-suggestion prompt); add the HealthKit capability + a Health-data privacy-label entry in App Store Connect; `pod install` before the iOS build. |
 
 ## 8. Conventions
 
@@ -353,5 +354,5 @@ service role key), so the gateway must not pre-verify (`--no-verify-jwt`).
 
 ---
 
-*Last updated: 2026-07-24. When working on this project, prefer to update
+*Last updated: 2026-07-24 (v1.3.0). When working on this project, prefer to update
 this file over creating new docs for general orientation.*

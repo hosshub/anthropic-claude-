@@ -5,6 +5,34 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## v1.3.0 — food bank, Apple Health, richer plans
+
+### Arabic (ar)
+
+```
+جديد في هذا التحديث 🌿
+
+• بنك الطعام: سجّل مئات الأطباق المصرية والعربية بلا تصوير — بحث فوري بالاسم أو المكوّن، مع منطقتها وقيمها.
+• اربط تطبيق الصحة (Apple Health): خطواتك وسعراتك المحروقة تظهر في شاشة اليوم وتُضاف إلى ميزانية سعراتك.
+• ٥ اقتراحات وجبات دفعة واحدة مع تصفية بنوع الوجبة، وتنويع أوسع في الخطط الأسبوعية.
+• التزم بخطتك الأسبوعية وتابع المخطط مقابل الفعلي بنسبة التزام يومية.
+• اسم أول وأخير ولقب تختارها لتحيتك.
+```
+
+### English (en-US)
+
+```
+New in this update 🌿
+
+• Food bank: log hundreds of Egyptian and Arabic dishes without a photo — instant search by name or ingredient, each with its zone and nutrition.
+• Connect Apple Health: your steps and burned calories show on Today and are added to your daily calorie budget.
+• 5 meal suggestions at once with a meal-type filter, and more varied weekly plans.
+• Commit to your weekly plan and track planned vs actual with a daily adherence score.
+• A first name, last name, and nickname you choose for your greeting.
+```
+
+---
+
 ## ⭐ USE THIS ONE — v1.2.1 shipping over the live 1.0.2 (cumulative)
 
 The live App Store version is **1.0.2**, so anyone updating jumps straight
