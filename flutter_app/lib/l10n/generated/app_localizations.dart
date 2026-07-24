@@ -1877,7 +1877,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestions_plan_intro.
   ///
   /// In ar, this message translates to:
-  /// **'ولّد خطة وجبات لسبعة أيام مرّتبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.'**
+  /// **'ولّد خطة وجبات لسبعة أيام مرتّبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.'**
   String get suggestions_plan_intro;
 
   /// No description provided for @suggestions_plan_button_first.

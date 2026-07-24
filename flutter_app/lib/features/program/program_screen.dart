@@ -33,6 +33,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Future<void> _loadStartedAt() async {
     final prefs = await SharedPreferences.getInstance();
     final ms = prefs.getInt(_prefsKey);
+    if (!mounted) return;
     setState(() {
       _startedAt = ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
       _loading = false;
@@ -44,6 +45,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     await prefs.setInt(_prefsKey, now.millisecondsSinceEpoch);
+    if (!mounted) return;
     setState(() {
       _startedAt = now;
       _selectedDay = 1;
@@ -53,6 +55,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Future<void> _stop() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefsKey);
+    if (!mounted) return;
     setState(() {
       _startedAt = null;
       _selectedDay = 1;

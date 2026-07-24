@@ -977,7 +977,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get suggestions_plan_intro =>
-      'ولّد خطة وجبات لسبعة أيام مرّتبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.';
+      'ولّد خطة وجبات لسبعة أيام مرتّبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.';
 
   @override
   String get suggestions_plan_button_first => 'ولّد خطة الأسبوع';

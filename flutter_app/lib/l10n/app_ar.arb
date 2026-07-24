@@ -345,7 +345,7 @@
   "suggestions_components": "المكونات",
   "suggestions_optionN": "خيار {n}",
   "@suggestions_optionN": { "placeholders": { "n": { "type": "int" } } },
-  "suggestions_plan_intro": "ولّد خطة وجبات لسبعة أيام مرّتبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.",
+  "suggestions_plan_intro": "ولّد خطة وجبات لسبعة أيام مرتّبة (سبت ← جمعة) مع الفطور والغداء والعشاء لكل يوم — من الطيبات فقط.",
   "suggestions_plan_button_first": "ولّد خطة الأسبوع",
   "suggestions_plan_button_again": "ولّد خطة جديدة",
 

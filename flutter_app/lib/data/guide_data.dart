@@ -332,7 +332,7 @@ class GuideData {
       ruleAr: 'تبسيط مكونات الوجبة',
       ruleEn: 'Simplify meal ingredients',
       applicationAr: 'وجبة قليلة المكونات أفضل من خلطات كثيرة',
-      applicationEn: 'A few-ingredient meal beats a many-mixture one',
+      applicationEn: 'A meal with few ingredients beats a complicated mixture',
       icon: Icons.grid_view,
     ),
     GoldenRule(
