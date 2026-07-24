@@ -5,6 +5,36 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## v1.2.0 — your feedback, built in
+
+### Arabic (ar)
+
+```
+هذا التحديث مبني على ملاحظاتكم 🌿
+
+• عدّل عناصر أي وجبة بعد التحليل: صحّح الاسم، غيّر المنطقة، أو احذف عنصراً — وتُعاد النتيجة فوراً.
+• ٣ اقتراحات وجبات دفعة واحدة بدل اقتراح واحد.
+• الخطة الأسبوعية أصبحت محفوظة: أشّر على كل وجبة عند إنجازها وتابع تقدّمك.
+• جولة ترحيب جديدة + اسم معروض تختاره بنفسك — التحية باسمك لا ببريدك.
+• أثناء التحليل ترى صورتك مع مؤشر واضح بدل شاشة انتظار فارغة.
+• تحسينات تصميم شاملة، ونصوص أدق بالعربية والإنجليزية، ومعالجة أخطاء أهدأ مع زر إعادة المحاولة.
+```
+
+### English (en-US)
+
+```
+This update is built from your feedback 🌿
+
+• Edit any analyzed meal: fix an item's name, change its zone, or remove it — the score recalculates instantly.
+• Get 3 meal suggestions at once instead of one.
+• Weekly plans now stick around: tick meals off as you eat them and watch your progress.
+• A new welcome tour + a display name you choose — greetings use your name, not your email.
+• While analyzing, you see your photo with clear progress instead of a blank spinner.
+• A full design polish pass, sharper Arabic and English copy, and calmer error handling with retry.
+```
+
+---
+
 ## v1.1.0 — nutrition + guidebook (fast-follow after 1.0.2)
 
 ### Arabic (ar)

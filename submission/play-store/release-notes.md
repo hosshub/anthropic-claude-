@@ -2,6 +2,20 @@
 
 Max 500 characters per locale on Play.
 
+## version 1.2.0
+
+### Arabic (ar)
+
+```
+تحديث مبني على ملاحظاتكم: عدّل عناصر الوجبة بعد التحليل وتُعاد النتيجة فوراً، ٣ اقتراحات وجبات دفعة واحدة، خطة أسبوعية محفوظة مع متابعة الإنجاز، جولة ترحيب واسم معروض تختاره، وتحسينات تصميم ونصوص شاملة.
+```
+
+### English (en-US)
+
+```
+Built from your feedback: edit analyzed meal items with instant score recalculation, 3 meal suggestions at once, saved weekly plans with progress tracking, a new welcome tour with your display name, plus a full design and copy polish.
+```
+
 ## version 1.1.0
 
 ### Arabic (ar)

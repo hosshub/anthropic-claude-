@@ -24,7 +24,7 @@ before first use.
 |---|---|
 | **Mobile** | Flutter (Dart 3.5+) → iOS + Android from one codebase |
 | **State mgmt** | `provider` (ChangeNotifier services) |
-| **Local DB** | `sqflite` (schema v2; tables: meals, food_items, body_responses, fasting_days) |
+| **Local DB** | `sqflite` (schema v4; tables: meals, food_items, body_responses, fasting_days, meal_plans, plan_days) |
 | **Auth** | Supabase Auth — email/password, Google OAuth (PKCE), Sign in with Apple |
 | **Backend proxy** | Supabase Edge Functions (Deno/TypeScript) — `analyze`, `delete-account` |
 | **AI** | Google **Gemini 2.5 Flash-Lite** via Generative Language API, proxied through `analyze` function. Daily per-user cap with refund-on-failure (PostgreSQL `bump_usage` / `refund_usage` RPCs) |
@@ -221,6 +221,7 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 14. iPad layout | ❌ future | currently iPhone-only (portrait locked) |
 | 15. Nutrition (v1.1.0) | ✅ built | analyze returns per-item kcal/macros/micros + totals (`total_nutrition`); SQLite v3 adds nutrition columns; NutritionCard on meal detail; daily calorie tracker on Today vs goal (NutritionGoalService, Settings editor); needs `supabase functions deploy analyze` + Mac build 1.1.0+7 |
 | 16. Meal guidebook (v1.1.0) | ✅ built | `guidebook_data.dart` (26 bilingual meals × 5 categories, zone-compliant) + GuidebookScreen (search/filter/detail sheet/capture CTA), Guide section 8 of 10 |
+| 17. v1.2.0 post-launch fixes | ✅ built (1.2.0+8) | Triaged from launch reviews (see V1.2_PLAN.md in the handoff folder): editable analyzed items with client-side score recompute (`score_engine.dart`, tested), 3 suggestions per request (server envelope + legacy fallback), persisted weekly plans with per-meal done tracking (schema v4: `meal_plans`/`plan_days` + `meals.was_edited`), welcome onboarding flow + display name (ProfileService), design-system pass (component themes, capture preview, zero analyzer issues), copy audit + mounted-guard hardening. Deploy `analyze` for the 3-suggestion prompt; build IPA/AAB at 1.2.0+8. |
 
 ## 8. Conventions
 
@@ -351,5 +352,5 @@ service role key), so the gateway must not pre-verify (`--no-verify-jwt`).
 
 ---
 
-*Last updated: 2026-06-08. When working on this project, prefer to update
+*Last updated: 2026-07-24. When working on this project, prefer to update
 this file over creating new docs for general orientation.*
