@@ -5,6 +5,51 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## ⭐ USE THIS ONE — v1.2.1 shipping over the live 1.0.2 (cumulative)
+
+The live App Store version is **1.0.2**, so anyone updating jumps straight
+to 1.2.1 and has never seen 1.1.0 or 1.2.0. Paste **this** cumulative block
+into "What's New" — it covers everything they'll actually get. (The
+per-version blocks below are kept only for the internal changelog.)
+
+### Arabic (ar)
+
+```
+تحديث كبير — كل جديد منذ 1.0 🌿
+
+جديد
+• التغذية بلمحة: سعرات وماكروز لكل عنصر، وعدّاد سعرات يومي في شاشة اليوم.
+• دليل الوجبات: ٢٦ وجبة طيبة للفطور والغداء والعشاء والوجبات الخفيفة وأيام الصيام.
+• عدّل أي وجبة محلَّلة — صحّح اسماً، غيّر منطقة عنصر، أو احذفه — وتتحدّث النتيجة فوراً.
+• احصل على ٣ اقتراحات وجبات دفعة واحدة، واحفظ خططاً أسبوعية تؤشّر عليها أثناء تناولك.
+• جولة ترحيب لطيفة واسم معروض تختاره — التحية باسمك لا ببريدك.
+• سلسلة تسجيل في شاشة اليوم، وإعادة تسجيل أي وجبة سابقة بلمسة واحدة وبلا استهلاك تحليل.
+• ابحث في سجل وجباتك بالاسم أو المكوّن.
+
+تحسينات
+• تصميم مُجدَّد بالكامل، نصوص أدق بالعربية والإنجليزية، معالجة أخطاء أهدأ، وتجربة تصوير أسلس.
+```
+
+### English (en-US)
+
+```
+A big update — everything since 1.0 🌿
+
+NEW
+• Nutrition at a glance: per-item calories and macros, plus a daily calorie tracker on Today.
+• Meal guidebook: 26 Tayyib meals across breakfast, lunch, dinner, snacks, and fasting days.
+• Edit any analyzed meal — fix a name, change an item's zone, or remove it — and the score updates instantly.
+• Get 3 meal suggestions at once, and save weekly plans you can tick off as you eat.
+• A friendly welcome tour and a display name you choose — greetings use your name, not your email.
+• Logging streak on Today, and one-tap re-log of any past meal without using an analysis.
+• Search your meal history by name or ingredient.
+
+IMPROVED
+• A full design refresh, sharper Arabic and English throughout, calmer error handling, and a smoother capture experience.
+```
+
+---
+
 ## v1.2.1 — streaks, quick re-log, search
 
 ### Arabic (ar)
