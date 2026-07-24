@@ -149,7 +149,7 @@ class _ResultCard extends StatelessWidget {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: TColors.primary.withOpacity(0.10),
+                  color: TColors.primary.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -179,7 +179,7 @@ class _ResultCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: TColors.primary.withOpacity(0.10),
+                color: TColors.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Text(
@@ -435,7 +435,7 @@ class _PlanProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: TColors.primary.withOpacity(0.12),
+              backgroundColor: TColors.primary.withValues(alpha: 0.12),
               color: TColors.primary,
             ),
           ),
@@ -531,7 +531,7 @@ class _DayCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: TColors.gold.withOpacity(0.10),
+                color: TColors.gold.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -574,9 +574,9 @@ class _ErrorNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: TColors.khabith.withOpacity(0.07),
+        color: TColors.khabith.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: TColors.khabith.withOpacity(0.25)),
+        border: Border.all(color: TColors.khabith.withValues(alpha: 0.25)),
       ),
       child: Column(
         children: [

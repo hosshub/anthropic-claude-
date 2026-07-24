@@ -79,8 +79,7 @@ class SuggestionService {
 }
 
 class SuggestionException extends AppException {
-  SuggestionException.code(AppMessage code, {String? detail})
-      : super(code, detail: detail);
+  SuggestionException.code(super.code, {super.detail});
 
   SuggestionException.fromServer(String serverMessage)
       : super(AppMessage.suggestBadResponse, serverMessage: serverMessage);

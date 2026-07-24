@@ -24,6 +24,17 @@ class MealRepository extends ChangeNotifier {
 
   Future<Database> get _db => _opener();
 
+  /// عدّاد تغييرات — يزيد مع كل notifyListeners حتى تستطيع الشاشات
+  /// إبطال نتائج FutureBuilder المخزّنة عند تغيّر البيانات فقط.
+  int _revision = 0;
+  int get revision => _revision;
+
+  @override
+  void notifyListeners() {
+    _revision++;
+    super.notifyListeners();
+  }
+
   Future<Directory> _mealsDir() async {
     final docs = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(docs.path, 'meals'));

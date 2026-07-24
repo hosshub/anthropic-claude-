@@ -28,7 +28,7 @@ class GuideGoldenRulesScreen extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: TColors.primary.withOpacity(0.12),
+                    color: TColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,

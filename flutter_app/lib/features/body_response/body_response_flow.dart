@@ -88,7 +88,11 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
       }
       _go(_totalSteps - 1);
     } catch (e) {
-      setState(() => _error = l.bodyResponse_couldNotSave(describeError(l, e)));
+      if (mounted) {
+        setState(
+          () => _error = l.bodyResponse_couldNotSave(describeError(l, e)),
+        );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -212,7 +216,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
             child: LinearProgressIndicator(
               value: (_step + 1) / _totalSteps,
               minHeight: 6,
-              backgroundColor: TColors.primary.withOpacity(0.12),
+              backgroundColor: TColors.primary.withValues(alpha: 0.12),
               valueColor: const AlwaysStoppedAnimation(TColors.primary),
             ),
           ),
@@ -233,7 +237,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
               onPressed: () => _go(_step - 1),
               style: OutlinedButton.styleFrom(
                 foregroundColor: TColors.textSecondary,
-                side: BorderSide(color: TColors.textSecondary.withOpacity(0.3)),
+                side: BorderSide(color: TColors.textSecondary.withValues(alpha: 0.3)),
               ),
               child: Text(l.common_previous),
             ),
@@ -361,7 +365,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _satisfaction == v
-                      ? TColors.primary.withOpacity(0.18)
+                      ? TColors.primary.withValues(alpha: 0.18)
                       : Colors.transparent,
                   border: Border.all(
                     color: _satisfaction == v
@@ -410,7 +414,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: color(),
               thumbColor: color(),
-              inactiveTrackColor: color().withOpacity(0.25),
+              inactiveTrackColor: color().withValues(alpha: 0.25),
             ),
             child: Slider(
               value: _bloating.toDouble(),
@@ -503,7 +507,7 @@ class _BodyResponseFlowState extends State<BodyResponseFlow> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: _worth == option
-                              ? TColors.primary.withOpacity(0.12)
+                              ? TColors.primary.withValues(alpha: 0.12)
                               : TColors.surface,
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -592,7 +596,7 @@ class _RadioRow extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? TColors.primary.withOpacity(0.10) : TColors.surface,
+            color: selected ? TColors.primary.withValues(alpha: 0.10) : TColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

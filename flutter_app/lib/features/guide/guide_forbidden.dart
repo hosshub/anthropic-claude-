@@ -60,7 +60,7 @@ class GuideForbiddenScreen extends StatelessWidget {
                             Icon(
                               Icons.close,
                               size: 14,
-                              color: TColors.khabith.withOpacity(0.7),
+                              color: TColors.khabith.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
                             Expanded(

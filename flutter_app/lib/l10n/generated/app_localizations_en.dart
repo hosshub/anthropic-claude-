@@ -406,6 +406,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capture_title => 'Meal Analysis';
 
   @override
+  String get capture_analyzingHint =>
+      'The AI is reading your plate — this usually takes a few seconds.';
+
+  @override
   String get capture_analyzing => 'Analyzing the meal…';
 
   @override

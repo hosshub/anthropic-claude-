@@ -15,6 +15,7 @@ import '../../widgets/primary_button.dart';
 import 'result_screen.dart';
 
 /// التقاط صورة → تحليل عبر الوسيط → حفظ الوجبة → شاشة النتيجة.
+/// أثناء التحليل تُعرض الصورة الملتقطة نفسها مع مؤشر تقدّم — لا شاشة فارغة.
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
 
@@ -26,6 +27,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   final ImagePicker _picker = ImagePicker();
   final AnalyzeService _analyzer = AnalyzeService();
   bool _busy = false;
+  Uint8List? _preview;
   String? _error;
 
   Future<void> _pick(ImageSource source) async {
@@ -33,6 +35,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _preview = null;
     });
     try {
       final picked = await _picker.pickImage(
@@ -40,11 +43,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
         maxWidth: 1024,
         imageQuality: 80,
       );
+      if (!mounted) return;
       if (picked == null) {
         setState(() => _busy = false);
         return;
       }
       final Uint8List bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() => _preview = bytes);
       final result = await _analyzer.analyze(bytes);
       if (!mounted) return;
       final saved = await context
@@ -69,8 +75,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _busy = false;
+        _preview = null;
         _error = describeError(l, e);
       });
     }
@@ -87,75 +95,136 @@ class _CaptureScreenState extends State<CaptureScreen> {
       child: Scaffold(
         appBar: AppBar(title: Text(l.capture_title)),
         body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_busy)
-                Column(
-                  children: [
-                    const CircularProgressIndicator(color: TColors.primary),
-                    const SizedBox(height: 14),
-                    Text(
-                      l.capture_analyzing,
-                      style: const TextStyle(color: TColors.textSecondary),
-                    ),
-                  ],
-                )
-              else ...[
-                const Icon(
-                  Icons.restaurant_menu,
-                  size: 60,
-                  color: TColors.primary,
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  l.capture_hint,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: TColors.textSecondary,
-                      ),
-                ),
-                const SizedBox(height: 28),
-                PrimaryButton(
-                  label: l.capture_camera,
-                  icon: Icons.camera_alt,
-                  onPressed: () => _pick(ImageSource.camera),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: () => _pick(ImageSource.gallery),
-                  icon: const Icon(Icons.photo_library),
-                  label: Text(l.capture_gallery),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: TColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    minimumSize: const Size.fromHeight(52),
-                    side: const BorderSide(color: TColors.primary, width: 1.4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ],
-              if (_error != null) ...[
-                const SizedBox(height: 18),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: TColors.khabith,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _busy ? _analyzingView(l) : _idleView(l),
           ),
         ),
       ),
-    ),
+    );
+  }
+
+  Widget _analyzingView(AppLocalizations l) {
+    final preview = _preview;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (preview != null)
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(TRadii.card),
+                child: Image.memory(
+                  preview,
+                  height: 300,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Container(
+                height: 300,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(TRadii.card),
+                ),
+              ),
+              const CircularProgressIndicator(color: Colors.white),
+            ],
+          )
+        else
+          const Center(
+            child: CircularProgressIndicator(color: TColors.primary),
+          ),
+        const SizedBox(height: 18),
+        Text(
+          l.capture_analyzing,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: TColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l.capture_analyzingHint,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: TColors.textSecondary,
+            fontSize: 13,
+            height: 1.6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _idleView(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: TColors.primary.withValues(alpha: 0.10),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.restaurant_menu,
+            size: 46,
+            color: TColors.primary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l.capture_hint,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: TColors.textSecondary,
+              ),
+        ),
+        const SizedBox(height: 28),
+        PrimaryButton(
+          label: l.capture_camera,
+          icon: Icons.camera_alt,
+          onPressed: () => _pick(ImageSource.camera),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: () => _pick(ImageSource.gallery),
+          icon: const Icon(Icons.photo_library),
+          label: Text(l.capture_gallery),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: TColors.khabith.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(TRadii.control),
+              border:
+                  Border.all(color: TColors.khabith.withValues(alpha: 0.25)),
+            ),
+            child: Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: TColors.khabith,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -165,7 +165,7 @@ class _MealCard extends StatelessWidget {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: TColors.textSecondary.withOpacity(0.35),
+                    color: TColors.textSecondary.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),

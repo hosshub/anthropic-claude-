@@ -86,9 +86,7 @@ class AccountException extends AppException {
   /// HTTP status the delete call failed with, shown as a suffix in Settings.
   final String? statusCode;
 
-  AccountException.code(AppMessage code, {String? detail})
-      : statusCode = null,
-        super(code, detail: detail);
+  AccountException.code(super.code, {super.detail}) : statusCode = null;
 
   AccountException.fromServer(String serverMessage, String status)
       : statusCode = status,

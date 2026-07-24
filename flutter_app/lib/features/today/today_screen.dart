@@ -19,8 +19,18 @@ import '../history/meal_detail_screen.dart';
 import '../suggestions/suggestions_screen.dart';
 import 'when_in_doubt_screen.dart';
 
-class TodayScreen extends StatelessWidget {
+class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
+
+  @override
+  State<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends State<TodayScreen> {
+  // Cache the day's query per repository generation — rebuilds (greeting,
+  // locale, calorie goal…) must not re-hit SQLite every frame.
+  Future<List<Meal>>? _mealsFuture;
+  int _repoGeneration = -1;
 
   String _greeting(BuildContext context, ProfileService profile) {
     final l = AppLocalizations.of(context)!;
@@ -45,14 +55,19 @@ class TodayScreen extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final dayStart = _dayStart;
     final dayEnd = dayStart.add(const Duration(days: 1));
+    // notifyListeners bumps repo.revision — refresh the cached future only
+    // when data actually changed (or the calendar day rolled over).
+    final generation = repo.revision ^ dayStart.millisecondsSinceEpoch;
+    if (_repoGeneration != generation || _mealsFuture == null) {
+      _repoGeneration = generation;
+      _mealsFuture = repo.loadBetween(dayStart, dayEnd);
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l.tab_today),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: TColors.primary,
-        foregroundColor: Colors.white,
+      floatingActionButton: FloatingActionButton.extended(
         tooltip: l.today_whenInDoubtTooltip,
         onPressed: () {
           Navigator.of(context).push(
@@ -62,12 +77,12 @@ class TodayScreen extends StatelessWidget {
             ),
           );
         },
-        child: const Text('🤔', style: TextStyle(fontSize: 24)),
+        icon: const Icon(Icons.help_outline),
+        label: Text(l.today_whenInDoubtTooltip),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Meal>>(
-          key: ValueKey(repo.hashCode),
-          future: repo.loadBetween(dayStart, dayEnd),
+          future: _mealsFuture,
           builder: (context, snap) {
             final meals = snap.data ?? const <Meal>[];
             final loading = snap.connectionState == ConnectionState.waiting;
@@ -119,15 +134,7 @@ class TodayScreen extends StatelessWidget {
                           icon: const Icon(Icons.auto_awesome, size: 18),
                           label: Text(l.today_suggestions),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
-                            side: const BorderSide(
-                              color: TColors.primary,
-                              width: 1.2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
                           ),
                         ),
                       ),
@@ -144,15 +151,7 @@ class TodayScreen extends StatelessWidget {
                           icon: const Icon(Icons.brightness_2, size: 18),
                           label: Text(l.today_fasting),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
-                            side: const BorderSide(
-                              color: TColors.primary,
-                              width: 1.2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
                           ),
                         ),
                       ),
@@ -215,7 +214,7 @@ class TodayScreen extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: score / 100,
                   strokeWidth: 11,
-                  backgroundColor: color.withOpacity(0.18),
+                  backgroundColor: color.withValues(alpha: 0.18),
                   color: color,
                   strokeCap: StrokeCap.round,
                 ),
@@ -327,7 +326,7 @@ class _DailyCaloriesCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 10,
-                backgroundColor: barColor.withOpacity(0.15),
+                backgroundColor: barColor.withValues(alpha: 0.15),
                 color: barColor,
               ),
             ),

@@ -800,6 +800,12 @@ abstract class AppLocalizations {
   /// **'تحليل وجبة'**
   String get capture_title;
 
+  /// No description provided for @capture_analyzingHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرأ الذكاء الاصطناعي طبقك الآن — يستغرق الأمر ثوانٍ قليلة عادةً.'**
+  String get capture_analyzingHint;
+
   /// No description provided for @capture_analyzing.
   ///
   /// In ar, this message translates to:

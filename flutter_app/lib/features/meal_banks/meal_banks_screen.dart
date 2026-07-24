@@ -202,7 +202,7 @@ class _MealItemSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: TColors.textSecondary.withOpacity(0.3),
+                    color: TColors.textSecondary.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

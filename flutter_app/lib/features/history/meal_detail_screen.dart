@@ -186,7 +186,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: TColors.gold.withOpacity(0.14),
+                      color: TColors.gold.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(40),
                     ),
                     child: Row(

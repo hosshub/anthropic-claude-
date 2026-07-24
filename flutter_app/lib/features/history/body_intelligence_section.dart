@@ -91,7 +91,7 @@ class BodyIntelligenceSection extends StatelessWidget {
       case SleepImpact.negative:
         return TColors.khabith;
       case SleepImpact.unknown:
-        return TColors.textSecondary.withOpacity(0.5);
+        return TColors.textSecondary.withValues(alpha: 0.5);
     }
   }
 
@@ -366,7 +366,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.10),
+                        color: accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(40),
                       ),
                       child: Text(
@@ -463,7 +463,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                             Container(
                               height: 14,
                               decoration: BoxDecoration(
-                                color: TColors.textSecondary.withOpacity(0.08),
+                                color: TColors.textSecondary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(7),
                               ),
                             ),
@@ -682,7 +682,7 @@ class _ScoreTrendChart extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: lineColor.withOpacity(0.10),
+                    color: lineColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(40),
                   ),
                   child: Text(
@@ -729,7 +729,7 @@ class _ScoreTrendChart extends StatelessWidget {
                         drawVerticalLine: false,
                         horizontalInterval: 25,
                         getDrawingHorizontalLine: (_) => FlLine(
-                          color: TColors.textSecondary.withOpacity(0.10),
+                          color: TColors.textSecondary.withValues(alpha: 0.10),
                           strokeWidth: 1,
                         ),
                       ),
@@ -834,8 +834,8 @@ class _ScoreTrendChart extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                lineColor.withOpacity(0.25),
-                                lineColor.withOpacity(0),
+                                lineColor.withValues(alpha: 0.25),
+                                lineColor.withValues(alpha: 0),
                               ],
                             ),
                           ),

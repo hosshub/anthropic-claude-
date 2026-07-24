@@ -397,6 +397,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get capture_title => 'تحليل وجبة';
 
   @override
+  String get capture_analyzingHint =>
+      'يقرأ الذكاء الاصطناعي طبقك الآن — يستغرق الأمر ثوانٍ قليلة عادةً.';
+
+  @override
   String get capture_analyzing => 'جارٍ تحليل الوجبة…';
 
   @override

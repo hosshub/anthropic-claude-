@@ -42,6 +42,7 @@ class _FastingScreenState extends State<FastingScreen> {
       final kind = kinds.isNotEmpty ? kinds.first : FastingKind.general;
       await repo.markFasting(date: _now, kind: kind);
     }
+    if (!mounted) return;
     HapticFeedback.selectionClick();
     setState(_reload);
   }
@@ -148,12 +149,12 @@ class _TodayCard extends StatelessWidget {
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
           colors: [
-            color.withOpacity(0.18),
-            color.withOpacity(0.06),
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.30)),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,9 +213,9 @@ class _TodayCard extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(40),
-                      border: Border.all(color: color.withOpacity(0.30)),
+                      border: Border.all(color: color.withValues(alpha: 0.30)),
                     ),
                     child: Text(
                       fastingKindLabel(l, k),

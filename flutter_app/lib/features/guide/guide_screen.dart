@@ -199,7 +199,7 @@ class _GuideIndexCard extends StatelessWidget {
                   Text(
                     section.number(locale),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                     ),
@@ -207,7 +207,7 @@ class _GuideIndexCard extends StatelessWidget {
                   const Spacer(),
                   Icon(
                     section.icon,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     size: 18,
                   ),
                 ],

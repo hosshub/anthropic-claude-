@@ -235,7 +235,7 @@ class _CalendarViewState extends State<_CalendarView> {
               defaultTextStyle: const TextStyle(color: TColors.textPrimary),
               weekendTextStyle: const TextStyle(color: TColors.textPrimary),
               todayDecoration: BoxDecoration(
-                color: TColors.primary.withOpacity(0.18),
+                color: TColors.primary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               selectedDecoration: const BoxDecoration(
@@ -310,9 +310,9 @@ class _DaySummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -320,7 +320,7 @@ class _DaySummary extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.18),
+              color: color.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -434,7 +434,7 @@ class _MealRow extends StatelessWidget {
                             AppLocalizations.of(context)!
                                 .history_bodyTrackingLogged,
                             style: TextStyle(
-                              color: TColors.primary.withOpacity(0.9),
+                              color: TColors.primary.withValues(alpha: 0.9),
                               fontSize: 11,
                             ),
                           ),
@@ -449,7 +449,7 @@ class _MealRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: scoreColor.withOpacity(0.10),
+                  color: scoreColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Text(

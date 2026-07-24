@@ -261,7 +261,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
                   child: CircularProgressIndicator(
                     value: currentDay / 15,
                     strokeWidth: 8,
-                    backgroundColor: TColors.primary.withOpacity(0.15),
+                    backgroundColor: TColors.primary.withValues(alpha: 0.15),
                     color: TColors.primary,
                     strokeCap: StrokeCap.round,
                   ),
@@ -327,7 +327,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: active ? phase.color.withOpacity(0.20) : Colors.transparent,
+        color: active ? phase.color.withValues(alpha: 0.20) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -369,9 +369,9 @@ class _ProgramScreenState extends State<ProgramScreen> {
           final bg = selected
               ? TColors.primary
               : isCurrent
-                  ? TColors.gold.withOpacity(0.18)
+                  ? TColors.gold.withValues(alpha: 0.18)
                   : completed
-                      ? TColors.primary.withOpacity(0.15)
+                      ? TColors.primary.withValues(alpha: 0.15)
                       : TColors.surface;
           final fg = selected ? Colors.white : TColors.textPrimary;
           return Padding(
@@ -481,7 +481,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Widget _badge(String text, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.18),
+          color: color.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(40),
         ),
         child: Text(

@@ -200,7 +200,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: Text(
                             l.common_or,
                             style: TextStyle(
-                              color: TColors.textSecondary.withOpacity(0.85),
+                              color: TColors.textSecondary.withValues(alpha: 0.85),
                               fontSize: 12,
                             ),
                           ),

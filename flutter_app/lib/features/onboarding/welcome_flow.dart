@@ -101,7 +101,7 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
                           decoration: BoxDecoration(
                             color: i == _index
                                 ? TColors.primary
-                                : TColors.primary.withOpacity(0.25),
+                                : TColors.primary.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -141,7 +141,7 @@ class _WelcomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: TColors.primary.withOpacity(0.3),
+                  color: TColors.primary.withValues(alpha: 0.3),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -226,7 +226,7 @@ class _FeatureCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -335,7 +335,7 @@ class _DonePage extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: TColors.zoneGreen.withOpacity(0.12),
+                color: TColors.zoneGreen.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

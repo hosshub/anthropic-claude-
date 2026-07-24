@@ -36,7 +36,7 @@ class ZoneBadge extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: c.withOpacity(0.12),
+            color: c.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(40),
           ),
           child: Row(

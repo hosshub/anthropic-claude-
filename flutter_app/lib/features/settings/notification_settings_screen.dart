@@ -105,7 +105,7 @@ class _PermissionBanner extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: TColors.zoneGreen.withOpacity(0.10),
+          color: TColors.zoneGreen.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -128,9 +128,9 @@ class _PermissionBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: TColors.gold.withOpacity(0.10),
+        color: TColors.gold.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: TColors.gold.withOpacity(0.35)),
+        border: Border.all(color: TColors.gold.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +224,7 @@ class _ToggleRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: TColors.primary.withOpacity(0.12),
+              color: TColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
@@ -254,7 +254,7 @@ class _ToggleRow extends StatelessWidget {
           ),
           Switch.adaptive(
             value: enabled,
-            activeColor: TColors.primary,
+            activeThumbColor: TColors.primary,
             onChanged: onToggle,
           ),
         ],
@@ -279,7 +279,7 @@ class _BodyFollowupRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: TColors.primary.withOpacity(0.12),
+              color: TColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
@@ -309,7 +309,7 @@ class _BodyFollowupRow extends StatelessWidget {
           ),
           Switch.adaptive(
             value: enabled,
-            activeColor: TColors.primary,
+            activeThumbColor: TColors.primary,
             onChanged: onToggle,
           ),
         ],

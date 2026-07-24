@@ -111,7 +111,7 @@ class _EditItemsSheetState extends State<_EditItemsSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: TColors.textSecondary.withOpacity(0.3),
+                color: TColors.textSecondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -182,7 +182,7 @@ class _EditItemsSheetState extends State<_EditItemsSheet> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: previewColor.withOpacity(0.12),
+                          color: previewColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(40),
                         ),
                         child: Text(

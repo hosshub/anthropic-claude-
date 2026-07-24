@@ -81,8 +81,7 @@ class AnalyzeService {
 /// or a passthrough server-emitted message (sanitized + already localized by
 /// the proxy) via the base [AppException.serverMessage].
 class AnalyzeException extends AppException {
-  AnalyzeException.code(AppMessage code, {String? detail})
-      : super(code, detail: detail);
+  AnalyzeException.code(super.code, {super.detail});
 
   AnalyzeException.fromServer(String serverMessage)
       : super(AppMessage.analyzeBadResponse, serverMessage: serverMessage);

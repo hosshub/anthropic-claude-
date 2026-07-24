@@ -107,7 +107,7 @@ class _MacroPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
+          color: color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -151,7 +151,7 @@ class MicrosWrap extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: TColors.primary.withOpacity(0.08),
+              color: TColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(

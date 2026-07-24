@@ -159,12 +159,12 @@ class _ZoneHero extends StatelessWidget {
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
           colors: [
-            color.withOpacity(0.18),
-            color.withOpacity(0.06),
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.30)),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +199,7 @@ class _ZoneHero extends StatelessWidget {
                       _verdict(l),
                       style: TextStyle(
                         fontSize: 13,
-                        color: color.withOpacity(0.85),
+                        color: color.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -222,7 +222,7 @@ class _ZoneHero extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -330,7 +330,7 @@ class _CategoryStyle extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
+                color: color.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
@@ -350,7 +350,7 @@ class _CategoryStyle extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.10),
+                color: color.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Text(
@@ -404,7 +404,7 @@ class _ItemStyle extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
+                color: color.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
@@ -439,7 +439,7 @@ class _ItemStyle extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -453,7 +453,7 @@ class _ItemStyle extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
-                      color: color.withOpacity(0.95),
+                      color: color.withValues(alpha: 0.95),
                     ),
                   ),
                 ),
@@ -481,15 +481,15 @@ class _ItemChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: color.withOpacity(0.25), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 13,
-          color: color.withOpacity(0.95),
+          color: color.withValues(alpha: 0.95),
           fontWeight: FontWeight.w600,
         ),
       ),

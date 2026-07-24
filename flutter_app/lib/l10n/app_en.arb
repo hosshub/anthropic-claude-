@@ -140,6 +140,7 @@
 
   "capture_title": "Meal Analysis",
   "capture_analyzing": "Analyzing the meal…",
+  "capture_analyzingHint": "The AI is reading your plate — this usually takes a few seconds.",
   "capture_hint": "Photograph your meal or pick from the gallery — we'll analyze it instantly.",
   "capture_camera": "Capture with Camera",
   "capture_gallery": "Pick from Gallery",

@@ -158,10 +158,10 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: TColors.gold.withOpacity(0.10),
+                        color: TColors.gold.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: TColors.gold.withOpacity(0.4),
+                          color: TColors.gold.withValues(alpha: 0.4),
                         ),
                       ),
                       child: Row(

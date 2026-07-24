@@ -133,7 +133,7 @@ class _GuideWeeklyPrepScreenState extends State<GuideWeeklyPrepScreen> {
                           value: progress,
                           minHeight: 6,
                           backgroundColor:
-                              TColors.primary.withOpacity(0.12),
+                              TColors.primary.withValues(alpha: 0.12),
                           valueColor: const AlwaysStoppedAnimation(
                             TColors.primary,
                           ),
@@ -197,7 +197,7 @@ class _TaskRow extends StatelessWidget {
                     : Icons.radio_button_unchecked,
                 color: done
                     ? TColors.primary
-                    : TColors.primary.withOpacity(0.7),
+                    : TColors.primary.withValues(alpha: 0.7),
                 size: 26,
               ),
               const SizedBox(width: 12),
@@ -238,7 +238,7 @@ class _TaskRow extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: TColors.primary.withOpacity(0.10),
+                            color: TColors.primary.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
