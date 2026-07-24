@@ -66,7 +66,7 @@ class AuthService extends ChangeNotifier {
       _finish();
       return true;
     } on AuthException catch (e) {
-      _fail(e.message);
+      _failWithAuthException(e);
       return false;
     } catch (e) {
       _failWithCode(_classifyUnexpected(e));
@@ -87,7 +87,7 @@ class AuthService extends ChangeNotifier {
       _finish();
       return true;
     } on AuthException catch (e) {
-      _fail(e.message);
+      _failWithAuthException(e);
       return false;
     } catch (e) {
       _failWithCode(_classifyUnexpected(e));
@@ -115,7 +115,7 @@ class AuthService extends ChangeNotifier {
       // لا ننهي _busy هنا — onAuthStateChange سيفعل ذلك بعد عودة الرابط.
       return true;
     } on AuthException catch (e) {
-      _fail(e.message);
+      _failWithAuthException(e);
       return false;
     } catch (e) {
       _failWithCode(_classifyUnexpected(e));
@@ -164,7 +164,7 @@ class AuthService extends ChangeNotifier {
       }
       return false;
     } on AuthException catch (e) {
-      _fail(e.message);
+      _failWithAuthException(e);
       return false;
     } catch (e) {
       _failWithCode(_classifyUnexpected(e));
@@ -213,15 +213,59 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Surfaces an [AuthException] safely: transport noise becomes a localized
+  /// network message; genuine auth errors keep their (actionable) text.
+  void _failWithAuthException(AuthException e) {
+    final code = codeForAuthExceptionMessage(e.message);
+    if (code != null) {
+      _failWithCode(code);
+    } else {
+      _fail(e.message);
+    }
+  }
+
   /// Map a non-Auth exception (network drop, timeout, anything else) to a
   /// localizable code — never surface raw Dart exception text to the UI.
-  static AppMessage _classifyUnexpected(Object e) {
-    final s = e.toString().toLowerCase();
-    final isNetwork = s.contains('timeout') ||
-        s.contains('socket') ||
-        s.contains('connection') ||
-        s.contains('clientexception');
-    return isNetwork ? AppMessage.authNetworkError : AppMessage.authUnexpectedError;
+  static AppMessage _classifyUnexpected(Object e) =>
+      _classifyMessage(e.toString()) ?? AppMessage.authUnexpectedError;
+
+  /// Classifies an [AuthException] message.
+  ///
+  /// Supabase reports transport failures as `AuthRetryableFetchException`,
+  /// which **extends AuthException** and carries the raw Dart text as its
+  /// message (gotrue `fetch.dart`: `message: error.toString()`). Since our
+  /// catch order handles `AuthException` before the generic `catch`, that raw
+  /// text would otherwise reach the user — e.g. "ClientException with
+  /// SocketException: Failed host lookup…" when the project is paused.
+  ///
+  /// Returns a localizable code when the message is transport noise (hide it),
+  /// or null when it is a genuine, actionable auth error (show it as-is —
+  /// "Invalid login credentials" is useful to the user).
+  static AppMessage? codeForAuthExceptionMessage(String message) {
+    if (message.trim().isEmpty) return AppMessage.authUnexpectedError;
+    return _classifyMessage(message);
+  }
+
+  /// Shared transport-noise detector. Null means "not transport noise".
+  static AppMessage? _classifyMessage(String message) {
+    final s = message.toLowerCase();
+    const markers = [
+      'timeout',
+      'socket',
+      'connection',
+      'clientexception',
+      'failed host lookup',
+      'network is unreachable',
+      'nodename nor servname',
+      'connection refused',
+      'connection reset',
+      'handshake',
+      'os error',
+    ];
+    for (final m in markers) {
+      if (s.contains(m)) return AppMessage.authNetworkError;
+    }
+    return null;
   }
 
   void _failWithCode(AppMessage code) {
