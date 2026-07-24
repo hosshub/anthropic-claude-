@@ -2,6 +2,20 @@
 
 Max 500 characters per locale on Play.
 
+## version 1.2.1
+
+### Arabic (ar)
+
+```
+سلسلة تسجيل يومية في شاشة اليوم، إعادة تسجيل أي وجبة سابقة بلمسة وبلا استهلاك تحليل، بحث في سجل الوجبات، وتحسينات استقرار.
+```
+
+### English (en-US)
+
+```
+Daily logging streak on Today, one-tap re-log of any past meal without using an AI analysis, history search, and stability improvements.
+```
+
 ## version 1.2.0
 
 ### Arabic (ar)

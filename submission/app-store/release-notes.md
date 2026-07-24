@@ -5,6 +5,32 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## v1.2.1 — streaks, quick re-log, search
+
+### Arabic (ar)
+
+```
+تحديث خفيف يكمل 1.2.0 🌿
+
+• سلسلة التسجيل: أيامك المتتالية بوجبة مسجّلة تظهر في شاشة اليوم — حافظ عليها.
+• "سجّل هذه الوجبة من جديد": أعد تسجيل وجبة سابقة بلمسة واحدة وبلا استهلاك تحليل.
+• بحث في السجل: اعثر على أي وجبة بالاسم أو المكوّن.
+• تحسينات استقرار وتغطية اختبارات أوسع.
+```
+
+### English (en-US)
+
+```
+A light follow-up to 1.2.0 🌿
+
+• Logging streak: your consecutive logged days now show on Today — keep it alive.
+• "Log this meal again": re-log any past meal in one tap, without using an AI analysis.
+• History search: find any meal by name or ingredient.
+• Stability improvements and wider test coverage.
+```
+
+---
+
 ## v1.2.0 — your feedback, built in
 
 ### Arabic (ar)
