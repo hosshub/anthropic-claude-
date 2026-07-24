@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tayyibat/data/database.dart';
+import 'package:tayyibat/data/plan_repository.dart';
+import 'package:tayyibat/models/suggestion.dart';
 
 /// v1.3.0 schema (v5): meals.source + meal_plans.started_at.
 void main() {
@@ -47,6 +49,26 @@ void main() {
     expect(mealCols.map((c) => c['name']), contains('source'));
     final planCols = await db.rawQuery('PRAGMA table_info(meal_plans)');
     expect(planCols.map((c) => c['name']), contains('started_at'));
+    await db.close();
+  });
+
+  test('PlanRepository.commitPlan sets started_at; loadLatest returns it',
+      () async {
+    final db = await freshDb();
+    final repo = PlanRepository(dbOpener: () async => db);
+    final plan = WeeklyPlan.fromJson(const {
+      'intro_ar': 'خطة',
+      'days': [
+        {'day_ar': 'السبت', 'meals_ar': ['فطور', 'غداء'], 'note_ar': ''},
+      ],
+    });
+    final saved = await repo.savePlan(plan);
+    expect(saved.startedAt, isNull);
+    expect((await repo.loadLatest())!.startedAt, isNull);
+
+    await repo.commitPlan(saved.id);
+    final after = await repo.loadLatest();
+    expect(after!.startedAt, isNotNull);
     await db.close();
   });
 }

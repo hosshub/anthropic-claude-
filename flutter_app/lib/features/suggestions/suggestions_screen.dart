@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/meal_repository.dart';
 import '../../data/plan_repository.dart';
+import '../../services/plan_adherence.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/suggestion.dart';
 import '../../services/app_messages.dart';
@@ -398,6 +400,17 @@ class _PlanTabState extends State<_PlanTab>
               const SizedBox(height: 18),
               _PlanProgressCard(plan: plan),
               const SizedBox(height: 10),
+              if (plan.startedAt == null)
+                _CommitPlanCard(
+                  onCommit: () async {
+                    await plans.commitPlan(plan.id);
+                    if (!mounted) return;
+                    setState(() => _planFuture = plans.loadLatest());
+                  },
+                )
+              else
+                _AdherenceCard(plan: plan),
+              const SizedBox(height: 10),
               if (plan.introAr.isNotEmpty) ...[
                 CardContainer(
                   child: Text(
@@ -434,6 +447,175 @@ class _PlanTabState extends State<_PlanTab>
           ],
         );
       },
+    );
+  }
+}
+
+class _CommitPlanCard extends StatelessWidget {
+  final Future<void> Function() onCommit;
+  const _CommitPlanCard({required this.onCommit});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.plan_notCommitted, style: const TextStyle(height: 1.55)),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onCommit,
+              icon: const Icon(Icons.flag_outlined),
+              label: Text(l.plan_commit),
+              style: FilledButton.styleFrom(
+                backgroundColor: TColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(46),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// بطاقة المخطط مقابل الفعلي: تحسب نسبة الالتزام من التأشير اليدوي وتسجيل
+/// الوجبات الفعلي في تواريخ الخطة.
+class _AdherenceCard extends StatelessWidget {
+  final SavedPlan plan;
+  const _AdherenceCard({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final repo = context.read<MealRepository>();
+    return FutureBuilder<List<DateTime>>(
+      future: repo.recentCaptureTimes(),
+      builder: (context, snap) {
+        final logged = <DateTime>{
+          for (final t in (snap.data ?? const <DateTime>[]))
+            DateTime(t.year, t.month, t.day),
+        };
+        final started = plan.startedAt!;
+        final startDate = DateTime(started.year, started.month, started.day);
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final fractions = [
+          for (final d in plan.days)
+            d.mealsAr.isEmpty
+                ? 0.0
+                : d.done.where((x) => x).length / d.mealsAr.length,
+        ];
+        final score = planAdherenceScore(
+          startedAt: started,
+          dayManualFractions: fractions,
+          loggedDates: logged,
+          today: today,
+        );
+        final color = TColors.scoreColor(score);
+        return CardContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.insights, color: TColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l.plan_adherence_title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  Text(
+                    l.common_percentValue(score),
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l.plan_adherence_sub,
+                style: const TextStyle(
+                  color: TColors.textSecondary,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (var d = 0; d < plan.days.length; d++)
+                    _dayChip(l, d, startDate, todayDate, fractions[d], logged),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dayChip(
+    AppLocalizations l,
+    int dayOrder,
+    DateTime startDate,
+    DateTime todayDate,
+    double manualFraction,
+    Set<DateTime> logged,
+  ) {
+    final date = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day + dayOrder,
+    );
+    final Color c;
+    final String label;
+    if (date.isAfter(todayDate)) {
+      c = TColors.textSecondary;
+      label = l.plan_day_upcoming;
+    } else if (manualFraction > 0 || logged.contains(date)) {
+      c = TColors.zoneGreen;
+      label = l.plan_day_done;
+    } else {
+      c = TColors.khabith;
+      label = l.plan_day_missed;
+    }
+    return Semantics(
+      label: '${plan.days[dayOrder].dayAr}: $label',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: c.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              plan.days[dayOrder].dayAr,
+              style: TextStyle(
+                  color: c, fontSize: 11, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

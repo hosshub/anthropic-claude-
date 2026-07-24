@@ -1090,6 +1090,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get suggestions_plan_button_again => 'ولّد خطة جديدة';
 
   @override
+  String get plan_commit => 'التزم بهذه الخطة';
+
+  @override
+  String get plan_committed_note => 'نتابع المخطط مقابل الفعلي منذ التزامك.';
+
+  @override
+  String get plan_adherence_title => 'المخطط مقابل الفعلي';
+
+  @override
+  String get plan_adherence_sub => 'مدى قربك من الخطة حتى الآن.';
+
+  @override
+  String get plan_notCommitted =>
+      'التزم بالخطة لبدء متابعة المخطط مقابل الفعلي.';
+
+  @override
+  String get plan_day_done => 'على المسار';
+
+  @override
+  String get plan_day_missed => 'فائتة';
+
+  @override
+  String get plan_day_upcoming => 'قادمة';
+
+  @override
   String get plan_savedAuto =>
       'خطتك محفوظة على جهازك — أشّر على كل وجبة عند إنجازها.';
 

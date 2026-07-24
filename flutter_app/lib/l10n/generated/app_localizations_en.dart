@@ -1104,6 +1104,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestions_plan_button_again => 'Generate a new plan';
 
   @override
+  String get plan_commit => 'Commit to this plan';
+
+  @override
+  String get plan_committed_note =>
+      'Tracking planned vs actual since you committed.';
+
+  @override
+  String get plan_adherence_title => 'Planned vs actual';
+
+  @override
+  String get plan_adherence_sub =>
+      'How closely you\'re following the plan so far.';
+
+  @override
+  String get plan_notCommitted =>
+      'Commit to the plan to start tracking planned vs actual.';
+
+  @override
+  String get plan_day_done => 'On track';
+
+  @override
+  String get plan_day_missed => 'Missed';
+
+  @override
+  String get plan_day_upcoming => 'Upcoming';
+
+  @override
   String get plan_savedAuto =>
       'Your plan is saved on this device — tick meals off as you go.';
 

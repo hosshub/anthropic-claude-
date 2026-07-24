@@ -2078,6 +2078,54 @@ abstract class AppLocalizations {
   /// **'ولّد خطة جديدة'**
   String get suggestions_plan_button_again;
 
+  /// No description provided for @plan_commit.
+  ///
+  /// In ar, this message translates to:
+  /// **'التزم بهذه الخطة'**
+  String get plan_commit;
+
+  /// No description provided for @plan_committed_note.
+  ///
+  /// In ar, this message translates to:
+  /// **'نتابع المخطط مقابل الفعلي منذ التزامك.'**
+  String get plan_committed_note;
+
+  /// No description provided for @plan_adherence_title.
+  ///
+  /// In ar, this message translates to:
+  /// **'المخطط مقابل الفعلي'**
+  String get plan_adherence_title;
+
+  /// No description provided for @plan_adherence_sub.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدى قربك من الخطة حتى الآن.'**
+  String get plan_adherence_sub;
+
+  /// No description provided for @plan_notCommitted.
+  ///
+  /// In ar, this message translates to:
+  /// **'التزم بالخطة لبدء متابعة المخطط مقابل الفعلي.'**
+  String get plan_notCommitted;
+
+  /// No description provided for @plan_day_done.
+  ///
+  /// In ar, this message translates to:
+  /// **'على المسار'**
+  String get plan_day_done;
+
+  /// No description provided for @plan_day_missed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فائتة'**
+  String get plan_day_missed;
+
+  /// No description provided for @plan_day_upcoming.
+  ///
+  /// In ar, this message translates to:
+  /// **'قادمة'**
+  String get plan_day_upcoming;
+
   /// No description provided for @plan_savedAuto.
   ///
   /// In ar, this message translates to:

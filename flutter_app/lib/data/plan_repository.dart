@@ -14,11 +14,15 @@ class SavedPlan {
   final String introAr;
   final List<SavedPlanDay> days;
 
+  /// v1.3 — تاريخ الالتزام بالخطة (يوم 0). null قبل الالتزام.
+  final DateTime? startedAt;
+
   const SavedPlan({
     required this.id,
     required this.createdAt,
     required this.introAr,
     required this.days,
+    this.startedAt,
   });
 
   int get totalMeals => days.fold(0, (a, d) => a + d.mealsAr.length);
@@ -110,11 +114,15 @@ class PlanRepository extends ChangeNotifier {
       whereArgs: [planId],
       orderBy: 'day_order',
     );
+    final startedMs = plan['started_at'] as int?;
     return SavedPlan(
       id: planId,
       createdAt:
           DateTime.fromMillisecondsSinceEpoch(plan['created_at'] as int),
       introAr: (plan['intro'] as String?) ?? '',
+      startedAt: startedMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(startedMs),
       days: [
         for (final r in dayRows)
           SavedPlanDay(
@@ -125,6 +133,18 @@ class PlanRepository extends ChangeNotifier {
           ),
       ],
     );
+  }
+
+  /// يثبّت بداية الخطة (يوم 0 = اليوم) عند التزام المستخدم بها.
+  Future<void> commitPlan(String planId) async {
+    final db = await _db;
+    await db.update(
+      'meal_plans',
+      {'started_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'id = ?',
+      whereArgs: [planId],
+    );
+    notifyListeners();
   }
 
   Future<void> setMealDone({
