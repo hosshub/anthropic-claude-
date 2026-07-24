@@ -7,8 +7,8 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
-import '../../services/auth_service.dart';
 import '../../services/nutrition_goal_service.dart';
+import '../../services/profile_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/nutrition_summary.dart';
@@ -22,14 +22,15 @@ import 'when_in_doubt_screen.dart';
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
 
-  String _greeting(BuildContext context, AuthService auth) {
+  String _greeting(BuildContext context, ProfileService profile) {
     final l = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
     final period =
         hour < 12 ? l.today_greetingMorning : l.today_greetingEvening;
-    final email = auth.email;
-    if (email == null || email.isEmpty) return period;
-    return l.today_greetingWithName(period, email.split('@').first);
+    // v1.2: التحية بالاسم المعروض الذي اختاره المستخدم — لا مقطع البريد.
+    final name = profile.displayName;
+    if (name == null || name.isEmpty) return period;
+    return l.today_greetingWithName(period, name);
   }
 
   DateTime get _dayStart {
@@ -39,7 +40,7 @@ class TodayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthService>();
+    final profile = context.watch<ProfileService>();
     final repo = context.watch<MealRepository>();
     final l = AppLocalizations.of(context)!;
     final dayStart = _dayStart;
@@ -77,7 +78,7 @@ class TodayScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    _greeting(context, auth),
+                    _greeting(context, profile),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 20),

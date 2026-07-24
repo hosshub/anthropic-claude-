@@ -45,6 +45,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_later => 'Later';
 
   @override
+  String get common_skip => 'Skip';
+
+  @override
   String get common_retry => 'Retry';
 
   @override

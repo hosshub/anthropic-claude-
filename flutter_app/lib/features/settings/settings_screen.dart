@@ -10,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../../services/locale_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/nutrition_goal_service.dart';
+import '../../services/profile_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../onboarding/disclaimer_screen.dart';
@@ -38,6 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // BuildContext across an async gap.
     final notifications = context.read<NotificationService>();
     final account = context.read<AccountService>();
+    final profile = context.read<ProfileService>();
     final messenger = ScaffoldMessenger.of(context);
     final confirm = await showDialog<bool>(
       context: context,
@@ -65,6 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await notifications.cancelAllBodyFollowups();
       if (!mounted) return;
       await account.deleteAccount();
+      await profile.reset();
       if (!mounted) return;
       await showDialog<void>(
         context: context,
@@ -142,6 +145,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ],
                       ),
+                    const SizedBox(height: 10),
+                    const _DisplayNameRow(),
                     const SizedBox(height: 14),
                     OutlinedButton.icon(
                       onPressed: _deleting ? null : _signOut,
@@ -374,6 +379,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// صف الاسم المعروض داخل بطاقة الحساب — يفتح حوار تعديل. الاسم يغذّي
+/// تحية شاشة اليوم ويبقى على الجهاز.
+class _DisplayNameRow extends StatelessWidget {
+  const _DisplayNameRow();
+
+  Future<void> _edit(BuildContext context) async {
+    final l = AppLocalizations.of(context)!;
+    final profile = context.read<ProfileService>();
+    final controller =
+        TextEditingController(text: profile.displayName ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.settings_displayName_dialogTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.settings_displayName_note,
+              style: const TextStyle(
+                fontSize: 11.5,
+                color: TColors.textSecondary,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: Text(l.common_save),
+          ),
+        ],
+      ),
+    );
+    if (result != null) await profile.setDisplayName(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final name = context.watch<ProfileService>().displayName;
+    return OutlinedButton.icon(
+      onPressed: () => _edit(context),
+      icon: const Icon(Icons.badge_outlined),
+      label: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(l.settings_displayName),
+          Flexible(
+            child: Text(
+              name ?? l.settings_displayName_empty,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: name == null ? TColors.textSecondary : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: TColors.primary,
+        alignment: AlignmentDirectional.centerStart,
+        minimumSize: const Size.fromHeight(48),
+        side: const BorderSide(color: TColors.primary, width: 1.2),
       ),
     );
   }

@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 
 import 'features/auth/auth_screen.dart';
 import 'features/onboarding/disclaimer_screen.dart';
+import 'features/onboarding/welcome_flow.dart';
 import 'services/auth_service.dart';
 import 'services/onboarding_service.dart';
+import 'services/profile_service.dart';
 import 'shell/main_shell.dart';
 
-/// نقطة التفرّع: دخول → تنبيه طبي (إن لم يُقبل بعد) → الإطار الرئيسي.
+/// نقطة التفرّع: دخول → تنبيه طبي (إن لم يُقبل) → جولة الترحيب (مرة واحدة،
+/// قابلة للتخطي) → الإطار الرئيسي.
 class AppRoot extends StatelessWidget {
   const AppRoot({super.key});
 
@@ -15,8 +18,9 @@ class AppRoot extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final onboarding = context.watch<OnboardingService>();
+    final profile = context.watch<ProfileService>();
 
-    if (auth.isRestoring || !onboarding.isReady) {
+    if (auth.isRestoring || !onboarding.isReady || !profile.isReady) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -24,6 +28,7 @@ class AppRoot extends StatelessWidget {
 
     if (!auth.isAuthenticated) return const AuthScreen();
     if (!onboarding.hasAcceptedDisclaimer) return const DisclaimerScreen();
+    if (!profile.hasCompletedOnboarding) return const WelcomeFlow();
     return const MainShell();
   }
 }

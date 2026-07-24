@@ -45,6 +45,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_later => 'لاحقاً';
 
   @override
+  String get common_skip => 'تخطّي';
+
+  @override
   String get common_retry => 'حاول مجدداً';
 
   @override

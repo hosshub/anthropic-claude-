@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'لاحقاً'**
   String get common_later;
 
+  /// No description provided for @common_skip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخطّي'**
+  String get common_skip;
+
   /// No description provided for @common_retry.
   ///
   /// In ar, this message translates to:
