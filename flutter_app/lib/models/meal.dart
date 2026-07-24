@@ -15,6 +15,9 @@ class Meal {
   final List<FoodItem> items;
   final BodyResponse? bodyResponse;
 
+  /// v1.2 — هل عدّل المستخدم عناصر الوجبة يدوياً بعد التحليل؟
+  final bool wasEdited;
+
   const Meal({
     required this.id,
     required this.capturedAt,
@@ -26,6 +29,7 @@ class Meal {
     required this.warnings,
     required this.items,
     this.bodyResponse,
+    this.wasEdited = false,
   });
 
   Meal copyWith({BodyResponse? bodyResponse}) => Meal(
@@ -39,6 +43,7 @@ class Meal {
         warnings: warnings,
         items: items,
         bodyResponse: bodyResponse ?? this.bodyResponse,
+        wasEdited: wasEdited,
       );
 
   /// عنوان مختصر للوجبة (اسم أول عنصر، أو "وجبة").

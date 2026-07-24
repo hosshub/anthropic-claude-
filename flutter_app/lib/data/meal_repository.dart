@@ -16,7 +16,13 @@ import 'database.dart';
 class MealRepository extends ChangeNotifier {
   final _uuid = const Uuid();
 
-  Future<Database> get _db => TayyibatDatabase.open();
+  /// حاقن لقاعدة البيانات — يسمح للاختبارات بتمرير قاعدة في الذاكرة.
+  final Future<Database> Function() _opener;
+
+  MealRepository({Future<Database> Function()? dbOpener})
+      : _opener = dbOpener ?? TayyibatDatabase.open;
+
+  Future<Database> get _db => _opener();
 
   Future<Directory> _mealsDir() async {
     final docs = await getApplicationDocumentsDirectory();
@@ -30,26 +36,33 @@ class MealRepository extends ChangeNotifier {
   // -------------------------------------------------------------------------
 
   /// يحفظ نتيجة تحليل كوجبة جديدة. يكتب الصورة على القرص ويُعيد الوجبة المُخزّنة.
+  /// [persistImage] تتيح للاختبارات تخطي path_provider والقرص.
   Future<Meal> saveFromAnalysis(
     AnalysisResult result,
-    Uint8List imageBytes,
-  ) async {
+    Uint8List imageBytes, {
+    bool persistImage = true,
+  }) async {
     final id = _uuid.v4();
     final capturedAt = DateTime.now();
-    final dir = await _mealsDir();
-    final imagePath = p.join(dir.path, '$id.jpg');
-    try {
-      await File(imagePath).writeAsBytes(imageBytes, flush: true);
-    } catch (_) {
-      // إن فشلت الكتابة لأي سبب، نواصل ونحفظ الصف بدون صورة.
+    String? imagePath;
+    if (persistImage) {
+      final dir = await _mealsDir();
+      imagePath = p.join(dir.path, '$id.jpg');
+      try {
+        await File(imagePath).writeAsBytes(imageBytes, flush: true);
+      } catch (_) {
+        // إن فشلت الكتابة لأي سبب، نواصل ونحفظ الصف بدون صورة.
+      }
     }
+    final storedPath =
+        imagePath != null && await File(imagePath).exists() ? imagePath : null;
 
     final db = await _db;
     await db.transaction((tx) async {
       await tx.insert('meals', {
         'id': id,
         'captured_at': capturedAt.millisecondsSinceEpoch,
-        'image_path': await File(imagePath).exists() ? imagePath : null,
+        'image_path': storedPath,
         'overall_score': result.overallScore,
         'score_label_ar': result.scoreLabelAr,
         'score_explanation_ar': result.scoreExplanationAr,
@@ -84,7 +97,7 @@ class MealRepository extends ChangeNotifier {
     return Meal(
       id: id,
       capturedAt: capturedAt,
-      imagePath: await File(imagePath).exists() ? imagePath : null,
+      imagePath: storedPath,
       overallScore: result.overallScore,
       scoreLabelAr: result.scoreLabelAr,
       scoreExplanationAr: result.scoreExplanationAr,
@@ -171,8 +184,61 @@ class MealRepository extends ChangeNotifier {
         warnings: _decodeStringList(r['warnings']),
         items: itemsByMeal[id] ?? const [],
         bodyResponse: responsesByMeal[id],
+        wasEdited: (r['was_edited'] as int? ?? 0) != 0,
       );
     }).toList();
+  }
+
+  // -------------------------------------------------------------------------
+  // تعديل العناصر (v1.2)
+  // -------------------------------------------------------------------------
+
+  /// يستبدل عناصر الوجبة بعد تعديل المستخدم، ويحدّث النتيجة والتسمية،
+  /// ويعلّم الوجبة كمُعدَّلة. الشرح القديم يُمسح لأنه قد يشير لعناصر أُزيلت.
+  Future<void> updateMealItems(
+    String mealId,
+    List<FoodItem> items, {
+    required int score,
+    required String label,
+  }) async {
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.delete('food_items', where: 'meal_id = ?', whereArgs: [mealId]);
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i];
+        await tx.insert('food_items', {
+          'id': _uuid.v4(),
+          'meal_id': mealId,
+          'name_ar': item.nameAr,
+          'verdict': item.verdict,
+          'zone': item.zoneRaw,
+          'caution_ar': item.cautionAr,
+          'category': item.category,
+          'reasoning': item.reasoningAr,
+          'confidence': item.confidence,
+          'estimated_portion': item.estimatedPortion,
+          'rule_violated': item.ruleViolated,
+          'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
+        });
+      }
+      await tx.update(
+        'meals',
+        {
+          'overall_score': score,
+          'score_label_ar': label,
+          'score_explanation_ar': '',
+          'was_edited': 1,
+        },
+        where: 'id = ?',
+        whereArgs: [mealId],
+      );
+    });
+    notifyListeners();
   }
 
   FoodItem _foodItemFromRow(Map<String, Object?> r) => FoodItem(
