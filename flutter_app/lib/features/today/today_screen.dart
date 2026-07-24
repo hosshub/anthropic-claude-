@@ -9,6 +9,7 @@ import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
 import '../../services/nutrition_goal_service.dart';
 import '../../services/profile_service.dart';
+import '../../services/streak.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/nutrition_summary.dart';
@@ -30,7 +31,9 @@ class _TodayScreenState extends State<TodayScreen> {
   // Cache the day's query per repository generation — rebuilds (greeting,
   // locale, calorie goal…) must not re-hit SQLite every frame.
   Future<List<Meal>>? _mealsFuture;
-  int _repoGeneration = -1;
+  Future<int>? _streakFuture;
+  int _cachedRevision = -1;
+  DateTime? _cachedDay;
 
   String _greeting(BuildContext context, ProfileService profile) {
     final l = AppLocalizations.of(context)!;
@@ -55,12 +58,17 @@ class _TodayScreenState extends State<TodayScreen> {
     final l = AppLocalizations.of(context)!;
     final dayStart = _dayStart;
     final dayEnd = dayStart.add(const Duration(days: 1));
-    // notifyListeners bumps repo.revision — refresh the cached future only
+    // notifyListeners bumps repo.revision — refresh the cached futures only
     // when data actually changed (or the calendar day rolled over).
-    final generation = repo.revision ^ dayStart.millisecondsSinceEpoch;
-    if (_repoGeneration != generation || _mealsFuture == null) {
-      _repoGeneration = generation;
+    if (_cachedRevision != repo.revision ||
+        _cachedDay != dayStart ||
+        _mealsFuture == null) {
+      _cachedRevision = repo.revision;
+      _cachedDay = dayStart;
       _mealsFuture = repo.loadBetween(dayStart, dayEnd);
+      _streakFuture = repo
+          .recentCaptureTimes()
+          .then((times) => loggedStreak(times));
     }
 
     return Scaffold(
@@ -106,6 +114,10 @@ class _TodayScreenState extends State<TodayScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
+                  _StreakCard(
+                    streakFuture: _streakFuture,
+                    loggedToday: meals.isNotEmpty,
+                  ),
                   _DailyCaloriesCard(meals: meals),
                   const SizedBox(height: 20),
                   PrimaryButton(
@@ -345,6 +357,73 @@ class _DailyCaloriesCard extends StatelessWidget {
           MacroRow(nutrition: combined),
         ],
       ),
+    );
+  }
+}
+
+/// شريط سلسلة التسجيل — أيام متتالية بوجبة واحدة على الأقل. يظهر فقط
+/// عندما توجد سلسلة (لا نعاتب مستخدماً جديداً بصفر).
+class _StreakCard extends StatelessWidget {
+  final Future<int>? streakFuture;
+  final bool loggedToday;
+  const _StreakCard({required this.streakFuture, required this.loggedToday});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return FutureBuilder<int>(
+      future: streakFuture,
+      builder: (context, snap) {
+        final streak = snap.data ?? 0;
+        if (streak <= 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: CardContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: TColors.gold.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department,
+                    color: TColors.gold,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${l.today_streakTitle}: ${l.today_streakDays(streak)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                      if (!loggedToday)
+                        Text(
+                          l.today_streakKeepAlive,
+                          style: const TextStyle(
+                            color: TColors.textSecondary,
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

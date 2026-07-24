@@ -146,6 +146,22 @@ class MealRepository extends ChangeNotifier {
     return _hydrate(rows);
   }
 
+  /// أوقات التقاط الوجبات الأخيرة (الأحدث أولاً) — تكفي لحساب سلسلة
+  /// التسجيل بلا تحميل الوجبات كاملة.
+  Future<List<DateTime>> recentCaptureTimes({int limit = 400}) async {
+    final db = await _db;
+    final rows = await db.query(
+      'meals',
+      columns: ['captured_at'],
+      orderBy: 'captured_at DESC',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        DateTime.fromMillisecondsSinceEpoch(r['captured_at'] as int),
+    ];
+  }
+
   Future<Meal?> load(String id) async {
     final db = await _db;
     final rows = await db.query('meals', where: 'id = ?', whereArgs: [id]);
@@ -198,6 +214,84 @@ class MealRepository extends ChangeNotifier {
         wasEdited: (r['was_edited'] as int? ?? 0) != 0,
       );
     }).toList();
+  }
+
+  // -------------------------------------------------------------------------
+  // إعادة تسجيل وجبة (v1.2.1)
+  // -------------------------------------------------------------------------
+
+  /// يسجّل وجبة سابقة من جديد الآن — نسخة كاملة للعناصر والنتيجة بلا
+  /// استهلاك تحليل ذكاء اصطناعي. متابعة الجسم لا تُنسخ (شعور جديد لوجبة
+  /// جديدة)، والصورة تُنسخ ملفاً مستقلاً حتى لا يكسرها حذف الأصل.
+  Future<Meal?> relogMeal(String mealId) async {
+    final original = await load(mealId);
+    if (original == null) return null;
+
+    final id = _uuid.v4();
+    final capturedAt = DateTime.now();
+    String? imagePath;
+    final sourcePath = original.imagePath;
+    if (sourcePath != null) {
+      try {
+        final dir = await _mealsDir();
+        final target = p.join(dir.path, '$id.jpg');
+        await File(sourcePath).copy(target);
+        imagePath = target;
+      } catch (_) {
+        // بلا صورة أفضل من فشل التسجيل كله.
+      }
+    }
+
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.insert('meals', {
+        'id': id,
+        'captured_at': capturedAt.millisecondsSinceEpoch,
+        'image_path': imagePath,
+        'overall_score': original.overallScore,
+        'score_label_ar': original.scoreLabelAr,
+        'score_explanation_ar': original.scoreExplanationAr,
+        'suggestions': jsonEncode(original.suggestions),
+        'warnings': jsonEncode(original.warnings),
+        'was_edited': original.wasEdited ? 1 : 0,
+      });
+      for (var i = 0; i < original.items.length; i++) {
+        final item = original.items[i];
+        await tx.insert('food_items', {
+          'id': _uuid.v4(),
+          'meal_id': id,
+          'name_ar': item.nameAr,
+          'verdict': item.verdict,
+          'zone': item.zoneRaw,
+          'caution_ar': item.cautionAr,
+          'category': item.category,
+          'reasoning': item.reasoningAr,
+          'confidence': item.confidence,
+          'estimated_portion': item.estimatedPortion,
+          'rule_violated': item.ruleViolated,
+          'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
+        });
+      }
+    });
+
+    notifyListeners();
+    return Meal(
+      id: id,
+      capturedAt: capturedAt,
+      imagePath: imagePath,
+      overallScore: original.overallScore,
+      scoreLabelAr: original.scoreLabelAr,
+      scoreExplanationAr: original.scoreExplanationAr,
+      suggestions: original.suggestions,
+      warnings: original.warnings,
+      items: original.items,
+      wasEdited: original.wasEdited,
+    );
   }
 
   // -------------------------------------------------------------------------

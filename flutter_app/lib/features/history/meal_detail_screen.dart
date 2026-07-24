@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
@@ -59,6 +60,16 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       setState(_reload);
       messenger.showSnackBar(SnackBar(content: Text(l.editItems_saved)));
     }
+  }
+
+  Future<void> _relog(Meal meal) async {
+    final l = AppLocalizations.of(context)!;
+    final repo = context.read<MealRepository>();
+    final messenger = ScaffoldMessenger.of(context);
+    final clone = await repo.relogMeal(meal.id);
+    if (!mounted || clone == null) return;
+    HapticFeedback.lightImpact();
+    messenger.showSnackBar(SnackBar(content: Text(l.mealDetail_logAgainDone)));
   }
 
   Future<void> _openBodyResponse(Meal meal) async {
@@ -307,6 +318,18 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
             ),
           ],
           const SizedBox(height: 14),
+          // v1.2.1 — سجّل نفس الوجبة من جديد بلا استهلاك تحليل.
+          if (!widget.isPostCapture) ...[
+            OutlinedButton.icon(
+              onPressed: () => _relog(meal),
+              icon: const Icon(Icons.replay),
+              label: Text(l.mealDetail_logAgain),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           // Delete only belongs in the History → MealDetail flow, never on the
           // freshly-captured result screen (avoids accidental one-tap regret).
           if (!widget.isPostCapture)

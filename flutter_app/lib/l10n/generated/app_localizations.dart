@@ -680,6 +680,24 @@ abstract class AppLocalizations {
   /// **'سجل اليوم'**
   String get today_log;
 
+  /// No description provided for @today_streakTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلسلة التسجيل'**
+  String get today_streakTitle;
+
+  /// No description provided for @today_streakDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{n, plural, =1{يوم واحد} =2{يومان} few{{n} أيام} many{{n} يوماً} other{{n} يوم}}'**
+  String today_streakDays(num n);
+
+  /// No description provided for @today_streakKeepAlive.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل وجبة اليوم لتحافظ على سلسلتك.'**
+  String get today_streakKeepAlive;
+
   /// No description provided for @today_photoYourMeal.
   ///
   /// In ar, this message translates to:
@@ -854,6 +872,18 @@ abstract class AppLocalizations {
   /// **'تقويم'**
   String get history_calendar;
 
+  /// No description provided for @history_searchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث في الوجبات…'**
+  String get history_searchHint;
+
+  /// No description provided for @history_searchEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد وجبات تطابق بحثك.'**
+  String get history_searchEmpty;
+
   /// No description provided for @history_empty_title.
   ///
   /// In ar, this message translates to:
@@ -973,6 +1003,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مُعدَّلة'**
   String get mealDetail_editedBadge;
+
+  /// No description provided for @mealDetail_logAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل هذه الوجبة من جديد'**
+  String get mealDetail_logAgain;
+
+  /// No description provided for @mealDetail_logAgainDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّلت من جديد كوجبة جديدة.'**
+  String get mealDetail_logAgainDone;
 
   /// No description provided for @mealDetail_editItems.
   ///

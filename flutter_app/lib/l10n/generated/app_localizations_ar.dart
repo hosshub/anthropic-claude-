@@ -334,6 +334,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get today_log => 'سجل اليوم';
 
   @override
+  String get today_streakTitle => 'سلسلة التسجيل';
+
+  @override
+  String today_streakDays(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n يوم',
+      many: '$n يوماً',
+      few: '$n أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get today_streakKeepAlive => 'سجّل وجبة اليوم لتحافظ على سلسلتك.';
+
+  @override
   String get today_photoYourMeal => 'صوّر وجبتك';
 
   @override
@@ -426,6 +446,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get history_calendar => 'تقويم';
 
   @override
+  String get history_searchHint => 'ابحث في الوجبات…';
+
+  @override
+  String get history_searchEmpty => 'لا توجد وجبات تطابق بحثك.';
+
+  @override
   String get history_empty_title => 'لا سجلّات بعد';
 
   @override
@@ -488,6 +514,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mealDetail_editedBadge => 'مُعدَّلة';
+
+  @override
+  String get mealDetail_logAgain => 'سجّل هذه الوجبة من جديد';
+
+  @override
+  String get mealDetail_logAgainDone => 'سُجّلت من جديد كوجبة جديدة.';
 
   @override
   String get mealDetail_editItems => 'تعديل العناصر';

@@ -315,7 +315,7 @@ class _PlanTabState extends State<_PlanTab>
   Widget build(BuildContext context) {
     super.build(context);
     final l = AppLocalizations.of(context)!;
-    final plans = context.watch<PlanRepository>();
+    final plans = context.read<PlanRepository>();
     return FutureBuilder<SavedPlan?>(
       future: _planFuture ??= plans.loadLatest(),
       builder: (context, snap) {

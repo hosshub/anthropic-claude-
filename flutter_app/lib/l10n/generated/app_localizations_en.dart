@@ -341,6 +341,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get today_log => 'Today\'s log';
 
   @override
+  String get today_streakTitle => 'Logging streak';
+
+  @override
+  String today_streakDays(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get today_streakKeepAlive => 'Log a meal today to keep your streak.';
+
+  @override
   String get today_photoYourMeal => 'Photograph your meal';
 
   @override
@@ -435,6 +452,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get history_calendar => 'Calendar';
 
   @override
+  String get history_searchHint => 'Search meals…';
+
+  @override
+  String get history_searchEmpty => 'No meals match your search.';
+
+  @override
   String get history_empty_title => 'No records yet';
 
   @override
@@ -498,6 +521,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mealDetail_editedBadge => 'Edited';
+
+  @override
+  String get mealDetail_logAgain => 'Log this meal again';
+
+  @override
+  String get mealDetail_logAgainDone => 'Logged again as a new entry.';
 
   @override
   String get mealDetail_editItems => 'Edit items';

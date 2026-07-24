@@ -24,6 +24,26 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   _HistoryView _view = _HistoryView.list;
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Meal> _filtered(List<Meal> meals) {
+    final q = _query.trim();
+    if (q.isEmpty) return meals;
+    return [
+      for (final m in meals)
+        if (m.primaryLabel.contains(q) ||
+            m.scoreLabelAr.contains(q) ||
+            m.items.any((i) => i.nameAr.contains(q)))
+          m,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +84,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
           final meals = snap.data ?? const <Meal>[];
           if (meals.isEmpty) return _emptyState(context);
-          return _view == _HistoryView.list
-              ? _ListView(meals: meals)
-              : _CalendarView(meals: meals);
+          if (_view == _HistoryView.calendar) {
+            return _CalendarView(meals: meals);
+          }
+          final filtered = _filtered(meals);
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (v) => setState(() => _query = v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l.history_searchHint,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => setState(() {
+                              _search.clear();
+                              _query = '';
+                            }),
+                          ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          l.history_searchEmpty,
+                          style:
+                              const TextStyle(color: TColors.textSecondary),
+                        ),
+                      )
+                    : _ListView(meals: filtered),
+              ),
+            ],
+          );
         },
       ),
     );
