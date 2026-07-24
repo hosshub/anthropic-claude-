@@ -26,6 +26,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   _HistoryView _view = _HistoryView.list;
   final TextEditingController _search = TextEditingController();
   String _query = '';
+  // Memoized like Today's — a rebuilt Future resets FutureBuilder to its
+  // spinner and would blow away search-field focus on every keystroke.
+  Future<List<Meal>>? _mealsFuture;
+  int _cachedRevision = -1;
 
   @override
   void dispose() {
@@ -34,13 +38,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   List<Meal> _filtered(List<Meal> meals) {
-    final q = _query.trim();
+    // خفض الحالة يجعل البحث يعمل للمحتوى الإنجليزي أيضاً؛ العربية بلا حالة.
+    final q = _query.trim().toLowerCase();
     if (q.isEmpty) return meals;
     return [
       for (final m in meals)
-        if (m.primaryLabel.contains(q) ||
-            m.scoreLabelAr.contains(q) ||
-            m.items.any((i) => i.nameAr.contains(q)))
+        if (m.primaryLabel.toLowerCase().contains(q) ||
+            m.scoreLabelAr.toLowerCase().contains(q) ||
+            m.items.any((i) => i.nameAr.toLowerCase().contains(q)))
           m,
     ];
   }
@@ -49,6 +54,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final repo = context.watch<MealRepository>();
     final l = AppLocalizations.of(context)!;
+    if (_cachedRevision != repo.revision || _mealsFuture == null) {
+      _cachedRevision = repo.revision;
+      _mealsFuture = repo.loadAll();
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(l.tab_history),
@@ -76,8 +85,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
       ),
       body: FutureBuilder<List<Meal>>(
-        key: ValueKey(repo.hashCode),
-        future: repo.loadAll(),
+        future: _mealsFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

@@ -48,6 +48,21 @@ void main() {
       );
     });
 
+    test('streak crosses a month boundary', () {
+      final aug2 = DateTime(2026, 8, 2, 14);
+      expect(
+        loggedStreak(
+          [
+            DateTime(2026, 8, 2, 9),
+            DateTime(2026, 8, 1, 13),
+            DateTime(2026, 7, 31, 20),
+          ],
+          now: aug2,
+        ),
+        3,
+      );
+    });
+
     test('unsorted input is handled', () {
       expect(
         loggedStreak([day(2), day(0), day(1)], now: now),

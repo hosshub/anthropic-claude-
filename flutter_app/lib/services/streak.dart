@@ -9,16 +9,20 @@ int loggedStreak(Iterable<DateTime> mealTimes, {DateTime? now}) {
   };
   if (days.isEmpty) return 0;
 
+  // الطرح عبر مُنشئ DateTime (لا Duration ثابتة) حتى لا تنكسر السلسلة في
+  // أيام التوقيت الصيفي ذات الـ23/25 ساعة (مصر والمغرب يطبقانه).
+  DateTime prevDay(DateTime d) => DateTime(d.year, d.month, d.day - 1);
+
   var cursor = today;
   if (!days.contains(cursor)) {
-    cursor = today.subtract(const Duration(days: 1));
+    cursor = prevDay(today);
     if (!days.contains(cursor)) return 0;
   }
 
   var streak = 0;
   while (days.contains(cursor)) {
     streak++;
-    cursor = cursor.subtract(const Duration(days: 1));
+    cursor = prevDay(cursor);
   }
   return streak;
 }
