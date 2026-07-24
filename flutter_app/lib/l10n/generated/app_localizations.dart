@@ -1226,6 +1226,66 @@ abstract class AppLocalizations {
   /// **'ضعيف'**
   String get scoreBand_weak;
 
+  /// No description provided for @health_activityToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشاط اليوم'**
+  String get health_activityToday;
+
+  /// No description provided for @health_steps.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخطوات'**
+  String get health_steps;
+
+  /// No description provided for @health_burned.
+  ///
+  /// In ar, this message translates to:
+  /// **'محروقة'**
+  String get health_burned;
+
+  /// No description provided for @today_caloriesFromActivity.
+  ///
+  /// In ar, this message translates to:
+  /// **'يشمل +{value} سعرة محروقة من النشاط'**
+  String today_caloriesFromActivity(int value);
+
+  /// No description provided for @settings_health.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق الصحة'**
+  String get settings_health;
+
+  /// No description provided for @settings_health_note.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة فقط. يقرأ خطواتك وسعراتك المحروقة لعرضها في شاشة اليوم وإضافتها إلى ميزانيتك اليومية. لا يُكتب شيء ولا يُشارك.'**
+  String get settings_health_note;
+
+  /// No description provided for @settings_health_connect.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط تطبيق الصحة'**
+  String get settings_health_connect;
+
+  /// No description provided for @settings_health_connected.
+  ///
+  /// In ar, this message translates to:
+  /// **'مُتّصل'**
+  String get settings_health_connected;
+
+  /// No description provided for @settings_health_disconnect.
+  ///
+  /// In ar, this message translates to:
+  /// **'فصل الربط'**
+  String get settings_health_disconnect;
+
+  /// No description provided for @settings_health_denied.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يُمنح الإذن. فعّله من تطبيق الصحة.'**
+  String get settings_health_denied;
+
   /// No description provided for @settings_title.
   ///
   /// In ar, this message translates to:

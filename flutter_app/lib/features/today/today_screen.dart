@@ -7,6 +7,8 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
+import '../../services/calorie_math.dart';
+import '../../services/health_service.dart';
 import '../../services/nutrition_goal_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/streak.dart';
@@ -120,6 +122,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     loggedToday: meals.isNotEmpty,
                   ),
                   _DailyCaloriesCard(meals: meals),
+                  const _HealthActivityCard(),
                   const SizedBox(height: 20),
                   PrimaryButton(
                     label: l.today_photoYourMeal,
@@ -299,6 +302,7 @@ class _DailyCaloriesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final goalService = context.watch<NutritionGoalService>();
+    final health = context.watch<HealthService>();
 
     final totals = meals
         .map((m) => m.nutrition)
@@ -313,8 +317,14 @@ class _DailyCaloriesCard extends StatelessWidget {
       carbsG: totals.fold(0.0, (a, n) => a + n.carbsG),
       fatG: totals.fold(0.0, (a, n) => a + n.fatG),
     );
-    final goal = goalService.goal;
-    final remaining = goal - consumed;
+    // v1.3: Apple Health offsets the budget — burned calories raise the goal.
+    final burned = health.authorized ? (health.activeEnergyKcal ?? 0) : 0;
+    final goal = adjustedGoal(goal: goalService.goal, burned: burned);
+    final remaining = calorieRemaining(
+      goal: goalService.goal,
+      consumed: consumed,
+      burned: burned,
+    );
     final progress = (consumed / goal).clamp(0.0, 1.0);
     final over = remaining < 0;
     final barColor = over ? TColors.khabith : TColors.gold;
@@ -369,6 +379,16 @@ class _DailyCaloriesCard extends StatelessWidget {
               color: over ? TColors.khabith : TColors.textSecondary,
             ),
           ),
+          if (burned > 0) ...[
+            const SizedBox(height: 2),
+            Text(
+              l.today_caloriesFromActivity(burned),
+              style: const TextStyle(
+                fontSize: 11,
+                color: TColors.zoneGreen,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           MacroRow(nutrition: combined),
         ],
@@ -440,6 +460,57 @@ class _StreakCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// بطاقة نشاط اليوم من Apple Health — خطوات وسعرات محروقة. تظهر فقط عند
+/// وجود إذن وبيانات.
+class _HealthActivityCard extends StatelessWidget {
+  const _HealthActivityCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final health = context.watch<HealthService>();
+    if (!health.hasData) return const SizedBox.shrink();
+    final steps = health.steps;
+    final burned = health.activeEnergyKcal;
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: CardContainer(
+        child: Row(
+          children: [
+            const Icon(Icons.directions_walk, color: TColors.zoneGreen, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              l.health_activityToday,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Spacer(),
+            if (steps != null) ...[
+              _metric('$steps', l.health_steps),
+              const SizedBox(width: 18),
+            ],
+            if (burned != null)
+              _metric('$burned', l.health_burned, color: TColors.gold),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _metric(String value, String label, {Color color = TColors.primary}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 16, color: color)),
+        Text(label,
+            style: const TextStyle(
+                color: TColors.textSecondary, fontSize: 11)),
+      ],
     );
   }
 }

@@ -43,6 +43,10 @@
 	<string>نستخدم الكاميرا لتصوير وجباتك وتحليل مدى توافقها مع نظام الطيبات.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>نطلب الوصول إلى صورك لاختيار صورة وجبة وتحليلها.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>نقرأ خطواتك والسعرات المحروقة من تطبيق الصحة لعرضها وتعديل ميزانية سعراتك اليومية. لا نكتب أي بيانات ولا نشاركها.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>لا يكتب التطبيق أي بيانات في تطبيق الصحة؛ يقرأ فقط خطواتك وسعراتك المحروقة.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

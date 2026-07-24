@@ -9,6 +9,7 @@ import '../../services/account_service.dart';
 import '../../services/app_messages.dart';
 import '../../services/auth_service.dart';
 import '../../services/locale_service.dart';
+import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/nutrition_goal_service.dart';
 import '../../services/profile_service.dart';
@@ -233,6 +234,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // -- Nutrition -------------------------------------------------
               const SizedBox(height: 18),
               const _CalorieGoalCard(),
+
+              // -- Apple Health ----------------------------------------------
+              const SizedBox(height: 18),
+              const _HealthCard(),
 
               // -- Reminders -------------------------------------------------
               const SizedBox(height: 18),
@@ -490,6 +495,115 @@ class _DisplayNameRow extends StatelessWidget {
         alignment: AlignmentDirectional.centerStart,
         minimumSize: const Size.fromHeight(48),
         side: const BorderSide(color: TColors.primary, width: 1.2),
+      ),
+    );
+  }
+}
+
+/// بطاقة ربط Apple Health — قراءة الخطوات والسعرات المحروقة (اختياري).
+class _HealthCard extends StatefulWidget {
+  const _HealthCard();
+
+  @override
+  State<_HealthCard> createState() => _HealthCardState();
+}
+
+class _HealthCardState extends State<_HealthCard> {
+  bool _busy = false;
+
+  Future<void> _connect() async {
+    final l = AppLocalizations.of(context)!;
+    final health = context.read<HealthService>();
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    final ok = await health.connect();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.settings_health_denied)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final health = context.watch<HealthService>();
+    final connected = health.authorized;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                l.settings_health,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: TColors.primary,
+                ),
+              ),
+              const Spacer(),
+              if (connected)
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        color: TColors.zoneGreen, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      l.settings_health_connected,
+                      style: const TextStyle(
+                        color: TColors.zoneGreen,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.settings_health_note,
+            style: const TextStyle(
+              color: TColors.textSecondary,
+              fontSize: 11.5,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (connected)
+            OutlinedButton.icon(
+              onPressed: () => context.read<HealthService>().disconnect(),
+              icon: const Icon(Icons.link_off),
+              label: Text(l.settings_health_disconnect),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: TColors.textSecondary,
+                minimumSize: const Size.fromHeight(46),
+                side: BorderSide(
+                    color: TColors.textSecondary.withValues(alpha: 0.4)),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: _busy ? null : _connect,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: TColors.primary),
+                    )
+                  : const Icon(Icons.favorite_border),
+              label: Text(l.settings_health_connect),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: TColors.primary,
+                minimumSize: const Size.fromHeight(46),
+                side: const BorderSide(color: TColors.primary, width: 1.2),
+              ),
+            ),
+        ],
       ),
     );
   }

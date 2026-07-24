@@ -628,6 +628,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scoreBand_weak => 'ضعيف';
 
   @override
+  String get health_activityToday => 'نشاط اليوم';
+
+  @override
+  String get health_steps => 'الخطوات';
+
+  @override
+  String get health_burned => 'محروقة';
+
+  @override
+  String today_caloriesFromActivity(int value) {
+    return 'يشمل +$value سعرة محروقة من النشاط';
+  }
+
+  @override
+  String get settings_health => 'تطبيق الصحة';
+
+  @override
+  String get settings_health_note =>
+      'قراءة فقط. يقرأ خطواتك وسعراتك المحروقة لعرضها في شاشة اليوم وإضافتها إلى ميزانيتك اليومية. لا يُكتب شيء ولا يُشارك.';
+
+  @override
+  String get settings_health_connect => 'ربط تطبيق الصحة';
+
+  @override
+  String get settings_health_connected => 'مُتّصل';
+
+  @override
+  String get settings_health_disconnect => 'فصل الربط';
+
+  @override
+  String get settings_health_denied => 'لم يُمنح الإذن. فعّله من تطبيق الصحة.';
+
+  @override
   String get settings_title => 'الإعدادات';
 
   @override

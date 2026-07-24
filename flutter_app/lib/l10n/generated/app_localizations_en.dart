@@ -635,6 +635,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scoreBand_weak => 'Weak';
 
   @override
+  String get health_activityToday => 'Activity today';
+
+  @override
+  String get health_steps => 'Steps';
+
+  @override
+  String get health_burned => 'Burned';
+
+  @override
+  String today_caloriesFromActivity(int value) {
+    return 'Includes +$value kcal burned from activity';
+  }
+
+  @override
+  String get settings_health => 'Apple Health';
+
+  @override
+  String get settings_health_note =>
+      'Read-only. Reads your steps and active calories to show them on Today and add burned calories to your daily budget. Nothing is written or shared.';
+
+  @override
+  String get settings_health_connect => 'Connect Apple Health';
+
+  @override
+  String get settings_health_connected => 'Connected';
+
+  @override
+  String get settings_health_disconnect => 'Disconnect';
+
+  @override
+  String get settings_health_denied =>
+      'Permission not granted. Enable it in the Health app.';
+
+  @override
   String get settings_title => 'Settings';
 
   @override
