@@ -146,8 +146,8 @@ void main() {
       debugPrint('SHOT 05_intelligence failed: $e');
     }
 
-    // 6) Guide → guidebook (best effort).
-    await gotoTab(l.tab_guide);
-    await screen('06_guidebook', () => openByText(l.guide_section_guidebook));
+    // 6) Food bank — the v1.3 headline: log without a photo.
+    await gotoTab(l.tab_today);
+    await screen('06_food_bank', () => openByText(l.today_logFromBank));
   });
 }
