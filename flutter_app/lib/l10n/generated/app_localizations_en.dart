@@ -652,9 +652,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_sleep => 'Sleep';
 
   @override
-  String get health_weight => 'Weight';
-
-  @override
   String health_sleepValue(int h, int m) {
     return '${h}h ${m}m';
   }
@@ -683,7 +680,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_health_note =>
-      'Read-only. Reads your steps and active calories to show them on Today and add burned calories to your daily budget. Nothing is written or shared.';
+      'Reads your steps, active calories, sleep, and weight to show them in the app and adjust your daily calorie budget. Meal calories are written back only if you turn on the switch below. Your data stays on your device and is never shared.';
 
   @override
   String get settings_health_connect => 'Connect Apple Health';

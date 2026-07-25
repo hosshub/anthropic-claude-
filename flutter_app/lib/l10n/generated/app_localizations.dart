@@ -1256,12 +1256,6 @@ abstract class AppLocalizations {
   /// **'النوم'**
   String get health_sleep;
 
-  /// No description provided for @health_weight.
-  ///
-  /// In ar, this message translates to:
-  /// **'الوزن'**
-  String get health_weight;
-
   /// No description provided for @health_sleepValue.
   ///
   /// In ar, this message translates to:
@@ -1307,7 +1301,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_health_note.
   ///
   /// In ar, this message translates to:
-  /// **'قراءة فقط. يقرأ خطواتك وسعراتك المحروقة لعرضها في شاشة اليوم وإضافتها إلى ميزانيتك اليومية. لا يُكتب شيء ولا يُشارك.'**
+  /// **'يقرأ خطواتك وسعراتك المحروقة ونومك ووزنك لعرضها في التطبيق وتعديل ميزانية سعراتك اليومية. ولا تُكتب سعرات وجباتك إلا إذا فعّلت المفتاح أدناه. تبقى بياناتك على جهازك ولا تُشارك.'**
   String get settings_health_note;
 
   /// No description provided for @settings_health_connect.

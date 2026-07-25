@@ -328,8 +328,14 @@ function withLegacySuggestionShape(obj: unknown): unknown {
   if (!Array.isArray(list) || list.length === 0) return obj;
   const first = list[0];
   if (typeof first !== "object" || first === null) return obj;
-  // Only fill fields the model did not already place at the top level.
-  return { ...(first as Record<string, unknown>), ...o };
+  // Only the four fields the pre-1.2 clients actually read, so a future
+  // schema change can't leak an unexpected key into old builds.
+  const f = first as Record<string, unknown>;
+  const legacy: Record<string, unknown> = {};
+  for (const k of ["name_ar", "components_ar", "reasoning_ar", "best_time_ar"]) {
+    if (f[k] !== undefined) legacy[k] = f[k];
+  }
+  return { ...legacy, ...o };
 }
 
 function stripFences(text: string): string {
@@ -615,7 +621,7 @@ Deno.serve(async (req: Request) => {
   if (payload.task === "suggest") {
     return await callGemini(
       [{ text: buildSuggestPrompt(locale, payload.meal_type) }],
-      3072,
+      4096,
       locale,
       async () => {},
       withLegacySuggestionShape,
@@ -625,7 +631,14 @@ Deno.serve(async (req: Request) => {
 
   // 2) خطة أسبوعية كاملة (نصّي — لا يُحتسب في الحدّ اليومي).
   if (payload.task === "plan") {
-    return await callGemini([{ text: buildPlanPrompt(locale) }], 4096, locale);
+    return await callGemini(
+      [{ text: buildPlanPrompt(locale) }],
+      4096,
+      locale,
+      async () => {},
+      (o) => o,
+      1.0,
+    );
   }
 
   // 3) تحليل صورة وجبة (الافتراضي — يخضع للحدّ اليومي).

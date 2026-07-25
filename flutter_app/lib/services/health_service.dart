@@ -17,6 +17,12 @@ import 'health_math.dart';
 class HealthService extends ChangeNotifier {
   static const _kConnected = 'health_connected';
   static const _kWriteMeals = 'health_write_meals';
+  static const _kTypesVersion = 'health_types_version';
+
+  /// يزداد كلما أضفنا نوع بيانات جديداً. HealthKit لا يعيد سؤال المستخدم عن
+  /// نوع سبق تحديده، فمن ربَط الحساب على نسخة أقدم لن يصله الجديد أبداً ما لم
+  /// نطلب الإذن مجدداً — وiOS يعرض حينها الأنواع الجديدة فقط.
+  static const int _currentTypesVersion = 2;
 
   final Health _health = Health();
   bool _configured = false;
@@ -31,10 +37,21 @@ class HealthService extends ChangeNotifier {
     _load();
   }
 
+  /// منذ watchOS 9 تكتب ساعة Apple النوم كمراحل (core/deep/REM) ولا تكتب
+  /// asleepUnspecified إطلاقاً، والمكوّن يرشّح كل نوع بقيمته الخام. الاكتفاء
+  /// بـ SLEEP_ASLEEP يعني صفر دقائق لأغلب المستخدمين، لذا نقرأ المراحل كلها.
+  /// جميعها تنتمي لنفس نوع HealthKit، فلا يضيف ذلك صفاً في شاشة الأذونات.
+  static const List<HealthDataType> _sleepTypes = [
+    HealthDataType.SLEEP_ASLEEP,
+    HealthDataType.SLEEP_LIGHT,
+    HealthDataType.SLEEP_DEEP,
+    HealthDataType.SLEEP_REM,
+  ];
+
   static const List<HealthDataType> _readTypes = [
     HealthDataType.STEPS,
     HealthDataType.ACTIVE_ENERGY_BURNED,
-    HealthDataType.SLEEP_ASLEEP,
+    ..._sleepTypes,
     HealthDataType.WEIGHT,
   ];
   static const HealthDataType _writeType =
@@ -49,7 +66,7 @@ class HealthService extends ChangeNotifier {
 
   List<HealthDataAccess> _perms({required bool includeWrite}) => [
         for (final _ in _readTypes) HealthDataAccess.READ,
-        if (includeWrite) HealthDataAccess.READ_WRITE,
+        if (includeWrite) HealthDataAccess.WRITE,
       ];
 
   bool get authorized => _connected;
@@ -72,6 +89,18 @@ class HealthService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _connected = prefs.getBool(_kConnected) ?? false;
       _writeMeals = prefs.getBool(_kWriteMeals) ?? false;
+      final storedVersion = prefs.getInt(_kTypesVersion) ?? 1;
+      if (_connected && storedVersion < _currentTypesVersion) {
+        // من ربَط على نسخة أقدم لن يرى النوم والوزن أبداً بلا طلب جديد.
+        await _ensureConfigured();
+        try {
+          await _health.requestAuthorization(
+            _types(includeWrite: false),
+            permissions: _perms(includeWrite: false),
+          );
+        } catch (_) {}
+        await prefs.setInt(_kTypesVersion, _currentTypesVersion);
+      }
     } catch (_) {}
     if (_connected) await _fetch();
     notifyListeners();
@@ -88,6 +117,11 @@ class HealthService extends ChangeNotifier {
   /// يطلب الإذن مرة واحدة ثم يجلب بيانات اليوم. يُستدعى من زر الربط.
   Future<bool> connect({bool includeWrite = false}) async {
     await _ensureConfigured();
+    assert(
+      _types(includeWrite: includeWrite).length ==
+          _perms(includeWrite: includeWrite).length,
+      'types and permissions must stay the same length',
+    );
     try {
       final granted = await _health.requestAuthorization(
         _types(includeWrite: includeWrite),
@@ -115,11 +149,19 @@ class HealthService extends ChangeNotifier {
     }
     await _ensureConfigured();
     try {
-      final granted = await _health.requestAuthorization(
+      await _health.requestAuthorization(
         _types(includeWrite: true),
         permissions: _perms(includeWrite: true),
       );
-      if (!granted) return false;
+      // iOS reports success whenever the request *completes* — including a
+      // flat "Don't Allow", and including the case where the type is already
+      // determined so no sheet appears. Write access is the one permission
+      // HealthKit will actually disclose, so verify it rather than assume.
+      final granted = await _health.hasPermissions(
+        const [_writeType],
+        permissions: const [HealthDataAccess.WRITE],
+      );
+      if (granted != true) return false;
       _connected = true;
       _writeMeals = true;
       await _persistFlags();
@@ -159,7 +201,7 @@ class HealthService extends ChangeNotifier {
         unit: HealthDataUnit.KILOCALORIE,
         startTime: at,
         endTime: at,
-        recordingMethod: RecordingMethod.manual,
+        recordingMethod: RecordingMethod.automatic,
       );
     } catch (_) {/* الكتابة إضافة لطيفة، لا تُفشل تسجيل الوجبة */}
   }
@@ -169,6 +211,7 @@ class HealthService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kConnected, _connected);
       await prefs.setBool(_kWriteMeals, _writeMeals);
+      await prefs.setInt(_kTypesVersion, _currentTypesVersion);
     } catch (_) {}
   }
 
@@ -193,15 +236,18 @@ class HealthService extends ChangeNotifier {
       final points = await _health.getHealthDataFromTypes(
         startTime: windowStart,
         endTime: now,
-        types: const [HealthDataType.SLEEP_ASLEEP],
+        types: _sleepTypes,
       );
-      return sleepMinutesFromIntervals([
+      final minutes = sleepMinutesFromIntervals([
         for (final p in points) (start: p.dateFrom, end: p.dateTo),
       ]);
+      // Null (not 0) when nothing was tracked, so the UI hides the metric
+      // instead of claiming the user slept zero minutes.
+      return minutes == 0 ? null : minutes;
     });
     _weightKg = await _guard(() async {
       final points = await _health.getHealthDataFromTypes(
-        startTime: now.subtract(const Duration(days: 180)),
+        startTime: now.subtract(const Duration(days: 60)),
         endTime: now,
         types: const [HealthDataType.WEIGHT],
       );

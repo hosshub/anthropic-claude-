@@ -464,7 +464,7 @@ class _StreakCard extends StatelessWidget {
   }
 }
 
-/// بطاقة نشاط اليوم من Apple Health — خطوات وسعرات محروقة. تظهر فقط عند
+/// بطاقة نشاط اليوم من Apple Health — خطوات وسعرات محروقة ونوم. تظهر فقط عند
 /// وجود إذن وبيانات.
 class _HealthActivityCard extends StatelessWidget {
   const _HealthActivityCard();
@@ -484,10 +484,14 @@ class _HealthActivityCard extends StatelessWidget {
           children: [
             const Icon(Icons.directions_walk, color: TColors.zoneGreen, size: 22),
             const SizedBox(width: 8),
-            Text(
-              l.health_activityToday,
-              style: Theme.of(context).textTheme.titleMedium,
+            Flexible(
+              child: Text(
+                l.health_activityToday,
+                style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
+            const SizedBox(width: 8),
             const Spacer(),
             if (steps != null) ...[
               _metric('$steps', l.health_steps),

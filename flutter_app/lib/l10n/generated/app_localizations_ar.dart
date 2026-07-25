@@ -645,9 +645,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get health_sleep => 'النوم';
 
   @override
-  String get health_weight => 'الوزن';
-
-  @override
   String health_sleepValue(int h, int m) {
     return '$hس $mد';
   }
@@ -676,7 +673,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings_health_note =>
-      'قراءة فقط. يقرأ خطواتك وسعراتك المحروقة لعرضها في شاشة اليوم وإضافتها إلى ميزانيتك اليومية. لا يُكتب شيء ولا يُشارك.';
+      'يقرأ خطواتك وسعراتك المحروقة ونومك ووزنك لعرضها في التطبيق وتعديل ميزانية سعراتك اليومية. ولا تُكتب سعرات وجباتك إلا إذا فعّلت المفتاح أدناه. تبقى بياناتك على جهازك ولا تُشارك.';
 
   @override
   String get settings_health_connect => 'ربط تطبيق الصحة';

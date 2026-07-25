@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -202,10 +204,10 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final meal = await repo.logFromFoodBank(widget.item, portions: _portions);
-    await health.writeMealEnergy(
+    unawaited(health.writeMealEnergy(
       kcal: meal.nutrition?.caloriesKcal ?? 0,
       at: meal.capturedAt,
-    );
+    ));
     HapticFeedback.lightImpact();
     if (!mounted) return;
     navigator.pop();
