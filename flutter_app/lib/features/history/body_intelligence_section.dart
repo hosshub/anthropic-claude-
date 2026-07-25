@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../l10n/enum_labels.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../services/health_service.dart';
 import '../../models/analysis_result.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
@@ -150,6 +152,7 @@ class BodyIntelligenceSection extends StatelessWidget {
         _ScoreTrendChart(meals: meals),
         const SizedBox(height: 12),
         _buildMetricsCard(l),
+        const _HealthWeightCard(),
         if (responses.isEmpty) ...[
           const SizedBox(height: 12),
           _buildEmptyResponsesCard(l),
@@ -845,6 +848,77 @@ class _ScoreTrendChart extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+/// وزن المستخدم من Apple Health — عرض فقط، بلا تفسير أو توصية (التزاماً
+/// بقيود السلامة الطبية). يظهر فقط عند الربط ووجود قياس.
+class _HealthWeightCard extends StatelessWidget {
+  const _HealthWeightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final weight = context.watch<HealthService>().weightKg;
+    if (weight == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: TColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: TColors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.monitor_weight_outlined,
+                  color: TColors.primary, size: 21),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.health_weightTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l.health_weightSub,
+                    style: const TextStyle(
+                      color: TColors.textSecondary,
+                      fontSize: 11.5,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l.health_weightValue(weight.toStringAsFixed(1)),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: TColors.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

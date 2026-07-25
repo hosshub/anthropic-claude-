@@ -573,7 +573,36 @@ class _HealthCardState extends State<_HealthCard> {
             ),
           ),
           const SizedBox(height: 10),
-          if (connected)
+          if (connected) ...[
+            SwitchListTile.adaptive(
+              value: health.writeMealsEnabled,
+              onChanged: (v) async {
+                final messenger = ScaffoldMessenger.of(context);
+                final ok =
+                    await context.read<HealthService>().setWriteMeals(v);
+                if (!context.mounted) return;
+                if (v && !ok) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l.settings_health_denied)),
+                  );
+                }
+              },
+              contentPadding: EdgeInsets.zero,
+              activeThumbColor: TColors.primary,
+              title: Text(
+                l.settings_health_writeMeals,
+                style: const TextStyle(fontSize: 14),
+              ),
+              subtitle: Text(
+                l.settings_health_writeMeals_note,
+                style: const TextStyle(
+                  color: TColors.textSecondary,
+                  fontSize: 11,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
             OutlinedButton.icon(
               onPressed: () => context.read<HealthService>().disconnect(),
               icon: const Icon(Icons.link_off),
@@ -584,8 +613,8 @@ class _HealthCardState extends State<_HealthCard> {
                 side: BorderSide(
                     color: TColors.textSecondary.withValues(alpha: 0.4)),
               ),
-            )
-          else
+            ),
+          ] else
             OutlinedButton.icon(
               onPressed: _busy ? null : _connect,
               icon: _busy

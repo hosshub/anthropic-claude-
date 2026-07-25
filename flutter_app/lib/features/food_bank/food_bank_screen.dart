@@ -6,6 +6,7 @@ import '../../data/food_bank_data.dart';
 import '../../data/meal_repository.dart';
 import '../../l10n/enum_labels.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../services/health_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/zone_badge.dart';
 
@@ -197,9 +198,14 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
     final l = AppLocalizations.of(context)!;
     setState(() => _logging = true);
     final repo = context.read<MealRepository>();
+    final health = context.read<HealthService>();
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    await repo.logFromFoodBank(widget.item, portions: _portions);
+    final meal = await repo.logFromFoodBank(widget.item, portions: _portions);
+    await health.writeMealEnergy(
+      kcal: meal.nutrition?.caloriesKcal ?? 0,
+      at: meal.capturedAt,
+    );
     HapticFeedback.lightImpact();
     if (!mounted) return;
     navigator.pop();

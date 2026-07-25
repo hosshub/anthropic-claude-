@@ -8,6 +8,7 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
+import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../util/format.dart';
@@ -65,8 +66,15 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   Future<void> _relog(Meal meal) async {
     final l = AppLocalizations.of(context)!;
     final repo = context.read<MealRepository>();
+    final health = context.read<HealthService>();
     final messenger = ScaffoldMessenger.of(context);
     final clone = await repo.relogMeal(meal.id);
+    if (clone != null) {
+      await health.writeMealEnergy(
+        kcal: clone.nutrition?.caloriesKcal ?? 0,
+        at: clone.capturedAt,
+      );
+    }
     if (!mounted || clone == null) return;
     HapticFeedback.lightImpact();
     messenger.showSnackBar(SnackBar(content: Text(l.mealDetail_logAgainDone)));

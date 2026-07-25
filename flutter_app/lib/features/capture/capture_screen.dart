@@ -9,6 +9,7 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/analyze_service.dart';
 import '../../services/app_messages.dart';
+import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
@@ -64,6 +65,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
       } else {
         HapticFeedback.lightImpact();
       }
+      // Mirror the meal's calories into Apple Health when the user opted in.
+      // Best-effort: never blocks or fails the save.
+      final kcal = saved.nutrition?.caloriesKcal ?? 0;
+      unawaited(context
+          .read<HealthService>()
+          .writeMealEnergy(kcal: kcal, at: saved.capturedAt));
       // Best-effort schedule of the ~3h "how did you feel?" reminder.
       // No-op if the feature is off or notifications aren't granted.
       unawaited(context

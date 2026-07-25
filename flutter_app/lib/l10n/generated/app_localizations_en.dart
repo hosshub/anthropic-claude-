@@ -649,6 +649,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get health_sleep => 'Sleep';
+
+  @override
+  String get health_weight => 'Weight';
+
+  @override
+  String health_sleepValue(int h, int m) {
+    return '${h}h ${m}m';
+  }
+
+  @override
+  String health_weightValue(String value) {
+    return '$value kg';
+  }
+
+  @override
+  String get health_weightTitle => 'Weight from Apple Health';
+
+  @override
+  String get health_weightSub =>
+      'Most recent reading. Logged in the Health app, shown here for context.';
+
+  @override
+  String get settings_health_writeMeals => 'Write meals to Health';
+
+  @override
+  String get settings_health_writeMeals_note =>
+      'Saves each logged meal\'s calories to Apple Health as dietary energy, so your rings and other apps see it. Off by default.';
+
+  @override
   String get settings_health => 'Apple Health';
 
   @override

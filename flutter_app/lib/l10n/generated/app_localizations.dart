@@ -1250,6 +1250,54 @@ abstract class AppLocalizations {
   /// **'يشمل +{value} سعرة محروقة من النشاط'**
   String today_caloriesFromActivity(int value);
 
+  /// No description provided for @health_sleep.
+  ///
+  /// In ar, this message translates to:
+  /// **'النوم'**
+  String get health_sleep;
+
+  /// No description provided for @health_weight.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوزن'**
+  String get health_weight;
+
+  /// No description provided for @health_sleepValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{h}س {m}د'**
+  String health_sleepValue(int h, int m);
+
+  /// No description provided for @health_weightValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{value} كجم'**
+  String health_weightValue(String value);
+
+  /// No description provided for @health_weightTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وزنك من تطبيق الصحة'**
+  String get health_weightTitle;
+
+  /// No description provided for @health_weightSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحدث قياس مسجّل في تطبيق الصحة، يظهر هنا للسياق فقط.'**
+  String get health_weightSub;
+
+  /// No description provided for @settings_health_writeMeals.
+  ///
+  /// In ar, this message translates to:
+  /// **'كتابة الوجبات في تطبيق الصحة'**
+  String get settings_health_writeMeals;
+
+  /// No description provided for @settings_health_writeMeals_note.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحفظ سعرات كل وجبة تسجّلها في تطبيق الصحة كطاقة غذائية، فتراها حلقاتك والتطبيقات الأخرى. معطّل افتراضياً.'**
+  String get settings_health_writeMeals_note;
+
   /// No description provided for @settings_health.
   ///
   /// In ar, this message translates to:

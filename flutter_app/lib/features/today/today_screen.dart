@@ -476,6 +476,7 @@ class _HealthActivityCard extends StatelessWidget {
     if (!health.hasData) return const SizedBox.shrink();
     final steps = health.steps;
     final burned = health.activeEnergyKcal;
+    final sleep = health.sleepMinutes;
     return Padding(
       padding: const EdgeInsets.only(top: 14),
       child: CardContainer(
@@ -490,10 +491,18 @@ class _HealthActivityCard extends StatelessWidget {
             const Spacer(),
             if (steps != null) ...[
               _metric('$steps', l.health_steps),
-              const SizedBox(width: 18),
+              const SizedBox(width: 16),
             ],
-            if (burned != null)
+            if (burned != null) ...[
               _metric('$burned', l.health_burned, color: TColors.gold),
+              if (sleep != null) const SizedBox(width: 16),
+            ],
+            if (sleep != null)
+              _metric(
+                l.health_sleepValue(sleep ~/ 60, sleep % 60),
+                l.health_sleep,
+                color: TColors.primary,
+              ),
           ],
         ),
       ),

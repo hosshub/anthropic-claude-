@@ -642,6 +642,36 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get health_sleep => 'النوم';
+
+  @override
+  String get health_weight => 'الوزن';
+
+  @override
+  String health_sleepValue(int h, int m) {
+    return '$hس $mد';
+  }
+
+  @override
+  String health_weightValue(String value) {
+    return '$value كجم';
+  }
+
+  @override
+  String get health_weightTitle => 'وزنك من تطبيق الصحة';
+
+  @override
+  String get health_weightSub =>
+      'أحدث قياس مسجّل في تطبيق الصحة، يظهر هنا للسياق فقط.';
+
+  @override
+  String get settings_health_writeMeals => 'كتابة الوجبات في تطبيق الصحة';
+
+  @override
+  String get settings_health_writeMeals_note =>
+      'يحفظ سعرات كل وجبة تسجّلها في تطبيق الصحة كطاقة غذائية، فتراها حلقاتك والتطبيقات الأخرى. معطّل افتراضياً.';
+
+  @override
   String get settings_health => 'تطبيق الصحة';
 
   @override
