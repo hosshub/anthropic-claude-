@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -18,6 +20,7 @@ class SubscriptionService extends ChangeNotifier {
   static const String entitlementId = 'premium';
   static const String _kLastSuggestionAt = 'free_last_suggestion_at';
 
+  StreamSubscription<AuthState>? _authSub;
   bool _ready = false;
   bool _hasActivePurchase = false;
   bool _grandfathered = false;
@@ -54,6 +57,12 @@ class SubscriptionService extends ChangeNotifier {
       final uid = _supabaseUserId();
       if (uid != null) await Purchases.logIn(uid);
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfo);
+      // RevenueCat is configured at launch, but the user may sign in (or out,
+      // or switch accounts) later. Without re-identifying, purchases would be
+      // attributed to the wrong id and the webhook would update the wrong row.
+      _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+        syncIdentity();
+      });
       await refresh();
     } catch (_) {
       // متجر غير متاح (محاكي، شبكة، إعداد ناقص) — يبقى المستخدم مجانياً.
@@ -176,6 +185,12 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
   /// يُستدعى بعد تسجيل الدخول/الخروج حتى تتبع هوية RevenueCat المستخدم.
   Future<void> syncIdentity() async {
     _resolveGrandfathered();
@@ -196,6 +211,8 @@ class SubscriptionService extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+// ignore_for_file: unnecessary_lambdas
 
 enum PurchaseOutcome {
   success,

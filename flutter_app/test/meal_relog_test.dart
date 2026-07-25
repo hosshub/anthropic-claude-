@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tayyibat/data/database.dart';
+import 'package:tayyibat/data/food_bank_data.dart';
 import 'package:tayyibat/data/meal_repository.dart';
 import 'package:tayyibat/models/analysis_result.dart';
 import 'package:tayyibat/models/body_response.dart';
@@ -96,6 +97,37 @@ void main() {
           times.first.isAtSameMomentAs(times.last),
       isTrue,
     );
+    await db.close();
+  });
+
+  test('recentAiScanTimes counts only AI analyses, not free food-bank logs',
+      () async {
+    // The free tier allows unlimited food-bank logging but only 3 AI scans a
+    // week. If food-bank meals counted against the scan quota, using the free
+    // feature would silently burn the paid one.
+    final db = await freshDb();
+    final repo = MealRepository(dbOpener: () async => db);
+
+    await repo.saveFromAnalysis(
+      AnalysisResult.fromJson(const {
+        'identified_items': [
+          {'name_ar': 'أرز', 'zone': 'green'}
+        ],
+        'overall_score': 100,
+        'score_label_ar': 'ممتاز',
+        'score_explanation_ar': '',
+      }),
+      Uint8List(0),
+      persistImage: false,
+    );
+    final dish = foodBankItems.first;
+    await repo.logFromFoodBank(dish);
+    await repo.logFromFoodBank(dish);
+
+    expect(await repo.recentCaptureTimes(), hasLength(3),
+        reason: 'the logging streak still counts every meal');
+    expect(await repo.recentAiScanTimes(), hasLength(1),
+        reason: 'only the AI analysis counts against the scan quota');
     await db.close();
   });
 

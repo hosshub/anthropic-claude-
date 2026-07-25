@@ -48,7 +48,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     final l = AppLocalizations.of(context)!;
     // بوابة لطيفة: لا نرسل الطلب أصلاً إن نفد الرصيد، ونقترح بنك الطعام.
     final repo = context.read<MealRepository>();
-    final aiScans = (await repo.recentCaptureTimes())
+    final aiScans = (await repo.recentAiScanTimes())
         .take(200)
         .toList(growable: false);
     if (!mounted) return;

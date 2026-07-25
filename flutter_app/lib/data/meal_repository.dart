@@ -164,6 +164,25 @@ class MealRepository extends ChangeNotifier {
     ];
   }
 
+  /// أوقات تحليلات الذكاء الاصطناعي وحدها (source='ai') — وهي وحدها ما
+  /// يُحتسب على الرصيد المجاني. تسجيل بنك الطعام وإعادة التسجيل مجانيان بلا
+  /// حدود، فلا يجوز أن يستهلكا حصّة التحليل.
+  Future<List<DateTime>> recentAiScanTimes({int limit = 400}) async {
+    final db = await _db;
+    final rows = await db.query(
+      'meals',
+      columns: ['captured_at'],
+      where: 'source = ?',
+      whereArgs: const ['ai'],
+      orderBy: 'captured_at DESC',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        DateTime.fromMillisecondsSinceEpoch(r['captured_at'] as int),
+    ];
+  }
+
   Future<Meal?> load(String id) async {
     final db = await _db;
     final rows = await db.query('meals', where: 'id = ?', whereArgs: [id]);
