@@ -12,8 +12,9 @@ const int freeScansPerWeek = 3;
 ///
 /// التطبيق كان مدفوعاً **ويشترط حساباً**، لذا كل حساب أُنشئ قبل هذا التاريخ
 /// يخصّ مستخدماً دفع ثمن التطبيق فعلاً — فيحصل على المزايا الكاملة مدى الحياة.
-/// حدِّث هذا التاريخ ليطابق تاريخ إصدار 1.4 الفعلي قبل النشر.
-final DateTime paidEraCutoffDefault = DateTime.utc(2026, 8, 1);
+/// يجب أن يطابق paid_era_cutoff() في supabase/sql/entitlements.sql تماماً،
+/// وألّا يسبق تاريخ نشر 1.4 — تقديمه يُنزل مشترين دافعين إلى المستوى المجاني.
+final DateTime paidEraCutoffDefault = DateTime.utc(2026, 8, 15);
 
 /// هل يستحق المستخدم الترقية المجانية الدائمة (اشترى النسخة المدفوعة)؟
 bool isGrandfathered({

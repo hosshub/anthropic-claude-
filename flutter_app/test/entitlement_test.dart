@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tayyibat/services/entitlement.dart';
 
@@ -5,6 +7,27 @@ import 'package:tayyibat/services/entitlement.dart';
 /// tested without StoreKit: who counts as premium, who was grandfathered, and
 /// whether a free user has scans left this week.
 void main() {
+  test('the client and server grandfathering cutoffs are the same instant', () {
+    // The client decides what to show; the server decides what to allow. If
+    // these two dates ever drift apart a paying customer sees premium in the
+    // app and gets refused by analyze() — a silent failure that only surfaces
+    // as a support email. Cheap to assert, expensive to discover.
+    final sql = File('../supabase/sql/entitlements.sql').readAsStringSync();
+    final literal =
+        RegExp(r"select\s+'([^']+)'::timestamptz").firstMatch(sql)?.group(1);
+    expect(
+      literal,
+      isNotNull,
+      reason: 'paid_era_cutoff() no longer returns a plain timestamptz literal '
+          '— update this test to match how the SQL now spells the date',
+    );
+    expect(
+      DateTime.parse(literal!).toUtc(),
+      paidEraCutoffDefault,
+      reason: 'entitlement.dart and entitlements.sql must agree',
+    );
+  });
+
   group('isGrandfathered', () {
     // Anyone who created an account while the app was paid-only necessarily
     // paid for it, so account age is a sound proxy for "existing buyer".

@@ -22,14 +22,14 @@ alter table public.user_entitlements enable row level security;
 -- التطبيق كان مدفوعاً **ويشترط حساباً**، فكل حساب أُنشئ قبل هذا التاريخ يخصّ
 -- مستخدماً دفع ثمنه فعلاً ⇒ مزايا كاملة مدى الحياة. التحقق هنا (لا في العميل)
 -- حتى لا يمكن انتحاله.
--- ⚠️ حدّثه ليطابق تاريخ إصدار 1.4 الفعلي قبل النشر، وطابقه مع
---    paidEraCutoffDefault في lib/services/entitlement.dart.
+-- ⚠️ يجب أن يطابق paidEraCutoffDefault في lib/services/entitlement.dart
+--    تماماً. تعديل أحدهما وحده يجعل العميل والخادم يختلفان في من هو مشترك.
 -- ---------------------------------------------------------------------------
 create or replace function public.paid_era_cutoff()
 returns timestamptz
 language sql
 immutable
-as $$ select '2026-08-01T00:00:00Z'::timestamptz $$;
+as $$ select '2026-08-15T00:00:00Z'::timestamptz $$;
 
 -- ---------------------------------------------------------------------------
 -- 3) المستوى الفعلي للمستخدم.
