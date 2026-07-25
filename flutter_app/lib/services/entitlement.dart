@@ -53,3 +53,15 @@ int? scansRemainingThisWeek({
 
 /// null (مشترك) أو رصيد متبقٍ أكبر من صفر.
 bool canScan({required int? remaining}) => remaining == null || remaining > 0;
+
+/// هل بقي للمستخدم المجاني استخدامه الأسبوعي الواحد (الاقتراحات)؟
+///
+/// الاقتراحات نداء نصّي رخيص جداً مقارنةً بتحليل الصور، لذا يُحسب الرصيد على
+/// الجهاز؛ الحدّ المكلف (تحليل الصور) وحده يُفرض على الخادم.
+bool hasWeeklyAllowance({
+  required DateTime? lastUsedAt,
+  required DateTime now,
+}) {
+  if (lastUsedAt == null) return true;
+  return lastUsedAt.isBefore(weekStart(now));
+}

@@ -7,10 +7,12 @@ import '../../services/plan_adherence.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/suggestion.dart';
 import '../../services/app_messages.dart';
+import '../../services/subscription_service.dart';
 import '../../services/suggestion_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
+import '../paywall/paywall_screen.dart';
 
 class SuggestionsScreen extends StatelessWidget {
   const SuggestionsScreen({super.key});
@@ -66,12 +68,21 @@ class _SuggestionTabState extends State<_SuggestionTab>
   bool get wantKeepAlive => true;
 
   Future<void> _fetch() async {
+    final subs = context.read<SubscriptionService>();
+    // المجاني: اقتراح واحد أسبوعياً. لا نُرسل الطلب أصلاً إن نفد الرصيد.
+    if (!await subs.canRequestSuggestions()) {
+      if (!mounted) return;
+      await showPaywall(context);
+      return;
+    }
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final r = await _svc.suggestMeals(mealType: _mealType);
+      await subs.markSuggestionsUsed();
       if (!mounted) return;
       setState(() {
         _results = r;
@@ -380,15 +391,19 @@ class _PlanTabState extends State<_PlanTab>
               ),
             ),
             const SizedBox(height: 14),
-            PrimaryButton(
-              label: plan == null
-                  ? l.suggestions_plan_button_first
-                  : l.suggestions_plan_button_again,
-              icon: Icons.event_note,
-              loading: _loading,
-              onPressed:
-                  _loading ? null : () => _generate(hasExisting: plan != null),
-            ),
+            if (!context.watch<SubscriptionService>().isPremium)
+              _LockedFeatureCard(body: l.gate_plansLocked_body)
+            else
+              PrimaryButton(
+                label: plan == null
+                    ? l.suggestions_plan_button_first
+                    : l.suggestions_plan_button_again,
+                icon: Icons.event_note,
+                loading: _loading,
+                onPressed: _loading
+                    ? null
+                    : () => _generate(hasExisting: plan != null),
+              ),
             if (_error != null) ...[
               const SizedBox(height: 14),
               _ErrorNote(
@@ -775,6 +790,54 @@ class _DayCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// بطاقة ميزة مقفلة — تشرح القيمة وتفتح شاشة الاشتراك، بلا طريق مسدود.
+class _LockedFeatureCard extends StatelessWidget {
+  final String body;
+  const _LockedFeatureCard({required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium, color: TColors.gold, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l.gate_premiumFeature,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: TColors.gold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(body, style: const TextStyle(height: 1.55)),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => showPaywall(context),
+              icon: const Icon(Icons.lock_open),
+              label: Text(l.gate_upgrade),
+              style: FilledButton.styleFrom(
+                backgroundColor: TColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+          ),
         ],
       ),
     );

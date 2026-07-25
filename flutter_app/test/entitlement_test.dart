@@ -145,6 +145,45 @@ void main() {
     });
   });
 
+  group('hasWeeklyAllowance — the free suggestion allowance', () {
+    final saturday = DateTime(2026, 8, 1); // week start
+    final wednesday = DateTime(2026, 8, 5);
+
+    test('never used → allowed', () {
+      expect(
+        hasWeeklyAllowance(lastUsedAt: null, now: wednesday),
+        isTrue,
+      );
+    });
+
+    test('used earlier this week → not allowed', () {
+      expect(
+        hasWeeklyAllowance(
+          lastUsedAt: DateTime(2026, 8, 2),
+          now: wednesday,
+        ),
+        isFalse,
+      );
+    });
+
+    test('used last week → allowed again', () {
+      expect(
+        hasWeeklyAllowance(
+          lastUsedAt: DateTime(2026, 7, 30),
+          now: wednesday,
+        ),
+        isTrue,
+      );
+    });
+
+    test('used exactly at the week start counts as used', () {
+      expect(
+        hasWeeklyAllowance(lastUsedAt: saturday, now: wednesday),
+        isFalse,
+      );
+    });
+  });
+
   group('canScan', () {
     test('free user with scans left may scan', () {
       expect(canScan(remaining: 2), isTrue);

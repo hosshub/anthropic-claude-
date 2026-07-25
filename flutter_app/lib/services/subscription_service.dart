@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
@@ -15,6 +16,7 @@ import 'entitlement.dart';
 /// دون تعطّل، والخادم يبقى المرجع النهائي للحدّ.
 class SubscriptionService extends ChangeNotifier {
   static const String entitlementId = 'premium';
+  static const String _kLastSuggestionAt = 'free_last_suggestion_at';
 
   bool _ready = false;
   bool _hasActivePurchase = false;
@@ -138,6 +140,39 @@ class SubscriptionService extends ChangeNotifier {
           : PurchaseOutcome.nothingToRestore;
     } catch (_) {
       return PurchaseOutcome.failed;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // رصيد الاقتراحات المجاني (أسبوعي)
+  // -------------------------------------------------------------------------
+
+  /// هل يستطيع المستخدم طلب اقتراحات الآن؟ المشترك دائماً نعم.
+  Future<bool> canRequestSuggestions() async {
+    if (isPremium) return true;
+    return hasWeeklyAllowance(lastUsedAt: await _lastSuggestionAt(), now: DateTime.now());
+  }
+
+  /// يسجّل استهلاك الاقتراح الأسبوعي المجاني (لا أثر للمشترك).
+  Future<void> markSuggestionsUsed() async {
+    if (isPremium) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+        _kLastSuggestionAt,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<DateTime?> _lastSuggestionAt() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ms = prefs.getInt(_kLastSuggestionAt);
+      return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+    } catch (_) {
+      return null;
     }
   }
 

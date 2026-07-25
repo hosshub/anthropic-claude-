@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/meal_repository.dart';
 import '../../data/plan_repository.dart';
@@ -13,9 +14,11 @@ import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/nutrition_goal_service.dart';
 import '../../services/profile_service.dart';
+import '../../services/subscription_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../onboarding/disclaimer_screen.dart';
+import '../paywall/paywall_screen.dart';
 import 'notification_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -230,6 +233,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+
+              // -- Subscription ----------------------------------------------
+              const SizedBox(height: 18),
+              const _SubscriptionCard(),
 
               // -- Nutrition -------------------------------------------------
               const SizedBox(height: 18),
@@ -495,6 +502,91 @@ class _DisplayNameRow extends StatelessWidget {
         alignment: AlignmentDirectional.centerStart,
         minimumSize: const Size.fromHeight(48),
         side: const BorderSide(color: TColors.primary, width: 1.2),
+      ),
+    );
+  }
+}
+
+/// بطاقة الاشتراك: حالة المستخدم، وشكر خاص للمشترين الأوائل، وزر الترقية
+/// أو إدارة الاشتراك من إعدادات Apple.
+class _SubscriptionCard extends StatelessWidget {
+  const _SubscriptionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final subs = context.watch<SubscriptionService>();
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                l.settings_subscription,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: TColors.primary,
+                ),
+              ),
+              const Spacer(),
+              if (subs.isPremium)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: TColors.gold.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  child: Text(
+                    l.premium_badge,
+                    style: const TextStyle(
+                      color: TColors.gold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (subs.isGrandfatheredUser)
+            Text(
+              l.settings_grandfathered,
+              style: const TextStyle(
+                color: TColors.textSecondary,
+                fontSize: 12,
+                height: 1.6,
+              ),
+            )
+          else if (subs.isPremium)
+            OutlinedButton.icon(
+              onPressed: () => launchUrl(
+                Uri.parse('https://apps.apple.com/account/subscriptions'),
+                mode: LaunchMode.externalApplication,
+              ),
+              icon: const Icon(Icons.manage_accounts_outlined),
+              label: Text(l.settings_manageSubscription),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: TColors.primary,
+                alignment: AlignmentDirectional.centerStart,
+                minimumSize: const Size.fromHeight(48),
+                side: const BorderSide(color: TColors.primary, width: 1.2),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: () => showPaywall(context),
+              icon: const Icon(Icons.workspace_premium_outlined),
+              label: Text(l.gate_upgrade),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: TColors.primary,
+                alignment: AlignmentDirectional.centerStart,
+                minimumSize: const Size.fromHeight(48),
+                side: const BorderSide(color: TColors.primary, width: 1.2),
+              ),
+            ),
+        ],
       ),
     );
   }
