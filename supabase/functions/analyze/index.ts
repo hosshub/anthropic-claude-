@@ -21,7 +21,10 @@ const APP_TOKEN = Deno.env.get("APP_TOKEN") ?? "";
 // حدّ يومي لكل مستخدم لتحليل الصور فقط (الميزة الأغلى).
 // suggest/plan لا يُحتسبان لأنهما نصّيان رخيصان نسبياً.
 // SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY يحقنهما Supabase تلقائياً.
-const DAILY_LIMIT = 7;
+// v1.4 — الحدّ يعتمد على مستوى المستخدم. المجاني: 3 تحليلات في الأسبوع
+// (يبدأ السبت مثل تقويم التطبيق). المشترك: 10 يومياً كاستخدام عادل.
+const FREE_SCANS_PER_WEEK = 3;
+const PREMIUM_SCANS_PER_DAY = 10;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -414,17 +417,56 @@ function userIdFromJWT(authHeader: string | null): string | null {
   }
 }
 
-async function bumpDailyUsage(userId: string): Promise<number | null> {
-  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+/** بداية أسبوع التطبيق (السبت) بصيغة YYYY-MM-DD. */
+function weekStartISO(now = new Date()): string {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // getUTCDay: الأحد=0 … السبت=6. نرجع للخلف حتى أقرب سبت.
+  const back = (d.getUTCDay() - 6 + 7) % 7;
+  d.setUTCDate(d.getUTCDate() - back);
+  return d.toISOString().slice(0, 10);
+}
+
+function todayISO(now = new Date()): string {
+  return now.toISOString().slice(0, 10);
+}
+
+/** المستوى الفعلي من قاعدة البيانات (يشمل ترقية المشترين القدامى). */
+async function fetchTier(userId: string): Promise<"free" | "premium"> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return "free";
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_usage`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/effective_tier`, {
       method: "POST",
       headers: {
         apikey: SERVICE_KEY,
         authorization: `Bearer ${SERVICE_KEY}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ p_user: userId, p_limit: DAILY_LIMIT }),
+      body: JSON.stringify({ p_user: userId }),
+    });
+    if (!res.ok) return "free";
+    const value = await res.json();
+    return value === "premium" ? "premium" : "free";
+  } catch {
+    return "free";
+  }
+}
+
+/** يزيد العدّاد ضمن نافذة المستوى. سالب = تجاوز الحدّ. */
+async function bumpUsageSince(
+  userId: string,
+  limit: number,
+  since: string,
+): Promise<number | null> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_usage_since`, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_KEY,
+        authorization: `Bearer ${SERVICE_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ p_user: userId, p_limit: limit, p_since: since }),
     });
     if (!res.ok) return null;
     const value = await res.json();
@@ -434,6 +476,7 @@ async function bumpDailyUsage(userId: string): Promise<number | null> {
     return null;
   }
 }
+
 
 async function refundDailyUsage(userId: string): Promise<void> {
   if (!SUPABASE_URL || !SERVICE_KEY) return;
@@ -657,14 +700,31 @@ Deno.serve(async (req: Request) => {
   const userId = userIdFromJWT(req.headers.get("authorization"));
   let counted = false;
   if (userId) {
-    const used = await bumpDailyUsage(userId);
+    // v1.4 — the cap depends on the user's tier, resolved server-side so a
+    // patched client can't award itself unlimited scans. Grandfathered
+    // purchasers of the paid app resolve to premium in effective_tier().
+    const tier = await fetchTier(userId);
+    const isFree = tier === "free";
+    const limit = isFree ? FREE_SCANS_PER_WEEK : PREMIUM_SCANS_PER_DAY;
+    const since = isFree ? weekStartISO() : todayISO();
+
+    const used = await bumpUsageSince(userId, limit, since);
     if (used !== null && used < 0) {
       return json(429, {
-        error: tr(
-          locale,
-          `بلغت الحد اليومي للتحليلات (${DAILY_LIMIT}). جرّب مجدداً غداً.`,
-          `Daily analysis limit reached (${DAILY_LIMIT}). Try again tomorrow.`,
-        ),
+        // `upgrade_required` lets the app show the paywall instead of a plain
+        // error when a free user runs out, and a "try tomorrow" note otherwise.
+        upgrade_required: isFree,
+        error: isFree
+          ? tr(
+            locale,
+            `استهلكت تحليلاتك المجانية لهذا الأسبوع (${FREE_SCANS_PER_WEEK}). اشترك للحصول على تحليلات بلا حدود، أو سجّل وجبتك من بنك الطعام.`,
+            `You've used your ${FREE_SCANS_PER_WEEK} free analyses this week. Subscribe for unlimited analyses, or log your meal from the food bank.`,
+          )
+          : tr(
+            locale,
+            `بلغت الحد اليومي للتحليلات (${PREMIUM_SCANS_PER_DAY}). جرّب مجدداً غداً.`,
+            `Daily analysis limit reached (${PREMIUM_SCANS_PER_DAY}). Try again tomorrow.`,
+          ),
       });
     }
     counted = used !== null && used > 0;
