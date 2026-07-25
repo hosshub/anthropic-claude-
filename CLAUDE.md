@@ -342,6 +342,37 @@ service role key), so the gateway must not pre-verify (`--no-verify-jwt`).
 | Support / privacy contact | `app@tayyibat.ai` |
 | App Store record | App Store Connect → Apps → Tayyibat (id `6777743474`) |
 
+## 11b. Operational hazard — free-tier Supabase auto-pause
+
+**Symptom:** every login (Apple, Google, *and* email) fails with
+`ClientException with SocketException: Failed host lookup:
+'cvznuwvwhnujdgfojmsb.supabase.co'`.
+
+**Cause:** the project is **paused**. Supabase free-tier projects auto-pause
+after ~7 days of inactivity, and pausing **removes the project's DNS record** —
+so the hostname stops resolving entirely. It is not an app, Apple `.p8`, or
+Google OAuth problem; nothing in the client needs changing.
+
+**Diagnose in 10 seconds:**
+```bash
+dig +short cvznuwvwhnujdgfojmsb.supabase.co   # empty  -> paused
+dig +short supabase.co                        # resolves -> your DNS is fine
+curl -s -o /dev/null -w "%{http_code}\n" \
+  https://cvznuwvwhnujdgfojmsb.supabase.co/auth/v1/health   # 000 -> unreachable
+```
+Healthy looks like: DNS returns Cloudflare IPs, the health probe returns **401**
+(alive, just wants an apikey), and `functions/v1/analyze` GET returns `{"ok":true}`.
+
+**Fix:** dashboard → *Restore project* (2–5 min). **Prevent:** upgrade the org
+to **Pro ($25/mo)** — Pro projects never auto-pause. This is a live paid app;
+an auto-pause locks every user out with no warning.
+
+Happened 2026-07-24. The raw error text users saw was a second, separate bug —
+fixed in `AuthService.codeForAuthExceptionMessage` (gotrue reports transport
+failures as `AuthRetryableFetchException`, a subclass of `AuthException` whose
+message is raw `error.toString()`, so it bypassed the generic network
+classifier).
+
 ## 12. Hard "do nots"
 
 - ❌ Do **not** make medical claims anywhere in copy, UI, or marketing.
