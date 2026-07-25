@@ -1108,13 +1108,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestions_single_intro =>
-      'Get 3 Tayyib meal ideas at once — built from the green zone, with measured yellow touches, and no forbidden item.';
+      'Get 5 Tayyib meal ideas at once — built from the green zone, with measured yellow touches, and no forbidden item.';
 
   @override
-  String get suggestions_single_button_first => 'Suggest 3 meals';
+  String get suggestions_single_button_first => 'Suggest 5 meals';
 
   @override
-  String get suggestions_single_button_again => 'Suggest 3 more';
+  String get suggestions_single_button_again => 'Suggest 5 more';
 
   @override
   String get suggestions_components => 'Components';

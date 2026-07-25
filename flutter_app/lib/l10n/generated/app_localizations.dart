@@ -2087,19 +2087,19 @@ abstract class AppLocalizations {
   /// No description provided for @suggestions_single_intro.
   ///
   /// In ar, this message translates to:
-  /// **'احصل على ٣ أفكار وجبات طيبة دفعة واحدة — من المنطقة الخضراء، مع لمسات صفراء بحساب، وبدون أي عنصر ممنوع.'**
+  /// **'احصل على ٥ أفكار وجبات طيبة دفعة واحدة — من المنطقة الخضراء، مع لمسات صفراء بحساب، وبدون أي عنصر ممنوع.'**
   String get suggestions_single_intro;
 
   /// No description provided for @suggestions_single_button_first.
   ///
   /// In ar, this message translates to:
-  /// **'اقترح ٣ وجبات'**
+  /// **'اقترح ٥ وجبات'**
   String get suggestions_single_button_first;
 
   /// No description provided for @suggestions_single_button_again.
   ///
   /// In ar, this message translates to:
-  /// **'اقترح ٣ وجبات أخرى'**
+  /// **'اقترح ٥ وجبات أخرى'**
   String get suggestions_single_button_again;
 
   /// No description provided for @suggestions_components.

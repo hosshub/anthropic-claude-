@@ -1093,13 +1093,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get suggestions_single_intro =>
-      'احصل على ٣ أفكار وجبات طيبة دفعة واحدة — من المنطقة الخضراء، مع لمسات صفراء بحساب، وبدون أي عنصر ممنوع.';
+      'احصل على ٥ أفكار وجبات طيبة دفعة واحدة — من المنطقة الخضراء، مع لمسات صفراء بحساب، وبدون أي عنصر ممنوع.';
 
   @override
-  String get suggestions_single_button_first => 'اقترح ٣ وجبات';
+  String get suggestions_single_button_first => 'اقترح ٥ وجبات';
 
   @override
-  String get suggestions_single_button_again => 'اقترح ٣ وجبات أخرى';
+  String get suggestions_single_button_again => 'اقترح ٥ وجبات أخرى';
 
   @override
   String get suggestions_components => 'المكونات';

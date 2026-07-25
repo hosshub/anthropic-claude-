@@ -310,6 +310,28 @@ ${RULES_JSON}
 ${SAFETY_PREAMBLE}`;
 }
 
+
+/**
+ * Keeps the multi-suggestion response readable by BOTH client generations.
+ *
+ * v1.2+ clients read the `suggestions` array. The v1.0.x clients that are
+ * live on the App Store read `name_ar` / `components_ar` / … at the TOP level
+ * and would render an empty card if those disappeared. So we mirror the first
+ * suggestion's fields alongside the array — new clients see all five, old
+ * clients keep seeing one, and neither breaks. This removes any ordering
+ * constraint between deploying the function and shipping an app update.
+ */
+function withLegacySuggestionShape(obj: unknown): unknown {
+  if (typeof obj !== "object" || obj === null) return obj;
+  const o = obj as Record<string, unknown>;
+  const list = o.suggestions;
+  if (!Array.isArray(list) || list.length === 0) return obj;
+  const first = list[0];
+  if (typeof first !== "object" || first === null) return obj;
+  // Only fill fields the model did not already place at the top level.
+  return { ...(first as Record<string, unknown>), ...o };
+}
+
 function stripFences(text: string): string {
   let t = (text ?? "").trim();
   if (t.startsWith("```")) t = t.replaceAll("```json", "").replaceAll("```", "").trim();
@@ -437,6 +459,8 @@ async function callGemini(
   maxTokens: number,
   locale: Locale,
   onFailure: () => Promise<void> = async () => {},
+  transform: (obj: unknown) => unknown = (o) => o,
+  temperature = 0.4,
 ): Promise<Response> {
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
@@ -453,7 +477,9 @@ async function callGemini(
       body: JSON.stringify({
         contents: [{ role: "user", parts }],
         generationConfig: {
-          temperature: 0.4,
+          // Image analysis needs determinism; the text tasks (suggest/plan)
+          // pass a higher value so regenerate returns genuinely new ideas.
+          temperature,
           maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
         },
@@ -533,7 +559,7 @@ async function callGemini(
         ),
       });
     }
-    return json(200, JSON.parse(stripFences(text)));
+    return json(200, transform(JSON.parse(stripFences(text))));
   } catch {
     await onFailure();
     return json(502, {
@@ -591,6 +617,9 @@ Deno.serve(async (req: Request) => {
       [{ text: buildSuggestPrompt(locale, payload.meal_type) }],
       3072,
       locale,
+      async () => {},
+      withLegacySuggestionShape,
+      1.0,
     );
   }
 
