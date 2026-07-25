@@ -5,6 +5,88 @@ Max 4000 characters per locale. Keep it punchy.
 
 ---
 
+## ⭐ USE THIS ONE — v1.4.0, shipping *after* v1.3.0 is approved
+
+Use this block only if build 11 (v1.3.0) goes live first. If you skip
+v1.3.0 and submit v1.4.0 straight over it, use the cumulative block below
+instead — otherwise updaters get the food bank, Apple Health and plan
+tracking with no mention of any of it.
+
+The reassurance to existing buyers sits **last**, not first: the App Store
+collapses What's New to about three lines, and the people who need that
+paragraph are the ones who will tap "more" anyway. Leading with it would
+spend every visible line telling new users about a purchase they never made.
+
+### Arabic (ar)
+
+```
+الطيبات صار مجانياً 🌿
+
+• حمّله وابدأ فوراً — بلا ثمن مقدّم.
+• مجاناً وللأبد: بنك الطعام كاملاً (مئات الأطباق المصرية والعربية)، والدليل، والسجل، وتتبّع الصيام، وربط تطبيق الصحة — إضافةً إلى ٣ تحليلات بالذكاء الاصطناعي كل أسبوع.
+• بريميوم: تحليل بلا حدود، اقتراحات وجبات أوسع، وخطط أسبوعية كاملة مع متابعة الالتزام.
+
+لمن اشترى الطيبات قبل اليوم: شكراً لثقتك المبكرة. حسابك مُرقّى إلى بريميوم كاملاً مدى الحياة بلا أي رسوم — لن تفقد ميزة واحدة.
+```
+
+### English (en-US)
+
+```
+Tayyibat is now free 🌿
+
+• Download and start straight away — nothing to pay up front.
+• Free forever: the full food bank (hundreds of Egyptian and Arabic dishes), the guide, your history, fasting tracking, and Apple Health — plus 3 AI meal analyses every week.
+• Premium: unlimited analyses, a wider set of meal suggestions, and full weekly plans with adherence tracking.
+
+If you bought Tayyibat before today: thank you for backing it early. Your account is upgraded to full Premium for life at no extra cost — you don't lose a single feature.
+```
+
+---
+
+## v1.4.0 cumulative — use this instead if v1.3.0 never shipped
+
+Covers 1.3.0 and 1.4.0 together.
+
+### Arabic (ar)
+
+```
+الطيبات صار مجانياً — ومعه تحديث كبير 🌿
+
+جديد
+• بنك الطعام: سجّل مئات الأطباق المصرية والعربية بلا تصوير — بحث فوري بالاسم أو المكوّن، مع منطقتها وقيمها. مجاني بلا حدود.
+• اربط تطبيق الصحة (Apple Health): خطواتك وسعراتك المحروقة ونومك ووزنك تظهر في شاشة اليوم، وميزانية سعراتك تتعدّل بما أحرقته.
+• ٥ اقتراحات وجبات دفعة واحدة مع تصفية بنوع الوجبة، وتنويع أوسع في الخطط الأسبوعية.
+• التزم بخطتك الأسبوعية وتابع المخطط مقابل الفعلي بنسبة التزام يومية.
+• اسم أول وأخير ولقب تختارها لتحيتك.
+
+المجاني وبريميوم
+• مجاناً وللأبد: بنك الطعام والدليل والسجل وتتبّع الصيام وتطبيق الصحة، إضافةً إلى ٣ تحليلات بالذكاء الاصطناعي كل أسبوع.
+• بريميوم: تحليل بلا حدود واقتراحات أوسع وخطط أسبوعية كاملة.
+
+لمن اشترى الطيبات قبل اليوم: شكراً لثقتك المبكرة. حسابك مُرقّى إلى بريميوم كاملاً مدى الحياة بلا أي رسوم — لن تفقد ميزة واحدة.
+```
+
+### English (en-US)
+
+```
+Tayyibat is now free — with a big update 🌿
+
+NEW
+• Food bank: log hundreds of Egyptian and Arabic dishes without a photo — instant search by name or ingredient, each with its zone and nutrition. Free and unlimited.
+• Connect Apple Health: your steps, burned calories, sleep and weight show on Today, and your calorie budget adjusts to what you burned.
+• 5 meal suggestions at once with a meal-type filter, and more varied weekly plans.
+• Commit to your weekly plan and track planned vs actual with a daily adherence score.
+• A first name, last name, and nickname you choose for your greeting.
+
+FREE AND PREMIUM
+• Free forever: the food bank, the guide, your history, fasting tracking and Apple Health, plus 3 AI meal analyses every week.
+• Premium: unlimited analyses, a wider set of suggestions, and full weekly plans.
+
+If you bought Tayyibat before today: thank you for backing it early. Your account is upgraded to full Premium for life at no extra cost — you don't lose a single feature.
+```
+
+---
+
 ## v1.3.0 — food bank, Apple Health, richer plans
 
 ### Arabic (ar)
@@ -33,7 +115,7 @@ New in this update 🌿
 
 ---
 
-## ⭐ USE THIS ONE — v1.2.1 shipping over the live 1.0.2 (cumulative)
+## v1.2.1 shipping over the live 1.0.2 (cumulative) — superseded, kept for the changelog
 
 The live App Store version is **1.0.2**, so anyone updating jumps straight
 to 1.2.1 and has never seen 1.1.0 or 1.2.0. Paste **this** cumulative block
