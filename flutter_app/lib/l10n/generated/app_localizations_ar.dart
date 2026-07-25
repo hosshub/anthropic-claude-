@@ -688,6 +688,144 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_health_denied => 'لم يُمنح الإذن. فعّله من تطبيق الصحة.';
 
   @override
+  String get paywall_title => 'الطيبات بريميوم';
+
+  @override
+  String get paywall_subtitle =>
+      'تحليل وجبات بلا حدود، وخطط أسبوعية، واقتراحات أكثر. وكل ما عدا ذلك يبقى مجانياً.';
+
+  @override
+  String get paywall_feature_scans => 'تحليل وجبات بالذكاء الاصطناعي بلا حدود';
+
+  @override
+  String get paywall_feature_suggestions =>
+      'اقتراحات وجبات بلا حدود مع التصفية بنوع الوجبة';
+
+  @override
+  String get paywall_feature_plans =>
+      'خطط أسبوعية مع متابعة المخطط مقابل الفعلي';
+
+  @override
+  String get paywall_feature_free =>
+      'بنك الطعام والدليل الكامل والسجل وتطبيق الصحة تبقى مجانية — دائماً';
+
+  @override
+  String get paywall_monthly => 'شهري';
+
+  @override
+  String get paywall_annual => 'سنوي';
+
+  @override
+  String get paywall_lifetime => 'مدى الحياة';
+
+  @override
+  String get paywall_bestValue => 'الأفضل قيمة';
+
+  @override
+  String paywall_freeTrial(String price) {
+    return '٧ أيام مجاناً ثم $price';
+  }
+
+  @override
+  String paywall_perMonth(String price) {
+    return '$price / شهرياً';
+  }
+
+  @override
+  String paywall_perYear(String price) {
+    return '$price / سنوياً';
+  }
+
+  @override
+  String paywall_oneTime(String price) {
+    return '$price دفعة واحدة';
+  }
+
+  @override
+  String get paywall_subscribe => 'متابعة';
+
+  @override
+  String get paywall_restore => 'استعادة المشتريات';
+
+  @override
+  String get paywall_terms => 'الشروط';
+
+  @override
+  String get paywall_privacy => 'الخصوصية';
+
+  @override
+  String get paywall_renewNote =>
+      'تتجدّد الاشتراكات تلقائياً حتى تُلغيها. يمكنك الإدارة أو الإلغاء في أي وقت من إعدادات Apple ID.';
+
+  @override
+  String get paywall_restored => 'تمت استعادة اشتراكك.';
+
+  @override
+  String get paywall_nothingToRestore =>
+      'لا يوجد شراء سابق على حساب Apple هذا.';
+
+  @override
+  String get paywall_failed => 'تعذّر إتمام الشراء. حاول مرة أخرى.';
+
+  @override
+  String get paywall_unavailable => 'المتجر غير متاح حالياً. حاول لاحقاً.';
+
+  @override
+  String get paywall_thanks => 'كل شيء جاهز — شكراً لك!';
+
+  @override
+  String get premium_badge => 'بريميوم';
+
+  @override
+  String gate_scansLeft(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'بقي $n تحليلاً مجانياً هذا الأسبوع',
+      few: 'بقيت $n تحليلات مجانية هذا الأسبوع',
+      two: 'بقي تحليلان مجانيان هذا الأسبوع',
+      one: 'بقي تحليل مجاني واحد هذا الأسبوع',
+      zero: 'لم يتبقَّ تحليل مجاني هذا الأسبوع',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gate_scansExhausted_title =>
+      'استهلكت تحليلات هذا الأسبوع المجانية';
+
+  @override
+  String get gate_scansExhausted_body =>
+      'تتجدّد تحليلاتك الثلاثة المجانية يوم السبت. اشترك للحصول على تحليلات بلا حدود، أو سجّل هذه الوجبة من بنك الطعام — وهو مجاني دائماً.';
+
+  @override
+  String get gate_useFoodBank => 'سجّلها من بنك الطعام بدلاً من ذلك';
+
+  @override
+  String get gate_upgrade => 'اطّلع على بريميوم';
+
+  @override
+  String get gate_premiumFeature => 'ميزة بريميوم';
+
+  @override
+  String get gate_plansLocked_body =>
+      'الخطط الأسبوعية ومتابعة المخطط مقابل الفعلي ضمن بريميوم.';
+
+  @override
+  String get gate_suggestionsLocked_body =>
+      'استهلكت اقتراح هذا الأسبوع المجاني. اشترك للحصول على أفكار بلا حدود.';
+
+  @override
+  String get settings_subscription => 'الاشتراك';
+
+  @override
+  String get settings_manageSubscription => 'إدارة الاشتراك';
+
+  @override
+  String get settings_grandfathered =>
+      'شكراً لشرائك الطيبات مبكراً — لديك بريميوم مدى الحياة.';
+
+  @override
   String get settings_title => 'الإعدادات';
 
   @override

@@ -17,6 +17,19 @@ class AppConfig {
   ///    وبسرّ JWT مولّد من المفتاح.
   static const bool appleSignInEnabled = true;
 
+  /// مفتاح RevenueCat العام. آمن للالتزام في المستودع مثل مفتاح Supabase
+  /// المنشور: مفاتيح SDK العامة تُشحن داخل كل نسخة من التطبيق ويمكن لأي أحد
+  /// استخراجها، وهي لا تمنح إلا ما يمنحه التطبيق نفسه. الأسرار الحقيقية
+  /// (خطّاف RevenueCat، مفتاح الخدمة) تبقى في أسرار Supabase.
+  ///
+  /// ⚠️ القيمة الافتراضية مفتاح **متجر اختباري** (بادئة test_) — يصلح للتجربة
+  /// فقط ولا يجري مشتريات حقيقية. قبل النشر مرّر مفتاح المنصّة الحقيقي:
+  ///   flutter build ipa --dart-define=REVENUECAT_KEY=appl_xxxxxxxx
+  static const String revenueCatApiKey = String.fromEnvironment(
+    'REVENUECAT_KEY',
+    defaultValue: 'test_wlFYlUCCChXvOXzsSUwitOdcWLt',
+  );
+
   /// Sentry DSN — supplied at build time via:
   ///   flutter run --dart-define=SENTRY_DSN=https://...@o....ingest.de.sentry.io/...
   /// Empty by default so unconfigured builds don't try to send anything.

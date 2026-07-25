@@ -9,8 +9,12 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/analyze_service.dart';
 import '../../services/app_messages.dart';
+import '../../services/entitlement.dart';
 import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/subscription_service.dart';
+import '../food_bank/food_bank_screen.dart';
+import '../paywall/paywall_screen.dart';
 import '../../theme/theme.dart';
 import '../../widgets/primary_button.dart';
 import 'result_screen.dart';
@@ -31,8 +35,28 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Uint8List? _preview;
   String? _error;
 
+  /// عدد التحليلات المتبقية للمستخدم المجاني هذا الأسبوع (null = بلا حدود).
+  /// الخادم هو المرجع النهائي؛ هذا لعرض العدّاد ومنع رحلة ضائعة فقط.
+  int? _remaining(BuildContext context, List<DateTime> scanTimes) =>
+      scansRemainingThisWeek(
+        tier: context.read<SubscriptionService>().tier,
+        scanTimes: scanTimes,
+        now: DateTime.now(),
+      );
+
   Future<void> _pick(ImageSource source) async {
     final l = AppLocalizations.of(context)!;
+    // بوابة لطيفة: لا نرسل الطلب أصلاً إن نفد الرصيد، ونقترح بنك الطعام.
+    final repo = context.read<MealRepository>();
+    final aiScans = (await repo.recentCaptureTimes())
+        .take(200)
+        .toList(growable: false);
+    if (!mounted) return;
+    final left = _remaining(context, aiScans);
+    if (!canScan(remaining: left)) {
+      await _showExhaustedSheet();
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -166,6 +190,87 @@ class _CaptureScreenState extends State<CaptureScreen> {
         ),
       ],
     );
+  }
+
+  /// تُعرض حين ينفد الرصيد الأسبوعي: لا طريق مسدود — إمّا الاشتراك أو
+  /// تسجيل الوجبة من بنك الطعام (مجاني دائماً).
+  Future<void> _showExhaustedSheet() async {
+    final l = AppLocalizations.of(context)!;
+    await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: TColors.background,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.lock_clock, color: TColors.gold),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l.gate_scansExhausted_title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 17),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l.gate_scansExhausted_body,
+                style: const TextStyle(
+                  color: TColors.textSecondary,
+                  height: 1.6,
+                  fontSize: 13.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(ctx).pop('upgrade'),
+                  icon: const Icon(Icons.workspace_premium),
+                  label: Text(l.gate_upgrade),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: TColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(ctx).pop('bank'),
+                  icon: const Icon(Icons.restaurant_menu),
+                  label: Text(l.gate_useFoodBank),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((choice) async {
+      if (!mounted || choice == null) return;
+      if (choice == 'upgrade') {
+        await showPaywall(context);
+      } else if (choice == 'bank') {
+        if (!mounted) return;
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const FoodBankScreen()),
+        );
+      }
+    });
   }
 
   Widget _idleView(AppLocalizations l) {

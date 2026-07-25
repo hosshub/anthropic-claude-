@@ -21,6 +21,7 @@ import 'services/notification_service.dart';
 import 'services/nutrition_goal_service.dart';
 import 'services/onboarding_service.dart';
 import 'services/profile_service.dart';
+import 'services/subscription_service.dart';
 import 'theme/theme.dart';
 
 // Sentry was removed from v1.0.2's dependency tree because sentry_flutter
@@ -95,6 +96,9 @@ class TayyibatApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PlanRepository()),
         ChangeNotifierProvider(create: (_) => ProfileService()),
         ChangeNotifierProvider(create: (_) => HealthService()),
+        ChangeNotifierProvider(
+          create: (_) => SubscriptionService()..initialize(),
+        ),
         ChangeNotifierProvider(create: (_) => FastingRepository()),
         ChangeNotifierProvider(
           create: (_) => NotificationService()..initialize(),

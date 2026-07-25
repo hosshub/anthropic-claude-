@@ -1328,6 +1328,222 @@ abstract class AppLocalizations {
   /// **'لم يُمنح الإذن. فعّله من تطبيق الصحة.'**
   String get settings_health_denied;
 
+  /// No description provided for @paywall_title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطيبات بريميوم'**
+  String get paywall_title;
+
+  /// No description provided for @paywall_subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحليل وجبات بلا حدود، وخطط أسبوعية، واقتراحات أكثر. وكل ما عدا ذلك يبقى مجانياً.'**
+  String get paywall_subtitle;
+
+  /// No description provided for @paywall_feature_scans.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحليل وجبات بالذكاء الاصطناعي بلا حدود'**
+  String get paywall_feature_scans;
+
+  /// No description provided for @paywall_feature_suggestions.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراحات وجبات بلا حدود مع التصفية بنوع الوجبة'**
+  String get paywall_feature_suggestions;
+
+  /// No description provided for @paywall_feature_plans.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطط أسبوعية مع متابعة المخطط مقابل الفعلي'**
+  String get paywall_feature_plans;
+
+  /// No description provided for @paywall_feature_free.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنك الطعام والدليل الكامل والسجل وتطبيق الصحة تبقى مجانية — دائماً'**
+  String get paywall_feature_free;
+
+  /// No description provided for @paywall_monthly.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهري'**
+  String get paywall_monthly;
+
+  /// No description provided for @paywall_annual.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنوي'**
+  String get paywall_annual;
+
+  /// No description provided for @paywall_lifetime.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدى الحياة'**
+  String get paywall_lifetime;
+
+  /// No description provided for @paywall_bestValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأفضل قيمة'**
+  String get paywall_bestValue;
+
+  /// No description provided for @paywall_freeTrial.
+  ///
+  /// In ar, this message translates to:
+  /// **'٧ أيام مجاناً ثم {price}'**
+  String paywall_freeTrial(String price);
+
+  /// No description provided for @paywall_perMonth.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} / شهرياً'**
+  String paywall_perMonth(String price);
+
+  /// No description provided for @paywall_perYear.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} / سنوياً'**
+  String paywall_perYear(String price);
+
+  /// No description provided for @paywall_oneTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} دفعة واحدة'**
+  String paywall_oneTime(String price);
+
+  /// No description provided for @paywall_subscribe.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get paywall_subscribe;
+
+  /// No description provided for @paywall_restore.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة المشتريات'**
+  String get paywall_restore;
+
+  /// No description provided for @paywall_terms.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشروط'**
+  String get paywall_terms;
+
+  /// No description provided for @paywall_privacy.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخصوصية'**
+  String get paywall_privacy;
+
+  /// No description provided for @paywall_renewNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتجدّد الاشتراكات تلقائياً حتى تُلغيها. يمكنك الإدارة أو الإلغاء في أي وقت من إعدادات Apple ID.'**
+  String get paywall_renewNote;
+
+  /// No description provided for @paywall_restored.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت استعادة اشتراكك.'**
+  String get paywall_restored;
+
+  /// No description provided for @paywall_nothingToRestore.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد شراء سابق على حساب Apple هذا.'**
+  String get paywall_nothingToRestore;
+
+  /// No description provided for @paywall_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إتمام الشراء. حاول مرة أخرى.'**
+  String get paywall_failed;
+
+  /// No description provided for @paywall_unavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتجر غير متاح حالياً. حاول لاحقاً.'**
+  String get paywall_unavailable;
+
+  /// No description provided for @paywall_thanks.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل شيء جاهز — شكراً لك!'**
+  String get paywall_thanks;
+
+  /// No description provided for @premium_badge.
+  ///
+  /// In ar, this message translates to:
+  /// **'بريميوم'**
+  String get premium_badge;
+
+  /// No description provided for @gate_scansLeft.
+  ///
+  /// In ar, this message translates to:
+  /// **'{n, plural, =0{لم يتبقَّ تحليل مجاني هذا الأسبوع} =1{بقي تحليل مجاني واحد هذا الأسبوع} =2{بقي تحليلان مجانيان هذا الأسبوع} few{بقيت {n} تحليلات مجانية هذا الأسبوع} other{بقي {n} تحليلاً مجانياً هذا الأسبوع}}'**
+  String gate_scansLeft(num n);
+
+  /// No description provided for @gate_scansExhausted_title.
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلكت تحليلات هذا الأسبوع المجانية'**
+  String get gate_scansExhausted_title;
+
+  /// No description provided for @gate_scansExhausted_body.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتجدّد تحليلاتك الثلاثة المجانية يوم السبت. اشترك للحصول على تحليلات بلا حدود، أو سجّل هذه الوجبة من بنك الطعام — وهو مجاني دائماً.'**
+  String get gate_scansExhausted_body;
+
+  /// No description provided for @gate_useFoodBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّلها من بنك الطعام بدلاً من ذلك'**
+  String get gate_useFoodBank;
+
+  /// No description provided for @gate_upgrade.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطّلع على بريميوم'**
+  String get gate_upgrade;
+
+  /// No description provided for @gate_premiumFeature.
+  ///
+  /// In ar, this message translates to:
+  /// **'ميزة بريميوم'**
+  String get gate_premiumFeature;
+
+  /// No description provided for @gate_plansLocked_body.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخطط الأسبوعية ومتابعة المخطط مقابل الفعلي ضمن بريميوم.'**
+  String get gate_plansLocked_body;
+
+  /// No description provided for @gate_suggestionsLocked_body.
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلكت اقتراح هذا الأسبوع المجاني. اشترك للحصول على أفكار بلا حدود.'**
+  String get gate_suggestionsLocked_body;
+
+  /// No description provided for @settings_subscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاشتراك'**
+  String get settings_subscription;
+
+  /// No description provided for @settings_manageSubscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة الاشتراك'**
+  String get settings_manageSubscription;
+
+  /// No description provided for @settings_grandfathered.
+  ///
+  /// In ar, this message translates to:
+  /// **'شكراً لشرائك الطيبات مبكراً — لديك بريميوم مدى الحياة.'**
+  String get settings_grandfathered;
+
   /// No description provided for @settings_title.
   ///
   /// In ar, this message translates to:

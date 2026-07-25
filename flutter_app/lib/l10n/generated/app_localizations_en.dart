@@ -696,6 +696,144 @@ class AppLocalizationsEn extends AppLocalizations {
       'Permission not granted. Enable it in the Health app.';
 
   @override
+  String get paywall_title => 'Tayyibat Premium';
+
+  @override
+  String get paywall_subtitle =>
+      'Unlimited AI meal analysis, weekly plans, and more suggestions. Everything else stays free.';
+
+  @override
+  String get paywall_feature_scans => 'Unlimited AI meal analyses';
+
+  @override
+  String get paywall_feature_suggestions =>
+      'Unlimited meal suggestions, filtered by meal type';
+
+  @override
+  String get paywall_feature_plans =>
+      'Weekly meal plans with planned-vs-actual tracking';
+
+  @override
+  String get paywall_feature_free =>
+      'The food bank, the full guide, history and Apple Health stay free — always';
+
+  @override
+  String get paywall_monthly => 'Monthly';
+
+  @override
+  String get paywall_annual => 'Yearly';
+
+  @override
+  String get paywall_lifetime => 'Lifetime';
+
+  @override
+  String get paywall_bestValue => 'Best value';
+
+  @override
+  String paywall_freeTrial(String price) {
+    return '7 days free, then $price';
+  }
+
+  @override
+  String paywall_perMonth(String price) {
+    return '$price / month';
+  }
+
+  @override
+  String paywall_perYear(String price) {
+    return '$price / year';
+  }
+
+  @override
+  String paywall_oneTime(String price) {
+    return '$price once';
+  }
+
+  @override
+  String get paywall_subscribe => 'Continue';
+
+  @override
+  String get paywall_restore => 'Restore purchases';
+
+  @override
+  String get paywall_terms => 'Terms';
+
+  @override
+  String get paywall_privacy => 'Privacy';
+
+  @override
+  String get paywall_renewNote =>
+      'Subscriptions renew automatically until cancelled. Manage or cancel anytime in your Apple ID settings.';
+
+  @override
+  String get paywall_restored => 'Your purchase has been restored.';
+
+  @override
+  String get paywall_nothingToRestore =>
+      'No previous purchase found for this Apple ID.';
+
+  @override
+  String get paywall_failed =>
+      'Purchase could not be completed. Please try again.';
+
+  @override
+  String get paywall_unavailable =>
+      'The store is unavailable right now. Please try again later.';
+
+  @override
+  String get paywall_thanks => 'You\'re all set — thank you!';
+
+  @override
+  String get premium_badge => 'Premium';
+
+  @override
+  String gate_scansLeft(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n free analyses left this week',
+      one: '1 free analysis left this week',
+      zero: 'No free analyses left this week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gate_scansExhausted_title =>
+      'You\'ve used this week\'s free analyses';
+
+  @override
+  String get gate_scansExhausted_body =>
+      'Your 3 free analyses reset on Saturday. Subscribe for unlimited analyses, or log this meal from the food bank — that\'s always free.';
+
+  @override
+  String get gate_useFoodBank => 'Log from the food bank instead';
+
+  @override
+  String get gate_upgrade => 'See Premium';
+
+  @override
+  String get gate_premiumFeature => 'A Premium feature';
+
+  @override
+  String get gate_plansLocked_body =>
+      'Weekly plans and planned-vs-actual tracking are part of Premium.';
+
+  @override
+  String get gate_suggestionsLocked_body =>
+      'You\'ve used this week\'s free suggestion. Subscribe for unlimited ideas.';
+
+  @override
+  String get settings_subscription => 'Subscription';
+
+  @override
+  String get settings_manageSubscription => 'Manage subscription';
+
+  @override
+  String get settings_grandfathered =>
+      'Thank you for buying Tayyibat early — you have Premium for life.';
+
+  @override
   String get settings_title => 'Settings';
 
   @override

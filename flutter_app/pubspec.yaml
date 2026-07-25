@@ -62,6 +62,12 @@ dependencies:
   # قراءة الخطوات والسعرات المحروقة من Apple Health / Health Connect
   health: ^13.3.1
 
+  # الاشتراكات والمشتريات داخل التطبيق (RevenueCat)
+  purchases_flutter: ^8.4.0
+
+  # فتح روابط الشروط والخصوصية من شاشة الاشتراك
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
