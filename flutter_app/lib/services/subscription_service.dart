@@ -20,19 +20,41 @@ class SubscriptionService extends ChangeNotifier {
   static const String entitlementId = 'premium';
   static const String _kLastSuggestionAt = 'free_last_suggestion_at';
 
+  /// متى أُنشئ حساب المستخدم الحالي. حاقن حتى تستطيع الاختبارات محاكاة
+  /// الدخول والخروج بلا Supabase.
+  final DateTime? Function() _accountCreatedAt;
+
   StreamSubscription<AuthState>? _authSub;
   bool _ready = false;
   bool _hasActivePurchase = false;
-  bool _grandfathered = false;
   Offerings? _offerings;
 
+  /// الاشتراك في تغيّر الجلسة يتم في المُنشئ لا داخل initialize: تسجيل الخروج
+  /// يجب أن يُسقط البريميوم حتى لو لم يُهيّأ RevenueCat أصلاً أو فشل تهيئته.
+  SubscriptionService({DateTime? Function()? accountCreatedAt})
+      : _accountCreatedAt = accountCreatedAt ?? _currentUserCreatedAt {
+    try {
+      _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+        syncIdentity();
+      });
+    } catch (_) {
+      // Supabase غير مهيّأ (الاختبارات) — الحساب يُقرأ عند الطلب على أي حال.
+    }
+  }
+
   bool get isReady => _ready;
-  bool get isGrandfatheredUser => _grandfathered;
   Offerings? get offerings => _offerings;
+
+  /// يُحسب عند القراءة ولا يُخزَّن: أي قيمة محفوظة تخصّ جلسة ربما انتهت.
+  /// هذه الخدمة تُنشأ مرة واحدة في جذر التطبيق وتعيش عبر كل دخول وخروج.
+  bool get isGrandfatheredUser => isGrandfathered(
+        accountCreatedAt: _accountCreatedAt(),
+        paidEraCutoff: paidEraCutoffDefault,
+      );
 
   Tier get tier => resolveTier(
         hasActivePurchase: _hasActivePurchase,
-        grandfathered: _grandfathered,
+        grandfathered: isGrandfatheredUser,
       );
 
   bool get isPremium => tier == Tier.premium;
@@ -41,7 +63,6 @@ class SubscriptionService extends ChangeNotifier {
   bool get storeAvailable => AppConfig.revenueCatApiKey.isNotEmpty;
 
   Future<void> initialize() async {
-    _resolveGrandfathered();
     if (!storeAvailable) {
       _ready = true;
       notifyListeners();
@@ -57,12 +78,6 @@ class SubscriptionService extends ChangeNotifier {
       final uid = _supabaseUserId();
       if (uid != null) await Purchases.logIn(uid);
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfo);
-      // RevenueCat is configured at launch, but the user may sign in (or out,
-      // or switch accounts) later. Without re-identifying, purchases would be
-      // attributed to the wrong id and the webhook would update the wrong row.
-      _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
-        syncIdentity();
-      });
       await refresh();
     } catch (_) {
       // متجر غير متاح (محاكي، شبكة، إعداد ناقص) — يبقى المستخدم مجانياً.
@@ -73,16 +88,13 @@ class SubscriptionService extends ChangeNotifier {
 
   /// المشترون الأوائل: الحساب أُنشئ قبل التحوّل ⇒ بريميوم مدى الحياة.
   /// الخادم يتحقق من الأمر نفسه في effective_tier، فهذا للعرض فقط.
-  void _resolveGrandfathered() {
-    DateTime? createdAt;
+  static DateTime? _currentUserCreatedAt() {
     try {
       final raw = Supabase.instance.client.auth.currentUser?.createdAt;
-      if (raw != null) createdAt = DateTime.tryParse(raw)?.toUtc();
-    } catch (_) {}
-    _grandfathered = isGrandfathered(
-      accountCreatedAt: createdAt,
-      paidEraCutoff: paidEraCutoffDefault,
-    );
+      return raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _supabaseUserId() {
@@ -100,7 +112,6 @@ class SubscriptionService extends ChangeNotifier {
 
   /// يعيد قراءة حالة العميل والعروض من RevenueCat.
   Future<void> refresh() async {
-    _resolveGrandfathered();
     if (!storeAvailable) {
       notifyListeners();
       return;
@@ -193,21 +204,24 @@ class SubscriptionService extends ChangeNotifier {
 
   /// يُستدعى بعد تسجيل الدخول/الخروج حتى تتبع هوية RevenueCat المستخدم.
   Future<void> syncIdentity() async {
-    _resolveGrandfathered();
     if (!storeAvailable) {
       notifyListeners();
       return;
     }
-    try {
-      final uid = _supabaseUserId();
-      if (uid == null) {
+    final uid = _supabaseUserId();
+    if (uid == null) {
+      // اسقط الشراء قبل النداء لا بعده: لو رمى logOut استثناءً فالمستخدم
+      // الخارج يبقى بلا امتيازات بدل أن يحتفظ بها.
+      _hasActivePurchase = false;
+      try {
         await Purchases.logOut();
-        _hasActivePurchase = false;
-      } else {
+      } catch (_) {}
+    } else {
+      try {
         await Purchases.logIn(uid);
         await refresh();
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
     notifyListeners();
   }
 }
