@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/program_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../../widgets/primary_button.dart';
@@ -32,6 +33,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Future<void> _loadStartedAt() async {
     final prefs = await SharedPreferences.getInstance();
     final ms = prefs.getInt(_prefsKey);
+    if (!mounted) return;
     setState(() {
       _startedAt = ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
       _loading = false;
@@ -43,6 +45,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     await prefs.setInt(_prefsKey, now.millisecondsSinceEpoch);
+    if (!mounted) return;
     setState(() {
       _startedAt = now;
       _selectedDay = 1;
@@ -52,6 +55,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Future<void> _stop() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefsKey);
+    if (!mounted) return;
     setState(() {
       _startedAt = null;
       _selectedDay = 1;
@@ -60,62 +64,65 @@ class _ProgramScreenState extends State<ProgramScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('برنامج ١٥ يوم')),
+      appBar: AppBar(title: Text(l.guide_section_program15)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _introCard,
+                _introCard(context),
                 const SizedBox(height: 12),
-                ..._bodyForStatus(_status),
+                ..._bodyForStatus(_status, context),
               ],
             ),
     );
   }
 
-  // ---- Common parts ----
-
-  Widget get _introCard => CardContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: const [
-                Icon(Icons.calendar_month, color: TColors.primary),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    ProgramData.titleAr,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: TColors.primary,
-                    ),
+  Widget _introCard(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month, color: TColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ProgramData.title(locale),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: TColors.primary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              ProgramData.philosophyAr,
-              style: TextStyle(
-                color: TColors.textSecondary,
-                height: 1.55,
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            ProgramData.philosophy(locale),
+            style: const TextStyle(
+              color: TColors.textSecondary,
+              height: 1.55,
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
-  List<Widget> _bodyForStatus(ProgramStatus status) {
+  List<Widget> _bodyForStatus(ProgramStatus status, BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (status is NotStarted) {
       return [
-        _phasesPreview,
+        _phasesPreview(context),
         const SizedBox(height: 12),
         PrimaryButton(
-          label: 'ابدأ البرنامج اليوم',
+          label: l.program_start,
           icon: Icons.play_arrow,
           onPressed: _start,
         ),
@@ -124,21 +131,22 @@ class _ProgramScreenState extends State<ProgramScreen> {
     if (status is InProgress) {
       final currentDay = status.day;
       return [
-        _progressHeader(currentDay),
+        _progressHeader(currentDay, context),
         const SizedBox(height: 10),
-        _phasePills(currentDay),
+        _phasePills(currentDay, context),
         const SizedBox(height: 12),
-        _daySelector(currentDay),
+        _daySelector(currentDay, context),
         const SizedBox(height: 12),
         _dayDetailCard(
           ProgramData.day(_selectedDay)!,
           _selectedDay == currentDay,
+          context,
         ),
         const SizedBox(height: 14),
         OutlinedButton.icon(
           onPressed: _stop,
           icon: const Icon(Icons.stop),
-          label: const Text('أوقف البرنامج'),
+          label: Text(l.program_stop),
           style: OutlinedButton.styleFrom(
             foregroundColor: TColors.khabith,
             minimumSize: const Size.fromHeight(46),
@@ -147,98 +155,99 @@ class _ProgramScreenState extends State<ProgramScreen> {
         ),
       ];
     }
-    // completed
     return [
-      _completionCard,
+      _completionCard(context),
       const SizedBox(height: 12),
       PrimaryButton(
-        label: 'ابدأ من جديد',
+        label: l.program_restart,
         icon: Icons.replay,
         onPressed: _start,
       ),
     ];
   }
 
-  // ---- Not started: phases preview ----
-
-  Widget get _phasesPreview => CardContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'مراحل الرحلة',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: TColors.primary,
-                fontSize: 16,
+  Widget _phasesPreview(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.program_phases_title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: TColors.primary,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (final phase in ProgramData.phases) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: phase.color,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      localizedNumeral(phase.number, locale),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          phase.title(locale),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          phase.daysRange(locale),
+                          style: const TextStyle(
+                            color: TColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          phase.focus(locale),
+                          style: const TextStyle(
+                            color: TColors.textSecondary,
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            for (final phase in ProgramData.phases) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: phase.color,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        arabicNumeral(phase.number),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 17,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            phase.titleAr,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                          Text(
-                            phase.daysRangeAr,
-                            style: const TextStyle(
-                              color: TColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            phase.focusAr,
-                            style: const TextStyle(
-                              color: TColors.textSecondary,
-                              fontSize: 12,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 
-  // ---- In-progress: header + selector + day card ----
-
-  Widget _progressHeader(int currentDay) {
+  Widget _progressHeader(int currentDay, BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final day = ProgramData.day(currentDay);
     return CardContainer(
       child: Row(
@@ -255,13 +264,13 @@ class _ProgramScreenState extends State<ProgramScreen> {
                   child: CircularProgressIndicator(
                     value: currentDay / 15,
                     strokeWidth: 8,
-                    backgroundColor: TColors.primary.withOpacity(0.15),
+                    backgroundColor: TColors.primary.withValues(alpha: 0.15),
                     color: TColors.primary,
                     strokeCap: StrokeCap.round,
                   ),
                 ),
                 Text(
-                  '${arabicNumeral(currentDay)}/${arabicNumeral(15)}',
+                  '${localizedNumeral(currentDay, locale)}/${localizedNumeral(15, locale)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: TColors.primary,
@@ -277,7 +286,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'اليوم ${arabicNumeral(currentDay)}',
+                  l.program_dayHeader(localizedNumeral(currentDay, locale)),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 17,
@@ -286,7 +295,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
                 ),
                 if (day != null)
                   Text(
-                    day.focusAr,
+                    day.focus(locale),
                     style: const TextStyle(
                       color: TColors.textSecondary,
                       fontSize: 14,
@@ -301,14 +310,14 @@ class _ProgramScreenState extends State<ProgramScreen> {
     );
   }
 
-  Widget _phasePills(int currentDay) {
+  Widget _phasePills(int currentDay, BuildContext context) {
     return Row(
       children: [
         for (final phase in ProgramData.phases) ...[
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: _phasePill(phase, phase.contains(currentDay)),
+              child: _phasePill(phase, phase.contains(currentDay), context),
             ),
           ),
         ],
@@ -316,11 +325,12 @@ class _ProgramScreenState extends State<ProgramScreen> {
     );
   }
 
-  Widget _phasePill(ProgramPhase phase, bool active) {
+  Widget _phasePill(ProgramPhase phase, bool active, BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: active ? phase.color.withOpacity(0.20) : Colors.transparent,
+        color: active ? phase.color.withValues(alpha: 0.20) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -332,7 +342,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            phase.titleAr,
+            phase.title(locale),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -347,7 +357,8 @@ class _ProgramScreenState extends State<ProgramScreen> {
     );
   }
 
-  Widget _daySelector(int currentDay) {
+  Widget _daySelector(int currentDay, BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
     return SizedBox(
       height: 52,
       child: ListView.builder(
@@ -361,9 +372,9 @@ class _ProgramScreenState extends State<ProgramScreen> {
           final bg = selected
               ? TColors.primary
               : isCurrent
-                  ? TColors.gold.withOpacity(0.18)
+                  ? TColors.gold.withValues(alpha: 0.18)
                   : completed
-                      ? TColors.primary.withOpacity(0.15)
+                      ? TColors.primary.withValues(alpha: 0.15)
                       : TColors.surface;
           final fg = selected ? Colors.white : TColors.textPrimary;
           return Padding(
@@ -382,7 +393,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
                       : null,
                 ),
                 child: Text(
-                  arabicNumeral(d),
+                  localizedNumeral(d, locale),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: fg,
@@ -397,7 +408,13 @@ class _ProgramScreenState extends State<ProgramScreen> {
     );
   }
 
-  Widget _dayDetailCard(ProgramDay detail, bool isCurrent) {
+  Widget _dayDetailCard(
+    ProgramDay detail,
+    bool isCurrent,
+    BuildContext context,
+  ) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final completed = detail.day < (_status is InProgress
         ? (_status as InProgress).day
         : 0);
@@ -408,7 +425,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
           Row(
             children: [
               Text(
-                'اليوم ${arabicNumeral(detail.day)}',
+                l.program_dayHeader(localizedNumeral(detail.day, locale)),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 17,
@@ -417,14 +434,14 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(width: 8),
               if (isCurrent)
-                _badge('اليوم الحالي', TColors.gold)
+                _badge(l.program_currentDay, TColors.gold)
               else if (completed)
-                _badge('اكتمل', TColors.primary),
+                _badge(l.program_completed_badge, TColors.primary),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            detail.focusAr,
+            detail.focus(locale),
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -435,22 +452,22 @@ class _ProgramScreenState extends State<ProgramScreen> {
             child: Divider(height: 1),
           ),
           _block(
-            label: 'وجبة مقترحة',
-            text: detail.exampleMealAr,
+            label: l.program_suggestedMeal,
+            text: detail.exampleMeal(locale),
             color: TColors.primary,
             icon: Icons.restaurant,
           ),
           const SizedBox(height: 10),
           _block(
-            label: 'نصيحة اليوم',
-            text: detail.tipAr,
+            label: l.program_dailyTip,
+            text: detail.tip(locale),
             color: TColors.gold,
             icon: Icons.lightbulb_outline,
           ),
           if (isCurrent) ...[
             const SizedBox(height: 12),
             PrimaryButton(
-              label: 'صوّر وجبة اليوم',
+              label: l.program_captureToday,
               icon: Icons.camera_alt,
               onPressed: () {
                 Navigator.of(context).push(
@@ -467,7 +484,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
   Widget _badge(String text, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.18),
+          color: color.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(40),
         ),
         child: Text(
@@ -509,35 +526,36 @@ class _ProgramScreenState extends State<ProgramScreen> {
     );
   }
 
-  // ---- Completed ----
-
-  Widget get _completionCard => CardContainer(
-        child: Column(
-          children: [
-            const Icon(
-              Icons.verified,
-              size: 56,
-              color: TColors.primary,
+  Widget _completionCard(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return CardContainer(
+      child: Column(
+        children: [
+          const Icon(
+            Icons.verified,
+            size: 56,
+            color: TColors.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l.program_completed_title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: TColors.textPrimary,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'أكملت البرنامج 🎉',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: TColors.textPrimary,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.program_completed_body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: TColors.textSecondary,
+              height: 1.6,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'اعرف الآن أي وجبات تعطيك راحة وشبعاً بدون ثقل. كرّر أفضل ٥ منها كقاعدة لك.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: TColors.textSecondary,
-                height: 1.6,
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
@@ -67,37 +69,26 @@ class _GuideWeeklyPrepScreenState extends State<GuideWeeklyPrepScreen> {
     await prefs.remove(_weekKey);
   }
 
-  String get _weekLabel {
-    const months = [
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return 'أسبوع ${_weekStart.day} ${months[_weekStart.month - 1]}';
+  String _weekLabel(AppLocalizations l, String locale) {
+    final monthName = DateFormat.MMMM(locale).format(_weekStart);
+    return l.guide_weeklyPrep_weekOf(_weekStart.day, monthName);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final total = GuideData.weeklyPrep.length;
     final doneCount = _done.length;
     final progress = total == 0 ? 0.0 : doneCount / total;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التحضير الأسبوعي'),
+        title: Text(l.guide_section_weeklyPrep),
         actions: [
           if (doneCount > 0)
             IconButton(
-              tooltip: 'تصفير الأسبوع',
+              tooltip: l.guide_weeklyPrep_reset,
               onPressed: _resetWeek,
               icon: const Icon(Icons.restart_alt),
             ),
@@ -118,7 +109,7 @@ class _GuideWeeklyPrepScreenState extends State<GuideWeeklyPrepScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              _weekLabel,
+                              _weekLabel(l, locale),
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -142,17 +133,16 @@ class _GuideWeeklyPrepScreenState extends State<GuideWeeklyPrepScreen> {
                           value: progress,
                           minHeight: 6,
                           backgroundColor:
-                              TColors.primary.withOpacity(0.12),
+                              TColors.primary.withValues(alpha: 0.12),
                           valueColor: const AlwaysStoppedAnimation(
                             TColors.primary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'علّم كل مهمة بعد إنجازها. القائمة تتصفّر تلقائياً '
-                        'مع بداية كل سبت.',
-                        style: TextStyle(
+                      Text(
+                        l.guide_weeklyPrep_hint,
+                        style: const TextStyle(
                           color: TColors.textSecondary,
                           fontSize: 12,
                           height: 1.5,
@@ -188,6 +178,8 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Material(
       color: TColors.surface,
       borderRadius: BorderRadius.circular(18),
@@ -205,7 +197,7 @@ class _TaskRow extends StatelessWidget {
                     : Icons.radio_button_unchecked,
                 color: done
                     ? TColors.primary
-                    : TColors.primary.withOpacity(0.7),
+                    : TColors.primary.withValues(alpha: 0.7),
                 size: 26,
               ),
               const SizedBox(width: 12),
@@ -214,7 +206,7 @@ class _TaskRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      task.titleAr,
+                      task.title(locale),
                       style: TextStyle(
                         fontSize: 15,
                         height: 1.5,
@@ -234,20 +226,23 @@ class _TaskRow extends StatelessWidget {
                         if (task.estimatedMinutes != null)
                           _meta(
                             Icons.timer_outlined,
-                            '${task.estimatedMinutes} د',
+                            l.guide_weeklyPrep_minutes(task.estimatedMinutes!),
                           ),
-                        _meta(Icons.ac_unit, 'صالح ${task.validDays} يوم'),
+                        _meta(
+                          Icons.ac_unit,
+                          l.guide_weeklyPrep_validDays(task.validDays),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: TColors.primary.withOpacity(0.10),
+                            color: TColors.primary.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
-                            weeklyCategoryLabel(task.category),
+                            weeklyCategoryLabel(task.category, locale),
                             style: const TextStyle(
                               fontSize: 11,
                               color: TColors.primary,

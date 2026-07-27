@@ -2,11 +2,16 @@ import 'dart:io';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/enum_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../services/health_service.dart';
 import '../../models/analysis_result.dart';
 import '../../models/body_response.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
+import '../../util/format.dart';
 import '../../widgets/card_container.dart';
 import 'meal_detail_screen.dart';
 
@@ -88,7 +93,7 @@ class BodyIntelligenceSection extends StatelessWidget {
       case SleepImpact.negative:
         return TColors.khabith;
       case SleepImpact.unknown:
-        return TColors.textSecondary.withOpacity(0.5);
+        return TColors.textSecondary.withValues(alpha: 0.5);
     }
   }
 
@@ -124,17 +129,18 @@ class BodyIntelligenceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final responses = _responsesIn30;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: const [
-            Icon(Icons.favorite, color: TColors.primary),
-            SizedBox(width: 8),
+          children: [
+            const Icon(Icons.favorite, color: TColors.primary),
+            const SizedBox(width: 8),
             Text(
-              'كيف يتجاوب جسمك؟',
-              style: TextStyle(
+              l.intel_title,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: TColors.textPrimary,
@@ -145,64 +151,67 @@ class BodyIntelligenceSection extends StatelessWidget {
         const SizedBox(height: 12),
         _ScoreTrendChart(meals: meals),
         const SizedBox(height: 12),
-        _metricsCard,
+        _buildMetricsCard(l),
+        const _HealthWeightCard(),
         if (responses.isEmpty) ...[
           const SizedBox(height: 12),
-          _emptyResponsesCard,
+          _buildEmptyResponsesCard(l),
         ] else ...[
           if (_topComforting.isNotEmpty) ...[
             const SizedBox(height: 12),
             _mealsListCard(
               context: context,
-              title: 'وجبات أعطتك راحة وشبعاً',
+              title: l.intel_topComforting,
               icon: Icons.thumb_up,
               accent: TColors.primary,
               entries: _topComforting,
-              badgeFor: (m) => '${m.bodyResponse?.satisfyingFullness ?? 0} / ٥ شبع',
+              badgeFor: (m) =>
+                  l.intel_satietyBadge(m.bodyResponse?.satisfyingFullness ?? 0),
             ),
           ],
           if (_heaviest.isNotEmpty) ...[
             const SizedBox(height: 12),
             _mealsListCard(
               context: context,
-              title: 'وجبات أثقلت جسمك',
+              title: l.intel_heaviest,
               icon: Icons.warning_amber,
               accent: TColors.khabith,
               entries: _heaviest,
-              badgeFor: (m) => 'انتفاخ ${m.bodyResponse?.bloating ?? 0} / ٥',
+              badgeFor: (m) =>
+                  l.intel_bloatingBadge(m.bodyResponse?.bloating ?? 0),
             ),
           ],
           const SizedBox(height: 12),
-          _sleepDistributionCard,
+          _buildSleepDistributionCard(l),
         ],
         const SizedBox(height: 12),
-        _zoneDistributionCard,
+        _buildZoneDistributionCard(l),
       ],
     );
   }
 
   // ---- metrics ----
 
-  Widget get _metricsCard => CardContainer(
+  Widget _buildMetricsCard(AppLocalizations l) => CardContainer(
         child: IntrinsicHeight(
           child: Row(
             children: [
               _metricTile(
-                label: 'متوسط الشبع',
+                l: l,
+                label: l.intel_avgSatiety,
                 value: _avgSatisfaction == null
                     ? '—'
                     : _avgSatisfaction!.toStringAsFixed(1),
-                suffix: '/ ٥',
                 color: TColors.primary,
                 icon: Icons.restaurant,
               ),
               const VerticalDivider(width: 14),
               _metricTile(
-                label: 'معدّل الانتفاخ',
+                l: l,
+                label: l.intel_avgBloating,
                 value: _avgBloating == null
                     ? '—'
                     : _avgBloating!.toStringAsFixed(1),
-                suffix: '/ ٥',
                 color: _avgBloating == null
                     ? TColors.textSecondary
                     : _bloatingColor(_avgBloating!),
@@ -214,9 +223,9 @@ class BodyIntelligenceSection extends StatelessWidget {
       );
 
   Widget _metricTile({
+    required AppLocalizations l,
     required String label,
     required String value,
-    required String suffix,
     required Color color,
     required IconData icon,
   }) {
@@ -252,7 +261,7 @@ class BodyIntelligenceSection extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                suffix,
+                l.intel_outOf5,
                 style: const TextStyle(
                   color: TColors.textSecondary,
                   fontSize: 12,
@@ -260,9 +269,9 @@ class BodyIntelligenceSection extends StatelessWidget {
               ),
             ],
           ),
-          const Text(
-            'آخر ٣٠ يوماً',
-            style: TextStyle(
+          Text(
+            l.intel_last30days,
+            style: const TextStyle(
               color: TColors.textSecondary,
               fontSize: 11,
             ),
@@ -272,15 +281,16 @@ class BodyIntelligenceSection extends StatelessWidget {
     );
   }
 
-  Widget get _emptyResponsesCard => CardContainer(
+  Widget _buildEmptyResponsesCard(AppLocalizations l) => CardContainer(
         child: Row(
-          children: const [
-            Icon(Icons.info_outline, color: TColors.gold),
-            SizedBox(width: 10),
+          children: [
+            const Icon(Icons.info_outline, color: TColors.gold),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'ابدأ بتسجيل متابعة الجسم بعد وجباتك حتى يعرف التطبيق ما يناسبك ويظهر أنماطك هنا.',
-                style: TextStyle(color: TColors.textSecondary, height: 1.55),
+                l.intel_empty,
+                style: const TextStyle(
+                    color: TColors.textSecondary, height: 1.55),
               ),
             ),
           ],
@@ -344,7 +354,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            _shortDate(m.capturedAt),
+                            TFormat.dateTime(context, m.capturedAt),
                             style: const TextStyle(
                               color: TColors.textSecondary,
                               fontSize: 11,
@@ -359,7 +369,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.10),
+                        color: accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(40),
                       ),
                       child: Text(
@@ -412,7 +422,7 @@ class BodyIntelligenceSection extends StatelessWidget {
 
   // ---- sleep ----
 
-  Widget get _sleepDistributionCard {
+  Widget _buildSleepDistributionCard(AppLocalizations l) {
     final counts = _sleepCounts;
     final maxCount =
         counts.values.fold<int>(0, (a, b) => b > a ? b : a).clamp(1, 999);
@@ -421,12 +431,12 @@ class BodyIntelligenceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.nights_stay, color: TColors.primary, size: 18),
-              SizedBox(width: 6),
+            children: [
+              const Icon(Icons.nights_stay, color: TColors.primary, size: 18),
+              const SizedBox(width: 6),
               Text(
-                'تأثير الوجبات على نومك',
-                style: TextStyle(
+                l.intel_sleepTitle,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: TColors.textPrimary,
@@ -443,7 +453,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                   SizedBox(
                     width: 110,
                     child: Text(
-                      entry.key.labelAr,
+                      sleepImpactLabel(l, entry.key),
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
@@ -456,7 +466,7 @@ class BodyIntelligenceSection extends StatelessWidget {
                             Container(
                               height: 14,
                               decoration: BoxDecoration(
-                                color: TColors.textSecondary.withOpacity(0.08),
+                                color: TColors.textSecondary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(7),
                               ),
                             ),
@@ -496,18 +506,18 @@ class BodyIntelligenceSection extends StatelessWidget {
 
   // ---- zone distribution ----
 
-  Widget get _zoneDistributionCard {
+  Widget _buildZoneDistributionCard(AppLocalizations l) {
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.grid_view, color: TColors.primary, size: 18),
-              SizedBox(width: 6),
+            children: [
+              const Icon(Icons.grid_view, color: TColors.primary, size: 18),
+              const SizedBox(width: 6),
               Text(
-                'توزّع الإشارات في طبقك',
-                style: TextStyle(
+                l.intel_zoneShareTitle,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: TColors.textPrimary,
@@ -517,16 +527,21 @@ class BodyIntelligenceSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _zoneStackBar(
-              title: 'آخر ٧ أيام', shares: _zoneShareSince(_sevenDaysAgo)),
+              l: l,
+              title: l.intel_last7days,
+              shares: _zoneShareSince(_sevenDaysAgo)),
           const SizedBox(height: 10),
           _zoneStackBar(
-              title: 'آخر ٣٠ يوماً', shares: _zoneShareSince(_thirtyDaysAgo)),
+              l: l,
+              title: l.intel_last30days,
+              shares: _zoneShareSince(_thirtyDaysAgo)),
         ],
       ),
     );
   }
 
   Widget _zoneStackBar({
+    required AppLocalizations l,
     required String title,
     required Map<FoodZone, double> shares,
   }) {
@@ -541,9 +556,9 @@ class BodyIntelligenceSection extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         if (!hasData)
-          const Text(
-            'لا بيانات بعد',
-            style: TextStyle(color: TColors.textSecondary, fontSize: 12),
+          Text(
+            l.intel_noDataYet,
+            style: const TextStyle(color: TColors.textSecondary, fontSize: 12),
           )
         else ...[
           ClipRRect(
@@ -579,7 +594,10 @@ class BodyIntelligenceSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${entry.value.round()}٪ ${entry.key.labelAr}',
+                      l.intel_zonePercent(
+                        entry.value.round(),
+                        foodZoneLabel(l, entry.key),
+                      ),
                       style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 11,
@@ -594,11 +612,6 @@ class BodyIntelligenceSection extends StatelessWidget {
     );
   }
 
-  String _shortDate(DateTime dt) {
-    final l = dt.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${l.year}/${two(l.month)}/${two(l.day)} • ${two(l.hour)}:${two(l.minute)}';
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -634,6 +647,7 @@ class _ScoreTrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final series = _series();
     final spots = <FlSpot>[];
     for (var i = 0; i < series.length; i++) {
@@ -655,9 +669,9 @@ class _ScoreTrendChart extends StatelessWidget {
               const Icon(Icons.show_chart,
                   color: TColors.primary, size: 18),
               const SizedBox(width: 6),
-              const Text(
-                'منحنى الالتزام',
-                style: TextStyle(
+              Text(
+                l.intel_trendTitle,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: TColors.textPrimary,
@@ -671,11 +685,11 @@ class _ScoreTrendChart extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: lineColor.withOpacity(0.10),
+                    color: lineColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(40),
                   ),
                   child: Text(
-                    'متوسط ${avg.round()}٪',
+                    l.intel_trendAvg(avg.round()),
                     style: TextStyle(
                       color: lineColor,
                       fontWeight: FontWeight.w700,
@@ -686,9 +700,9 @@ class _ScoreTrendChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
-            'آخر ٣٠ يوماً — متوسط درجة وجبات كل يوم.',
-            style: TextStyle(
+          Text(
+            l.intel_trendSubtitle,
+            style: const TextStyle(
               color: TColors.textSecondary,
               fontSize: 11,
               height: 1.5,
@@ -698,10 +712,10 @@ class _ScoreTrendChart extends StatelessWidget {
           SizedBox(
             height: 160,
             child: !hasData
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'يلزم على الأقل وجبتان لرسم المنحنى.',
-                      style: TextStyle(
+                      l.intel_trendNeedMore,
+                      style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,
                       ),
@@ -718,7 +732,7 @@ class _ScoreTrendChart extends StatelessWidget {
                         drawVerticalLine: false,
                         horizontalInterval: 25,
                         getDrawingHorizontalLine: (_) => FlLine(
-                          color: TColors.textSecondary.withOpacity(0.10),
+                          color: TColors.textSecondary.withValues(alpha: 0.10),
                           strokeWidth: 1,
                         ),
                       ),
@@ -757,11 +771,11 @@ class _ScoreTrendChart extends StatelessWidget {
                             getTitlesWidget: (v, _) {
                               final daysAgo = (_days - 1 - v).toInt();
                               if (daysAgo == 0) {
-                                return const Padding(
-                                  padding: EdgeInsets.only(top: 4),
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
                                   child: Text(
-                                    'اليوم',
-                                    style: TextStyle(
+                                    l.intel_trendToday,
+                                    style: const TextStyle(
                                       color: TColors.textSecondary,
                                       fontSize: 10,
                                     ),
@@ -769,11 +783,11 @@ class _ScoreTrendChart extends StatelessWidget {
                                 );
                               }
                               if (daysAgo == 30) {
-                                return const Padding(
-                                  padding: EdgeInsets.only(top: 4),
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
                                   child: Text(
-                                    '٣٠ يوم',
-                                    style: TextStyle(
+                                    l.intel_trend30daysAgo,
+                                    style: const TextStyle(
                                       color: TColors.textSecondary,
                                       fontSize: 10,
                                     ),
@@ -791,7 +805,7 @@ class _ScoreTrendChart extends StatelessWidget {
                           getTooltipItems: (touched) => touched
                               .map(
                                 (s) => LineTooltipItem(
-                                  '${s.y.round()}٪',
+                                  l.intel_tooltipPercent(s.y.round()),
                                   const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -823,8 +837,8 @@ class _ScoreTrendChart extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                lineColor.withOpacity(0.25),
-                                lineColor.withOpacity(0),
+                                lineColor.withValues(alpha: 0.25),
+                                lineColor.withValues(alpha: 0),
                               ],
                             ),
                           ),
@@ -834,6 +848,77 @@ class _ScoreTrendChart extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+/// وزن المستخدم من Apple Health — عرض فقط، بلا تفسير أو توصية (التزاماً
+/// بقيود السلامة الطبية). يظهر فقط عند الربط ووجود قياس.
+class _HealthWeightCard extends StatelessWidget {
+  const _HealthWeightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final weight = context.watch<HealthService>().weightKg;
+    if (weight == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: TColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: TColors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.monitor_weight_outlined,
+                  color: TColors.primary, size: 21),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.health_weightTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l.health_weightSub,
+                    style: const TextStyle(
+                      color: TColors.textSecondary,
+                      fontSize: 11.5,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l.health_weightValue(weight.toStringAsFixed(1)),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: TColors.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

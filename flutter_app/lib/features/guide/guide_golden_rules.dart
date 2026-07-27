@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
-/// ٠٢ — القواعد الذهبية الست.
 class GuideGoldenRulesScreen extends StatelessWidget {
   const GuideGoldenRulesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Scaffold(
-      appBar: AppBar(title: const Text('القواعد الذهبية')),
+      appBar: AppBar(title: Text(l.guide_section_goldenRules)),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: GuideData.goldenRules.length,
@@ -26,14 +28,11 @@ class GuideGoldenRulesScreen extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: TColors.primary.withOpacity(0.12),
+                    color: TColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    rule.icon,
-                    color: TColors.primary,
-                  ),
+                  child: Icon(rule.icon, color: TColors.primary),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -53,7 +52,7 @@ class GuideGoldenRulesScreen extends StatelessWidget {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              rule.ruleAr,
+                              rule.rule(locale),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -65,7 +64,7 @@ class GuideGoldenRulesScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        rule.applicationAr,
+                        rule.application(locale),
                         style: const TextStyle(
                           color: TColors.textSecondary,
                           fontSize: 14,

@@ -8,6 +8,7 @@ import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/meal.dart';
 import '../../theme/theme.dart';
+import '../../util/format.dart';
 import 'body_intelligence_section.dart';
 import 'meal_detail_screen.dart';
 
@@ -23,11 +24,40 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   _HistoryView _view = _HistoryView.list;
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+  // Memoized like Today's — a rebuilt Future resets FutureBuilder to its
+  // spinner and would blow away search-field focus on every keystroke.
+  Future<List<Meal>>? _mealsFuture;
+  int _cachedRevision = -1;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Meal> _filtered(List<Meal> meals) {
+    // خفض الحالة يجعل البحث يعمل للمحتوى الإنجليزي أيضاً؛ العربية بلا حالة.
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return meals;
+    return [
+      for (final m in meals)
+        if (m.primaryLabel.toLowerCase().contains(q) ||
+            m.scoreLabelAr.toLowerCase().contains(q) ||
+            m.items.any((i) => i.nameAr.toLowerCase().contains(q)))
+          m,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<MealRepository>();
     final l = AppLocalizations.of(context)!;
+    if (_cachedRevision != repo.revision || _mealsFuture == null) {
+      _cachedRevision = repo.revision;
+      _mealsFuture = repo.loadAll();
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(l.tab_history),
@@ -55,17 +85,54 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
       ),
       body: FutureBuilder<List<Meal>>(
-        key: ValueKey(repo.hashCode),
-        future: repo.loadAll(),
+        future: _mealsFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           final meals = snap.data ?? const <Meal>[];
           if (meals.isEmpty) return _emptyState(context);
-          return _view == _HistoryView.list
-              ? _ListView(meals: meals)
-              : _CalendarView(meals: meals);
+          if (_view == _HistoryView.calendar) {
+            return _CalendarView(meals: meals);
+          }
+          final filtered = _filtered(meals);
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (v) => setState(() => _query = v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l.history_searchHint,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => setState(() {
+                              _search.clear();
+                              _query = '';
+                            }),
+                          ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          l.history_searchEmpty,
+                          style:
+                              const TextStyle(color: TColors.textSecondary),
+                        ),
+                      )
+                    : _ListView(meals: filtered),
+              ),
+            ],
+          );
         },
       ),
     );
@@ -178,6 +245,8 @@ class _CalendarViewState extends State<_CalendarView> {
   Widget build(BuildContext context) {
     final selected = _selected ?? _normalize(_focused);
     final selectedMeals = _mealsOn(selected);
+    final l = AppLocalizations.of(context)!;
+    final localeCode = Localizations.localeOf(context).languageCode;
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
       children: [
@@ -191,9 +260,10 @@ class _CalendarViewState extends State<_CalendarView> {
             firstDay: DateTime.utc(2024, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focused,
+            locale: localeCode,
             selectedDayPredicate: (d) =>
                 _selected != null && isSameDay(_selected, d),
-            availableCalendarFormats: const {CalendarFormat.month: 'شهر'},
+            availableCalendarFormats: {CalendarFormat.month: l.history_calendar_month},
             calendarFormat: CalendarFormat.month,
             startingDayOfWeek: StartingDayOfWeek.saturday,
             eventLoader: _mealsOn,
@@ -231,7 +301,7 @@ class _CalendarViewState extends State<_CalendarView> {
               defaultTextStyle: const TextStyle(color: TColors.textPrimary),
               weekendTextStyle: const TextStyle(color: TColors.textPrimary),
               todayDecoration: BoxDecoration(
-                color: TColors.primary.withOpacity(0.18),
+                color: TColors.primary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               selectedDecoration: const BoxDecoration(
@@ -306,9 +376,9 @@ class _DaySummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -316,12 +386,12 @@ class _DaySummary extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.18),
+              color: color.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Text(
-              avg == null ? '—' : '$avg٪',
+              avg == null ? '—' : l.common_percentValue(avg),
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w800,
@@ -335,7 +405,7 @@ class _DaySummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _dateAr(date),
+                  TFormat.longDate(context, date),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -365,23 +435,6 @@ class _DaySummary extends StatelessWidget {
     );
   }
 
-  String _dateAr(DateTime d) {
-    const months = [
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -395,6 +448,7 @@ class _MealRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scoreColor = TColors.scoreColor(meal.overallScore);
+    final l = AppLocalizations.of(context)!;
     return Material(
       color: TColors.surface,
       elevation: 0,
@@ -446,7 +500,7 @@ class _MealRow extends StatelessWidget {
                             AppLocalizations.of(context)!
                                 .history_bodyTrackingLogged,
                             style: TextStyle(
-                              color: TColors.primary.withOpacity(0.9),
+                              color: TColors.primary.withValues(alpha: 0.9),
                               fontSize: 11,
                             ),
                           ),
@@ -461,11 +515,11 @@ class _MealRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: scoreColor.withOpacity(0.10),
+                  color: scoreColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Text(
-                  '${meal.overallScore}%',
+                  l.common_percentValue(meal.overallScore),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: scoreColor,
@@ -514,12 +568,11 @@ class _MealRow extends StatelessWidget {
     final local = dt.toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final mealDay = DateTime(local.year, local.month, local.day);
-    String two(int n) => n.toString().padLeft(2, '0');
-    final time = '${two(local.hour)}:${two(local.minute)}';
+    final time = TFormat.time(context, local);
     if (mealDay == today) return '${l.history_today} • $time';
     if (mealDay == today.subtract(const Duration(days: 1))) {
       return '${l.history_yesterday} • $time';
     }
-    return '${local.year}/${two(local.month)}/${two(local.day)} • $time';
+    return TFormat.dateTime(context, local);
   }
 }

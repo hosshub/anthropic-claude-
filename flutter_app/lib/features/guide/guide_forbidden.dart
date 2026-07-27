@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
-/// ٠٤ — الممنوعات الصريحة (المنطقة الحمراء).
 class GuideForbiddenScreen extends StatelessWidget {
   const GuideForbiddenScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final red = GuideData.redZone;
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    const red = GuideData.redZone;
     return Scaffold(
-      appBar: AppBar(title: const Text('الممنوعات الصريحة')),
+      appBar: AppBar(title: Text(l.guide_section_forbidden)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -23,7 +25,7 @@ class GuideForbiddenScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    red.subtitleAr,
+                    red.subtitle(locale),
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: TColors.khabith,
@@ -35,13 +37,14 @@ class GuideForbiddenScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           for (final group in red.groups) ...[
-            if (group.categoryAr != null && group.items != null) ...[
+            if (group.category(locale) != null &&
+                group.items(locale) != null) ...[
               CardContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      group.categoryAr!,
+                      group.category(locale)!,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: TColors.khabith,
@@ -49,7 +52,7 @@ class GuideForbiddenScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    for (final item in group.items!)
+                    for (final item in group.items(locale)!)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: Row(
@@ -57,7 +60,7 @@ class GuideForbiddenScreen extends StatelessWidget {
                             Icon(
                               Icons.close,
                               size: 14,
-                              color: TColors.khabith.withOpacity(0.7),
+                              color: TColors.khabith.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
                             Expanded(

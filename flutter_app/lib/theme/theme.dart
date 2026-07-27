@@ -21,7 +21,7 @@ class TColors {
   static const Color zoneRed = Color(0xFF9B2C2C);
 
   // ظل البطاقات
-  static Color cardShadow = Colors.black.withOpacity(0.06);
+  static Color cardShadow = Colors.black.withValues(alpha: 0.06);
 
   /// لون نقاط الالتزام تبعاً لنسبتها (مثل Theme.scoreColor في SwiftUI).
   static Color scoreColor(int score) {
@@ -32,7 +32,15 @@ class TColors {
   }
 }
 
-/// ثيم Material 3 الرئيسي للتطبيق.
+/// نصف أقطار موحّدة عبر الواجهة — بدلاً من قيم متناثرة في كل شاشة.
+class TRadii {
+  static const double control = 14; // أزرار وحقول
+  static const double card = 18; // بطاقات
+  static const double sheet = 24; // أوراق سفلية وحوارات
+}
+
+/// ثيم Material 3 الرئيسي للتطبيق. الأزرار والحوارات والتنقّل تأخذ
+/// شكلها من هنا — الشاشات لا تعيد تعريف الأنماط محلياً.
 final ThemeData tayyibatTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.fromSeed(
@@ -95,16 +103,114 @@ final ThemeData tayyibatTheme = ThemeData(
     filled: true,
     fillColor: TColors.surface,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: TColors.textSecondary.withOpacity(0.25)),
+      borderRadius: BorderRadius.circular(TRadii.control),
+      borderSide:
+          BorderSide(color: TColors.textSecondary.withValues(alpha: 0.25)),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: TColors.textSecondary.withOpacity(0.25)),
+      borderRadius: BorderRadius.circular(TRadii.control),
+      borderSide:
+          BorderSide(color: TColors.textSecondary.withValues(alpha: 0.25)),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(TRadii.control),
       borderSide: const BorderSide(color: TColors.primary, width: 1.6),
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: TColors.primary,
+      foregroundColor: Colors.white,
+      disabledBackgroundColor: TColors.primary.withValues(alpha: 0.55),
+      minimumSize: const Size.fromHeight(52),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(TRadii.control),
+      ),
+    ),
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      backgroundColor: TColors.primary,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(TRadii.control),
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: TColors.primary,
+      side: const BorderSide(color: TColors.primary, width: 1.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(TRadii.control),
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: TColors.primary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(TRadii.control),
+      ),
+    ),
+  ),
+  segmentedButtonTheme: SegmentedButtonThemeData(
+    style: SegmentedButton.styleFrom(
+      selectedBackgroundColor: TColors.primary.withValues(alpha: 0.12),
+      selectedForegroundColor: TColors.primary,
+      foregroundColor: TColors.textSecondary,
+      side: BorderSide(color: TColors.textSecondary.withValues(alpha: 0.25)),
+    ),
+  ),
+  navigationBarTheme: NavigationBarThemeData(
+    backgroundColor: TColors.surface,
+    indicatorColor: TColors.primary.withValues(alpha: 0.15),
+    surfaceTintColor: Colors.transparent,
+    labelTextStyle: const WidgetStatePropertyAll(
+      TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: TColors.textPrimary,
+      ),
+    ),
+  ),
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: TColors.primary,
+    foregroundColor: Colors.white,
+  ),
+  dialogTheme: DialogThemeData(
+    backgroundColor: TColors.surface,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    titleTextStyle: const TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: TColors.textPrimary,
+    ),
+  ),
+  snackBarTheme: SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: TColors.textPrimary,
+    contentTextStyle: const TextStyle(color: Colors.white, height: 1.5),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(TRadii.control),
+    ),
+  ),
+  checkboxTheme: CheckboxThemeData(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+  ),
+  tabBarTheme: const TabBarThemeData(
+    labelColor: TColors.primary,
+    unselectedLabelColor: TColors.textSecondary,
+    indicatorColor: TColors.primary,
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: TColors.background,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(TRadii.sheet)),
     ),
   ),
 );

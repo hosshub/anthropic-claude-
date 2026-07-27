@@ -50,7 +50,7 @@ class PrimaryButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: TColors.primary,
         foregroundColor: Colors.white,
-        disabledBackgroundColor: TColors.primary.withOpacity(0.55),
+        disabledBackgroundColor: TColors.primary.withValues(alpha: 0.55),
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),

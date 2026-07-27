@@ -15,6 +15,12 @@ class Meal {
   final List<FoodItem> items;
   final BodyResponse? bodyResponse;
 
+  /// v1.2 — هل عدّل المستخدم عناصر الوجبة يدوياً بعد التحليل؟
+  final bool wasEdited;
+
+  /// v1.3 — مصدر الوجبة: 'ai' (تحليل صورة)، 'food_bank'، 'manual'.
+  final String source;
+
   const Meal({
     required this.id,
     required this.capturedAt,
@@ -26,6 +32,8 @@ class Meal {
     required this.warnings,
     required this.items,
     this.bodyResponse,
+    this.wasEdited = false,
+    this.source = 'ai',
   });
 
   Meal copyWith({BodyResponse? bodyResponse}) => Meal(
@@ -39,9 +47,14 @@ class Meal {
         warnings: warnings,
         items: items,
         bodyResponse: bodyResponse ?? this.bodyResponse,
+        wasEdited: wasEdited,
       );
 
   /// عنوان مختصر للوجبة (اسم أول عنصر، أو "وجبة").
   String get primaryLabel =>
       items.isNotEmpty ? items.first.nameAr : 'وجبة';
+
+  /// مجاميع التغذية مشتقة من العناصر — null لوجبات ما قبل v1.1 التي لا
+  /// تحمل أرقام تغذية.
+  MealNutrition? get nutrition => MealNutrition.fromItems(items);
 }

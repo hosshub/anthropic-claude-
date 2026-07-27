@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/enum_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/fasting_calculator.dart';
 import '../../services/fasting_repository.dart';
 import '../../theme/theme.dart';
@@ -39,12 +42,14 @@ class _FastingScreenState extends State<FastingScreen> {
       final kind = kinds.isNotEmpty ? kinds.first : FastingKind.general;
       await repo.markFasting(date: _now, kind: kind);
     }
+    if (!mounted) return;
+    HapticFeedback.selectionClick();
     setState(_reload);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Re-fetch on rebuild so the screen reflects any external repository updates.
+    final l = AppLocalizations.of(context)!;
     final repo = context.watch<FastingRepository>();
     _today ??= repo.loadFor(_now);
     _recent ??= repo.recent();
@@ -55,7 +60,7 @@ class _FastingScreenState extends State<FastingScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('الصيام')),
+      appBar: AppBar(title: Text(l.fasting_title)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -76,11 +81,11 @@ class _FastingScreenState extends State<FastingScreen> {
             _UpcomingCard(date: upcoming.date, kinds: upcoming.kinds),
           ],
           const SizedBox(height: 18),
-          const Padding(
-            padding: EdgeInsets.only(right: 4, bottom: 8),
+          Padding(
+            padding: const EdgeInsets.only(right: 4, bottom: 8),
             child: Text(
-              'السجل',
-              style: TextStyle(
+              l.fasting_log,
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: TColors.textPrimary,
                 fontSize: 16,
@@ -98,9 +103,9 @@ class _FastingScreenState extends State<FastingScreen> {
                     color: TColors.surface,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
-                    'لم تسجّل أي يوم صيام بعد.',
-                    style: TextStyle(color: TColors.textSecondary),
+                  child: Text(
+                    l.fasting_history_empty,
+                    style: const TextStyle(color: TColors.textSecondary),
                   ),
                 );
               }
@@ -133,6 +138,8 @@ class _TodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final fasting = entry != null;
     final color = fasting ? TColors.zoneGreen : TColors.gold;
     return Container(
@@ -142,12 +149,12 @@ class _TodayCard extends StatelessWidget {
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
           colors: [
-            color.withOpacity(0.18),
-            color.withOpacity(0.06),
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.30)),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +181,7 @@ class _TodayCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      fasting ? 'أنت صائم اليوم' : 'اليوم',
+                      fasting ? l.fasting_fastingToday : l.fasting_today,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -182,7 +189,7 @@ class _TodayCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      FastingCalculator.hijriShort(date),
+                      FastingCalculator.hijriShort(date, locale),
                       style: const TextStyle(
                         color: TColors.textSecondary,
                         fontSize: 12,
@@ -206,12 +213,12 @@ class _TodayCard extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(40),
-                      border: Border.all(color: color.withOpacity(0.30)),
+                      border: Border.all(color: color.withValues(alpha: 0.30)),
                     ),
                     child: Text(
-                      k.labelAr,
+                      fastingKindLabel(l, k),
                       style: TextStyle(
                         color: color,
                         fontWeight: FontWeight.w700,
@@ -223,7 +230,7 @@ class _TodayCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              kinds.first.hintAr,
+              fastingKindHint(l, kinds.first),
               style: const TextStyle(
                 color: TColors.textSecondary,
                 fontSize: 12.5,
@@ -241,7 +248,9 @@ class _TodayCard extends StatelessWidget {
               minimumSize: const Size.fromHeight(48),
             ),
             icon: Icon(fasting ? Icons.close : Icons.check),
-            label: Text(fasting ? 'ألغِ تسجيل الصيام' : 'سجّل أنني صائم اليوم'),
+            label: Text(
+              fasting ? l.fasting_unmarkFasting : l.fasting_markFasting,
+            ),
           ),
         ],
       ),
@@ -256,18 +265,19 @@ class _UpcomingCard extends StatelessWidget {
   final List<FastingKind> kinds;
   const _UpcomingCard({required this.date, required this.kinds});
 
-  String _daysAway() {
+  String _daysAway(AppLocalizations l) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(date.year, date.month, date.day);
     final diff = target.difference(today).inDays;
-    if (diff == 1) return 'غداً';
-    if (diff < 7) return 'بعد $diff أيام';
-    return 'بعد $diff يوم';
+    if (diff == 1) return l.fasting_tomorrow;
+    return l.fasting_inDays(diff);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return CardContainer(
       child: Row(
         children: [
@@ -279,7 +289,7 @@ class _UpcomingCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'أقرب يوم صيام مرشّح: ${_daysAway()}',
+                  l.fasting_nextSuggestion(_daysAway(l)),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -288,14 +298,14 @@ class _UpcomingCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  kinds.map((k) => k.labelAr).join('، '),
+                  kinds.map((k) => fastingKindLabel(l, k)).join(l.common_listSeparator),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 12.5,
                   ),
                 ),
                 Text(
-                  FastingCalculator.hijriShort(date),
+                  FastingCalculator.hijriShort(date, locale),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 11.5,
@@ -318,6 +328,7 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
@@ -343,7 +354,7 @@ class _HistoryRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    entry.kind.labelAr,
+                    fastingKindLabel(l, entry.kind),
                     style: const TextStyle(
                       color: TColors.textSecondary,
                       fontSize: 12,

@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 import '../capture/capture_screen.dart';
 import '../guide/guide_golden_rules.dart';
 import '../meal_banks/meal_banks_screen.dart';
 
-/// مساعد "عندما تحتار" — ملخّص ذهبي + ٣ إجراءات سريعة.
 class WhenInDoubtScreen extends StatelessWidget {
   const WhenInDoubtScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('عندما تحتار'),
+        title: Text(l.whenInDoubt_title),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -22,37 +23,35 @@ class WhenInDoubtScreen extends StatelessWidget {
           _summary(
             color: TColors.primary,
             icon: Icons.check_circle,
-            title: 'اختر',
-            body: 'أرز أو بطاطس + بروتين مناسب + دهون طبيعية.',
+            title: l.whenInDoubt_choose,
+            body: l.whenInDoubt_choose_body,
           ),
           const SizedBox(height: 10),
           _summary(
             color: TColors.khabith,
             icon: Icons.block,
-            title: 'امنع تماماً',
-            body:
-                'الفراخ والبيض، الحليب ومشتقاته، البقوليات، المُصنّع، الزيوت الصناعية.',
+            title: l.whenInDoubt_avoid,
+            body: l.whenInDoubt_avoid_body,
           ),
           const SizedBox(height: 10),
           _summary(
             color: TColors.gold,
             icon: Icons.warning_amber,
-            title: 'استخدم باعتدال',
-            body:
-                'الأجبان المعتقة، الفاكهة، العسل، التمر، القهوة، والشاي المحدود.',
+            title: l.whenInDoubt_moderate,
+            body: l.whenInDoubt_moderate_body,
           ),
           const SizedBox(height: 10),
           _summary(
             color: TColors.textSecondary,
             icon: Icons.visibility,
-            title: 'راقب',
-            body: 'الهضم، الطاقة، النوم، والشبع.',
+            title: l.whenInDoubt_watch,
+            body: l.whenInDoubt_watch_body,
           ),
           const SizedBox(height: 18),
           _actionRow(
             emoji: '🍽',
-            title: 'افتح بنك الوجبات',
-            subtitle: 'أفكار جاهزة حسب وقت اليوم',
+            title: l.whenInDoubt_openMealBanks,
+            subtitle: l.whenInDoubt_openMealBanks_sub,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const MealBanksScreen()),
@@ -62,8 +61,8 @@ class WhenInDoubtScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _actionRow(
             emoji: '📖',
-            title: 'اقرأ القواعد الذهبية',
-            subtitle: 'ست قواعد تُبقي النظام واضحاً',
+            title: l.whenInDoubt_readRules,
+            subtitle: l.whenInDoubt_readRules_sub,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const GuideGoldenRulesScreen()),
@@ -73,8 +72,8 @@ class WhenInDoubtScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _actionRow(
             emoji: '📸',
-            title: 'صوّر ما أمامك',
-            subtitle: 'نحلّل وجبتك ونعطيك الإشارة',
+            title: l.whenInDoubt_photoNow,
+            subtitle: l.whenInDoubt_photoNow_sub,
             onTap: () {
               Navigator.of(context).pop();
               Navigator.of(context).push(

@@ -1,0 +1,99 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/flutter-ci.yml"
+  pull_request:
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/flutter-ci.yml"
+
+jobs:
+  analyze:
+    name: analyze + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # No version pin — we want whichever stable bundles
+          # flutter_localizations on intl 0.20.x to match the developer's
+          # local toolchain. If you ever need reproducible CI, pin to the
+          # exact `flutter --version` the local Mac reports.
+          cache: true
+
+      - name: Print versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Generate localizations
+        # Mirrors what `flutter pub get` does on a normal dev machine, but
+        # makes the gen-l10n step explicit so a failure here is loud.
+        run: flutter gen-l10n
+
+      - name: Analyze
+        # --no-fatal-infos: tracking latest stable means newer Flutter
+        # releases keep introducing fresh deprecations (withOpacity →
+        # withValues, Switch.activeColor → .activeThumbColor, etc.).
+        # Mechanical to fix but we don't want every upstream version bump
+        # to red-light the PR. Infos stay visible in the log; only
+        # genuine errors and warnings still block.
+        run: flutter analyze --no-fatal-infos
+
+      - name: Ban hardcoded Arabic in services/widgets
+        # User-visible strings in services/ and widgets/ must flow through ARB
+        # keys, not be hardcoded as Arabic literals — otherwise English-mode
+        # users see Arabic in error toasts and badges. The grep is scoped to
+        # those two directories; data/, l10n/, comments, and the rest of the
+        # app are unaffected.
+        #
+        # Allowlisted files where Arabic IS legitimate data (not a leak):
+        #   - notification_service.dart: NotifKind.label/description returns
+        #     Arabic ONLY when called with locale == 'ar'; English branch
+        #     returns English. The Arabic is a content payload, not chrome.
+        #   - fasting_calculator.dart: hijriShort() builds an Arabic-month
+        #     Hijri label. Audit P2 — should become locale-aware in a
+        #     follow-up; for now Arabic users see Arabic, English users
+        #     also see Arabic (acceptable for this v1.0.2).
+        run: |
+          set +e
+          # Strip /* ... */ block comments (single-line) and // line comments
+          # before grepping. Skip files in the allowlist above.
+          MATCHES=$(find lib/services lib/widgets -name '*.dart' \
+            ! -name 'notification_service.dart' \
+            ! -name 'fasting_calculator.dart' \
+            -exec sh -c '
+              sed -e "s|/\*[^*]*\*/||g" -e "s|//.*||" "$1" \
+                | grep -nP "[\\x{0600}-\\x{06FF}]" \
+                | sed "s|^|$1:|"
+            ' sh {} \;)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Found hardcoded Arabic in lib/services or lib/widgets."
+            echo "$MATCHES"
+            echo ""
+            echo "Move user-visible strings to lib/l10n/app_*.arb and reference"
+            echo "them via AppLocalizations, or throw an AppMessage code (see"
+            echo "lib/services/app_messages.dart)."
+            exit 1
+          fi
+
+      - name: Test
+        # Pure-logic + localization tests live under flutter_app/test/.
+        # --no-pub: deps + gen-l10n already ran in the steps above.
+        run: flutter test --no-pub

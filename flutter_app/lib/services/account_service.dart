@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/meal_repository.dart';
+import 'app_messages.dart';
 
 /// عنوان دالة حذف الحساب (مطابق للنسخة المنشورة على Supabase).
 const String _deleteAccountUrl =
@@ -18,11 +19,11 @@ class AccountService {
   AccountService(this._meals);
 
   /// يحذف حساب المستخدم من Supabase ثم يمسح كل البيانات المحلية.
-  /// يرمي [AccountException] برسالة عربية صريحة عند أي فشل.
+  /// يرمي [AccountException] بكود قابل للترجمة عند أي فشل.
   Future<void> deleteAccount() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      throw AccountException('لا توجد جلسة مفتوحة.');
+      throw AccountException.code(AppMessage.accountNoSession);
     }
 
     http.Response res;
@@ -36,26 +37,40 @@ class AccountService {
         },
       ).timeout(const Duration(seconds: 30));
     } catch (e) {
-      throw AccountException(
-        'تعذّر الوصول للخادم. تأكّد من اتصالك بالإنترنت. ($e)',
+      // Keep the parenthesised detail short and technical-looking ("timeout",
+      // "offline") — e.toString() dumps a full English exception description
+      // into the middle of a localized sentence.
+      final kind = e.toString().toLowerCase();
+      final detail = kind.contains('timeout')
+          ? 'timeout'
+          : kind.contains('socket')
+              ? 'offline'
+              : 'network';
+      throw AccountException.code(
+        AppMessage.accountServerUnreachable,
+        detail: detail,
       );
     }
 
     if (res.statusCode == 404) {
-      throw AccountException(
-        'خدمة حذف الحساب غير منشورة على الخادم. أبلغ المطوّر.',
-      );
+      throw AccountException.code(AppMessage.accountDeleteNotDeployed);
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      String msg = 'فشل حذف الحساب (رمز ${res.statusCode}).';
+      String? serverMsg;
       try {
         final decoded = jsonDecode(res.body);
         if (decoded is Map && decoded['error'] is String) {
-          msg = '${decoded['error']} (رمز ${res.statusCode})';
+          serverMsg = sanitizeServerMessage(decoded['error'] as String);
         }
       } catch (_) {}
-      throw AccountException(msg);
+      if (serverMsg != null) {
+        throw AccountException.fromServer(serverMsg, '${res.statusCode}');
+      }
+      throw AccountException.code(
+        AppMessage.accountDeleteFailedWithCode,
+        detail: '${res.statusCode}',
+      );
     }
 
     // نظّف كل شيء محلياً ثم سجّل الخروج. لا نتعامل بفشل signOut هنا
@@ -67,9 +82,17 @@ class AccountService {
   }
 }
 
-class AccountException implements Exception {
-  final String message;
-  AccountException(this.message);
-  @override
-  String toString() => message;
+class AccountException extends AppException {
+  /// HTTP status the delete call failed with, shown as a suffix in Settings.
+  final String? statusCode;
+
+  AccountException.code(super.code, {super.detail}) : statusCode = null;
+
+  AccountException.fromServer(String serverMessage, String status)
+      : statusCode = status,
+        super(
+          AppMessage.accountDeleteFailedWithCode,
+          detail: status,
+          serverMessage: serverMessage,
+        );
 }

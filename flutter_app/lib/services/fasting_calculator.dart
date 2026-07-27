@@ -10,38 +10,8 @@ enum FastingKind {
   general,      // صيام تطوع آخر سجّله المستخدم يدوياً
 }
 
-extension FastingKindMeta on FastingKind {
-  String get labelAr {
-    switch (this) {
-      case FastingKind.monday:
-        return 'اثنين';
-      case FastingKind.thursday:
-        return 'خميس';
-      case FastingKind.whiteDay13:
-        return 'الأيام البيض — ١٣';
-      case FastingKind.whiteDay14:
-        return 'الأيام البيض — ١٤';
-      case FastingKind.whiteDay15:
-        return 'الأيام البيض — ١٥';
-      case FastingKind.general:
-        return 'صيام تطوّع';
-    }
-  }
-
-  String get hintAr {
-    switch (this) {
-      case FastingKind.monday:
-      case FastingKind.thursday:
-        return 'مستحب لمن استطاع — رحمة لا فرض.';
-      case FastingKind.whiteDay13:
-      case FastingKind.whiteDay14:
-      case FastingKind.whiteDay15:
-        return 'الأيام البيض من السنن المؤكدة.';
-      case FastingKind.general:
-        return 'يوم صيام إضافي اخترته أنت.';
-    }
-  }
-}
+// Locale-aware labels live in lib/l10n/enum_labels.dart (fastingKindLabel,
+// fastingKindHint) — use those.
 
 /// يحسب ما هي أنواع الصيام المرشّحة لتاريخ معيّن.
 class FastingCalculator {
@@ -73,16 +43,28 @@ class FastingCalculator {
     return '${date.year}-${two(date.month)}-${two(date.day)}';
   }
 
-  /// عرض هجري مختصر للعرض في الواجهة.
-  static String hijriShort(DateTime date) {
+  /// Compact Hijri label for the UI. Month names + year suffix flip with the
+  /// app locale — Arabic users see "15 ذو القعدة 1447هـ", English users see
+  /// "15 Dhul Qa'dah 1447 AH".
+  static String hijriShort(DateTime date, [String locale = 'ar']) {
     final h = HijriCalendar.fromDate(date);
-    const months = [
-      'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى',
-      'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال',
-      'ذو القعدة', 'ذو الحجة',
-    ];
-    return '${h.hDay} ${months[h.hMonth - 1]} ${h.hYear}هـ';
+    final months = locale == 'en' ? _hijriMonthsEn : _hijriMonthsAr;
+    final suffix = locale == 'en' ? ' AH' : 'هـ';
+    return '${h.hDay} ${months[h.hMonth - 1]} ${h.hYear}$suffix';
   }
+
+  static const List<String> _hijriMonthsAr = [
+    'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى',
+    'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال',
+    'ذو القعدة', 'ذو الحجة',
+  ];
+
+  /// Common transliterations (close to ISO 233 / Library of Congress).
+  static const List<String> _hijriMonthsEn = [
+    'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+    'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', "Sha'ban",
+    'Ramadan', 'Shawwal', "Dhul Qa'dah", 'Dhul Hijjah',
+  ];
 
   /// يجد أقرب يوم صيام مرشّح في الأيام القادمة (حتى ٣٠ يوم).
   static ({DateTime date, List<FastingKind> kinds})? nextRecommended(

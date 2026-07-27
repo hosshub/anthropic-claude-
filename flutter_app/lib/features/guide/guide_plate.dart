@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../data/guide_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
 
-/// ٠٥ — طبق الطيبات (الصيغة الأساسية).
 class GuidePlateScreen extends StatelessWidget {
   const GuidePlateScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return Scaffold(
-      appBar: AppBar(title: const Text('طبق الطيبات')),
+      appBar: AppBar(title: Text(l.guide_section_plate)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -20,12 +22,12 @@ class GuidePlateScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.adjust, color: TColors.primary),
-                    SizedBox(width: 8),
+                  children: [
+                    const Icon(Icons.adjust, color: TColors.primary),
+                    const SizedBox(width: 8),
                     Text(
-                      'الصيغة الأساسية',
-                      style: TextStyle(
+                      l.guide_plate_baseFormula,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: TColors.primary,
@@ -34,30 +36,29 @@ class GuidePlateScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'أرز أو بطاطس + بروتين مناسب + دهون طبيعية',
-                  style: TextStyle(fontSize: 16, height: 1.6),
+                Text(
+                  l.guide_plate_formula,
+                  style: const TextStyle(fontSize: 16, height: 1.6),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           _block(
-            title: 'نشويات',
-            body: 'اختر بين الأرز أو البطاطس بأي طريقة تحبها (مسلوقة، مشوية، مقلية…).',
+            title: l.guide_plate_starch_title,
+            body: l.guide_plate_starch_body,
             icon: Icons.eco,
           ),
           const SizedBox(height: 10),
           _block(
-            title: 'بروتين',
-            body:
-                'لحم أحمر، كبدة، كوارع، أرنب، حمام، أو سمك مستوٍ تماماً. تجنّب الدواجن والبيض.',
+            title: l.guide_plate_protein_title,
+            body: l.guide_plate_protein_body,
             icon: Icons.restaurant_menu,
           ),
           const SizedBox(height: 10),
           _block(
-            title: 'دهون طبيعية',
-            body: 'سمن بلدي، زبدة طبيعية، زيت زيتون، أو زيتون — باعتدال.',
+            title: l.guide_plate_fats_title,
+            body: l.guide_plate_fats_body,
             icon: Icons.water_drop,
           ),
           const SizedBox(height: 12),
@@ -66,12 +67,12 @@ class GuidePlateScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.star, color: TColors.gold),
-                    SizedBox(width: 6),
+                  children: [
+                    const Icon(Icons.star, color: TColors.gold),
+                    const SizedBox(width: 6),
                     Text(
-                      'القاعدة الذهبية',
-                      style: TextStyle(
+                      l.guide_plate_goldenRule_title,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: TColors.gold,
                       ),
@@ -79,16 +80,16 @@ class GuidePlateScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'بسّط مكونات الوجبة، وتوقّف قبل الامتلاء، وراقب استجابة جسمك.',
-                  style: TextStyle(height: 1.55),
+                Text(
+                  l.guide_plate_goldenRule_body,
+                  style: const TextStyle(height: 1.55),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
           Text(
-            GuideData.medicalDisclaimer,
+            GuideData.medicalDisclaimer(locale),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: TColors.textSecondary,
@@ -101,7 +102,11 @@ class GuidePlateScreen extends StatelessWidget {
     );
   }
 
-  Widget _block({required String title, required String body, required IconData icon}) {
+  Widget _block({
+    required String title,
+    required String body,
+    required IconData icon,
+  }) {
     return CardContainer(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

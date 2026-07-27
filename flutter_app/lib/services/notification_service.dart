@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -27,7 +28,23 @@ extension NotifKindMeta on NotifKind {
     }
   }
 
-  String get labelAr {
+  /// Title used on the notification + Android channel name. Reads the user's
+  /// chosen app language so reminders match the in-app language.
+  String label(String locale) {
+    if (locale == 'en') {
+      switch (this) {
+        case NotifKind.morningTip:
+          return 'Morning tip';
+        case NotifKind.lunchReminder:
+          return 'Lunch reminder';
+        case NotifKind.eveningTip:
+          return 'Evening tip';
+        case NotifKind.endOfDayLog:
+          return 'Log your meals';
+        case NotifKind.weeklyPrep:
+          return 'Weekly prep';
+      }
+    }
     switch (this) {
       case NotifKind.morningTip:
         return 'نصيحة الصباح';
@@ -42,7 +59,22 @@ extension NotifKindMeta on NotifKind {
     }
   }
 
-  String get descriptionAr {
+  /// Android channel description + fallback body when no tip is available.
+  String description(String locale) {
+    if (locale == 'en') {
+      switch (this) {
+        case NotifKind.morningTip:
+          return 'A morning tip from the Tayyibat system.';
+        case NotifKind.lunchReminder:
+          return 'A lunchtime reminder with a daily golden rule.';
+        case NotifKind.eveningTip:
+          return 'An evening tip before dinner.';
+        case NotifKind.endOfDayLog:
+          return 'Reminder to log what you ate today.';
+        case NotifKind.weeklyPrep:
+          return 'Every Saturday morning — a weekly prep checklist.';
+      }
+    }
     switch (this) {
       case NotifKind.morningTip:
         return 'تذكير صباحي بنصيحة من نظام الطيبات.';
@@ -96,6 +128,9 @@ extension NotifKindMeta on NotifKind {
 class NotificationService extends ChangeNotifier {
   static const String _kEnabled = 'notif_enabled_';
   static const String _kRecent = 'notif_recent_'; // ذيل آخر النصائح لكل تصنيف
+  static const String _kBodyFollowupEnabled = 'notif_body_followup_enabled';
+  static const String _kBodyFollowupIds = 'notif_body_followup_ids';
+  static const Duration _bodyFollowupDelay = Duration(hours: 3);
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -104,8 +139,10 @@ class NotificationService extends ChangeNotifier {
   bool _ready = false;
   bool _permissionGranted = false;
   final Map<NotifKind, bool> _enabled = {};
+  bool _bodyFollowupEnabled = true;
 
   bool get isReady => _ready;
+  bool get bodyFollowupEnabled => _bodyFollowupEnabled;
   bool get permissionGranted => _permissionGranted;
   bool enabled(NotifKind k) => _enabled[k] ?? false;
 
@@ -118,7 +155,7 @@ class NotificationService extends ChangeNotifier {
     _setLocalTimezoneBestEffort();
 
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      android: AndroidInitializationSettings('@drawable/ic_notification'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -131,6 +168,8 @@ class NotificationService extends ChangeNotifier {
     for (final k in NotifKind.values) {
       _enabled[k] = prefs.getBool('$_kEnabled${k.name}') ?? false;
     }
+    // Body-followup is opt-in but defaults to true on first launch.
+    _bodyFollowupEnabled = prefs.getBool(_kBodyFollowupEnabled) ?? true;
     _permissionGranted = await _checkPermission();
     _ready = true;
     notifyListeners();
@@ -216,6 +255,15 @@ class NotificationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String> _currentLocale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('app_locale') == 'en' ? 'en' : 'ar';
+    } catch (_) {
+      return 'ar';
+    }
+  }
+
   Future<void> _schedule(NotifKind kind) async {
     final (h, m) = kind.defaultTime;
     final now = tz.TZDateTime.now(tz.local);
@@ -230,21 +278,29 @@ class NotificationService extends ChangeNotifier {
       }
     }
 
+    final locale = await _currentLocale();
     final tip = await _pickTip(kind.tipSlot);
-    final body = tip?.textAr ?? kind.descriptionAr;
+    final body = tip?.text(locale) ?? kind.description(locale);
+    final title = kind.label(locale);
 
     await _plugin.zonedSchedule(
       kind.id,
-      kind.labelAr,
+      title,
       body,
       when,
       NotificationDetails(
         android: AndroidNotificationDetails(
           'tayyibat_${kind.name}',
-          kind.labelAr,
-          channelDescription: kind.descriptionAr,
+          title,
+          channelDescription: kind.description(locale),
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          // White-silhouette resource on Android. Without this Android
+          // renders a generic white square in the status bar. The PNG
+          // lives in android/app/src/main/res/drawable/ic_notification.png
+          // (see submission/android-shell.md step 4).
+          icon: '@drawable/ic_notification',
+          color: const Color(0xFFC9A35B), // gold tint for the icon dot
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -280,23 +336,145 @@ class NotificationService extends ChangeNotifier {
     await _plugin.cancelAll();
   }
 
+  // ---------------------------------------------------------------------------
+  // Body-response followup — one-shot reminder ~3h after each meal.
+  // ---------------------------------------------------------------------------
+
+  Future<void> setBodyFollowupEnabled(bool on) async {
+    _bodyFollowupEnabled = on;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kBodyFollowupEnabled, on);
+    if (!on) {
+      await cancelAllBodyFollowups();
+    }
+    notifyListeners();
+  }
+
+  int _bodyFollowupId(String mealId) =>
+      (mealId.hashCode & 0x7FFFFFFF) % 100000000 + 10000;
+
+  /// Schedule a one-shot "how did you feel?" nudge ~3 hours after the meal.
+  /// Silently no-ops if the feature is off, permission isn't granted, or the
+  /// meal was captured long enough ago that the scheduled time is already past.
+  Future<void> scheduleBodyFollowup(
+    String mealId,
+    DateTime capturedAt, {
+    Duration? delay,
+  }) async {
+    if (!_ready) await initialize();
+    if (!_bodyFollowupEnabled || !_permissionGranted) return;
+
+    final fireAt = capturedAt.add(delay ?? _bodyFollowupDelay);
+    final now = DateTime.now();
+    if (fireAt.isBefore(now.add(const Duration(seconds: 30)))) return;
+
+    final locale = await _currentLocale();
+    final timeLabel = _formatTime(capturedAt);
+    final (title, body) = _bodyFollowupCopy(locale, timeLabel);
+
+    final tzWhen = tz.TZDateTime.from(fireAt, tz.local);
+    final id = _bodyFollowupId(mealId);
+
+    await _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tzWhen,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'tayyibat_body_followup',
+          'Body response',
+          channelDescription: 'How did you feel after the meal?',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+          icon: '@drawable/ic_notification',
+          color: Color(0xFFC9A35B),
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'body-response:$mealId',
+    );
+
+    await _rememberFollowup(mealId);
+  }
+
+  Future<void> cancelBodyFollowup(String mealId) async {
+    await _plugin.cancel(_bodyFollowupId(mealId));
+    await _forgetFollowup(mealId);
+  }
+
+  Future<void> cancelAllBodyFollowups() async {
+    final ids = await _loadFollowupIds();
+    for (final mealId in ids) {
+      await _plugin.cancel(_bodyFollowupId(mealId));
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kBodyFollowupIds);
+  }
+
+  Future<List<String>> _loadFollowupIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kBodyFollowupIds) ?? const [];
+  }
+
+  Future<void> _rememberFollowup(String mealId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = (prefs.getStringList(_kBodyFollowupIds) ?? const <String>[]).toList();
+    if (!list.contains(mealId)) {
+      list.add(mealId);
+      await prefs.setStringList(_kBodyFollowupIds, list);
+    }
+  }
+
+  Future<void> _forgetFollowup(String mealId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = (prefs.getStringList(_kBodyFollowupIds) ?? const <String>[]).toList();
+    if (list.remove(mealId)) {
+      await prefs.setStringList(_kBodyFollowupIds, list);
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    final l = dt.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(l.hour)}:${two(l.minute)}';
+  }
+
+  (String, String) _bodyFollowupCopy(String locale, String timeLabel) {
+    if (locale == 'en') {
+      return (
+        'How did you feel after your $timeLabel meal?',
+        'Open Tayyibat to log your body response.',
+      );
+    }
+    return (
+      'كيف شعرت بعد وجبة الساعة $timeLabel؟',
+      'افتح تطبيق الطيبات وسجّل ملاحظاتك.',
+    );
+  }
+
   /// إشعار اختباري لمرة واحدة بعد ٥ ثوانٍ — مفيد للتأكد من إذن النظام.
-  Future<void> showTest() async {
+  Future<void> showTest(String title, String body) async {
     if (!_permissionGranted) await requestPermission();
     if (!_permissionGranted) return;
     final when = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
     await _plugin.zonedSchedule(
       9999,
-      'الطيبات',
-      'هذا إشعار اختباري. لو وصلك معناه التذكيرات شغّالة.',
+      title,
+      body,
       when,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'tayyibat_test',
-          'اختبار',
-          channelDescription: 'إشعار اختباري لمرة واحدة',
+          'Test',
+          channelDescription: 'One-off test notification',
           importance: Importance.high,
           priority: Priority.high,
+          icon: '@drawable/ic_notification',
+          color: Color(0xFFC9A35B),
         ),
         iOS: DarwinNotificationDetails(),
       ),

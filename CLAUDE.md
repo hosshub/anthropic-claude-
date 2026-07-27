@@ -24,7 +24,7 @@ before first use.
 |---|---|
 | **Mobile** | Flutter (Dart 3.5+) → iOS + Android from one codebase |
 | **State mgmt** | `provider` (ChangeNotifier services) |
-| **Local DB** | `sqflite` (schema v2; tables: meals, food_items, body_responses, fasting_days) |
+| **Local DB** | `sqflite` (schema v5; tables: meals[+source], food_items, body_responses, fasting_days, meal_plans[+started_at], plan_days) |
 | **Auth** | Supabase Auth — email/password, Google OAuth (PKCE), Sign in with Apple |
 | **Backend proxy** | Supabase Edge Functions (Deno/TypeScript) — `analyze`, `delete-account` |
 | **AI** | Google **Gemini 2.5 Flash-Lite** via Generative Language API, proxied through `analyze` function. Daily per-user cap with refund-on-failure (PostgreSQL `bump_usage` / `refund_usage` RPCs) |
@@ -196,7 +196,7 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 
 | Store | State |
 |---|---|
-| **App Store** | App record created (bundle `ai.tayyibat.tayyibat`). v1.0.0 build 1 uploaded via Transporter (build id `5a832f4f-f5d8-4ed4-93a6-187fa95f5d81`). App Privacy labels filled. Six artistic 1320×2868 screenshots ready in `/tmp/appstore/` (re-render via `/tmp/compose2.py` if needed). Pending: final screenshot upload + Submit for Review. |
+| **App Store** | App record created (bundle `ai.tayyibat.tayyibat`). v1.0.2 build 5 was rejected twice under Guideline 2.1(a): the reviewer hit Gemini's raw "prepayment credits are depleted" billing message in suggest/plan. Root cause = depleted Gemini API credits (account issue, not code). **All three fixes are now verified done (2026-07-19):** (a) server `analyze` deployed at version 21 — logs the provider error server-side only and returns a generic message (429 → "busy, try again shortly", else generic 502); (b) client sanitizes every error path (`sanitizeServerMessage` + `describeError` in `lib/services/app_messages.dart`), covered by `test/error_sanitization_test.dart` which asserts the exact Gemini billing string is rejected; (c) Gemini billing is live again — recent `analyze` logs are all HTTP 200, no 429s. **Signed release IPA for 1.1.0 (7) is built** at `flutter_app/build/ios/ipa/tayyibat.ipa` (22.6MB, `Apple Distribution: Hossam Nasef QBX2YPY4W8`, App Store profile, `applesignin` entitlement embedded). Pending (needs Apple credentials, do by hand): create a **1.1.0** version record in ASC (the rejected record is 1.0.2 — the build will not attach to it), upload the IPA via Transporter (installed), attach build, refresh screenshots to show nutrition + guidebook, then Submit for Review and reply to the open rejection thread. |
 | **Google Play** | Not yet started. `submission/play-store/` has the full kit (listing copy, data-safety answers, internal-testing setup). Recommended sequence: $25 Play Console signup → Internal Testing track → invite up to 100 friends → eventual Production. |
 | **Apple Sign in setup** | Done. Services ID `ai.tayyibat.web-signin` configured; Apple Key (`.p8`) JWT signed and uploaded as the Apple provider secret in Supabase. |
 | **Apple Developer enrollment** | Active under personal Apple ID `hossnasef@gmail.com`. The earlier Workspace account `hossam@oryxlab.com` was blocked by Apple and abandoned. |
@@ -211,14 +211,20 @@ each Saturday, progress bar) · 9. Common mistakes (6 anti-patterns).
 | 4. Calendar view | ✅ done | toggle in History |
 | 5. Charts | ✅ done | fl_chart 30-day trend |
 | 6. Account deletion API surface | ✅ done | App Store 5.1.1(v) compliant |
-| 7. Localization (English) | ❌ pending | only Arabic in v1; pubspec includes `flutter_localizations` but no `.arb` files yet |
-| 8. CI on push | ❌ pending | recommended: GitHub Actions running `flutter analyze` + `flutter test` |
-| 9. Crash reporting | ❌ pending | recommended: `sentry_flutter` EU instance once user count grows |
+| 7. Localization (English) | ✅ full (v1.0.1) | every UI surface and content surface is bilingual: auth/onboarding/today/history/settings/capture/result, body-response flow + card, suggestions, fasting, notifications, body-intelligence, when-in-doubt, the 35-tip bank, **and** the Guide tab (philosophy, golden rules, eating map, forbidden list, plate, weekly prep, mistakes), Meal Banks (4 banks × items), and the 15-day Program (phases + day-by-day content). Runtime toggle in Settings + LocaleService; AI prompt (Gemini) locale-aware via the `locale` field on the analyze function. The "partial English" note in Settings has been narrowed accordingly. |
+| 8. CI on push | ✅ wired (v1.0.1) | `.github/workflows/flutter-ci.yml` runs `flutter analyze` + `flutter test` on every push that touches `flutter_app/**`. CI tracks latest stable (no version pin) to stay in sync with the developer's local Mac; our pubspec requires intl ^0.20.2 which only ships with recent Flutter stables. |
+| 9. Crash reporting | ✅ wired (v1.0.1) | `sentry_flutter` 8.x in `main.dart`, gated on `--dart-define=SENTRY_DSN=...` (empty default = no events sent). PII collection, screenshots, view-hierarchy capture, traces, and profiling all disabled. EU region picked at the Sentry org level. |
 | 10. Onboarding refinements | ❌ pending | name + age + height collection (currently skipped) |
-| 11. Body-response notifications | ❌ pending | nudge X hours after a meal to log how you felt |
+| 11. Body-response notifications | ✅ wired (v1.0.1) | one-shot ~3h after each meal via `scheduleBodyFollowup`. Auto-cancels when the user logs the response, deletes the meal, or deletes the account. Toggle in Notification Settings; defaults on. Locale-aware title using the meal's `HH:MM` capture time. |
 | 12. App Preview video | ❌ pending | optional Apple slot; ~1 min QuickTime recording |
 | 13. Apple Watch companion | ❌ future | not v1 |
 | 14. iPad layout | ❌ future | currently iPhone-only (portrait locked) |
+| 15. Nutrition (v1.1.0) | ✅ built | analyze returns per-item kcal/macros/micros + totals (`total_nutrition`); SQLite v3 adds nutrition columns; NutritionCard on meal detail; daily calorie tracker on Today vs goal (NutritionGoalService, Settings editor); needs `supabase functions deploy analyze` + Mac build 1.1.0+7 |
+| 16. Meal guidebook (v1.1.0) | ✅ built | `guidebook_data.dart` (26 bilingual meals × 5 categories, zone-compliant) + GuidebookScreen (search/filter/detail sheet/capture CTA), Guide section 8 of 10 |
+| 17. v1.2.0 post-launch fixes | ✅ built (1.2.0+8) | Triaged from launch reviews (see V1.2_PLAN.md in the handoff folder): editable analyzed items with client-side score recompute (`score_engine.dart`, tested), 3 suggestions per request (server envelope + legacy fallback), persisted weekly plans with per-meal done tracking (schema v4: `meal_plans`/`plan_days` + `meals.was_edited`), welcome onboarding flow + display name (ProfileService), design-system pass (component themes, capture preview, zero analyzer issues), copy audit + mounted-guard hardening. Deploy `analyze` for the 3-suggestion prompt; ship as 1.2.1+9. |
+| 18. v1.2.1 competitive features | ✅ built (1.2.1+9) | Benchmarked against Cal AI / MyFitnessPal / Yazio table stakes: logging streak on Today (`streak.dart`, tested), one-tap re-log of a past meal without an AI analysis (`MealRepository.relogMeal`, tested), history search by item/label, WelcomeFlow + edit-sheet widget tests, Today cache key tuple-compare. |
+| 19. v1.3.0 feature expansion | ✅ built (1.3.0+10) | Schema v5 (`meals.source`, `meal_plans.started_at`). (a) Food bank: `food_bank_data.dart` (148 Egyptian/Arabic dishes, honest zones + nutrition) + `FoodBankScreen` + `MealRepository.logFromFoodBank` (no AI). (b) Profile first/last/nickname (`ProfileService`, migrates old displayName). (c) Apple Health: `health` 13.3.1 + HealthKit entitlement + NSHealthShare/Update — `HealthService` reads steps/active energy, `calorie_math.dart` offsets the budget (tested). (d) 5 suggestions + `meal_type` filter + variety seed (server `buildSuggestPrompt`). (e) Plan adherence: `plan_adherence.dart` blends manual check-off + auto logged-day (tested), `PlanRepository.commitPlan`. **Submission needs:** deploy `analyze` (5-suggestion prompt); add the HealthKit capability + a Health-data privacy-label entry in App Store Connect; `pod install` before the iOS build. |
+| 20. v1.4.0 monetization | ✅ built (1.4.0+12), blocked on ASC setup | Free download + `premium` entitlement via RevenueCat (`purchases_flutter`). Pure rules in `lib/services/entitlement.dart` (tested): 3 AI scans/week free on a Saturday-start week, one suggestion set/week, plans premium-only; grandfathering keys off `auth.users.created_at < paid_era_cutoff()`. `SubscriptionService` wraps RevenueCat and re-identifies on Supabase auth changes. Soft gates only — a spent quota offers the paywall *or* the food bank, never a dead end. Server: `supabase/sql/entitlements.sql` (`user_entitlements`, `effective_tier`, `bump_usage_since` under an advisory lock) + `functions/rc-webhook`; `analyze` reads the tier. Scan counting uses `recentAiScanTimes()` (`source='ai'`) so free food-bank logs never burn the metered quota. **Before shipping:** run `entitlements.sql`; set the real cutoff in *both* `entitlement.dart` and `entitlements.sql`; create the 3 IAPs with manual EGP/AED prices; swap in the production `appl_` key; set `RC_WEBHOOK_SECRET`; deploy `analyze` + `rc-webhook`; upload `web/terms.html`; run a sandbox purchase pass. |
 
 ## 8. Conventions
 
@@ -266,9 +272,15 @@ flutter run -d <iphone-udid>      # current: 00008150-00092D8602C0401C
 ### Build release IPA for App Store
 ```bash
 cd ~/anthropic-claude-/flutter_app
-flutter build ipa --release
+git checkout claude/tayyibat-ios-app-ftYsJ && git pull --ff-only
+flutter pub get
+cd ios && pod install && cd ..             # picks up sentry_flutter native bits
+flutter pub run flutter_launcher_icons     # regen icons (do not skip)
+flutter build ipa --release \
+  --dart-define=SENTRY_DSN=https://...@o....ingest.de.sentry.io/...
 # IPA at build/ios/ipa/tayyibat.ipa → drag into Transporter → Deliver.
 ```
+Drop the `--dart-define` line if Sentry is intentionally disabled for the build.
 
 ### Build release APK for Play Store
 ```bash
@@ -331,6 +343,37 @@ service role key), so the gateway must not pre-verify (`--no-verify-jwt`).
 | Support / privacy contact | `app@tayyibat.ai` |
 | App Store record | App Store Connect → Apps → Tayyibat (id `6777743474`) |
 
+## 11b. Operational hazard — free-tier Supabase auto-pause
+
+**Symptom:** every login (Apple, Google, *and* email) fails with
+`ClientException with SocketException: Failed host lookup:
+'cvznuwvwhnujdgfojmsb.supabase.co'`.
+
+**Cause:** the project is **paused**. Supabase free-tier projects auto-pause
+after ~7 days of inactivity, and pausing **removes the project's DNS record** —
+so the hostname stops resolving entirely. It is not an app, Apple `.p8`, or
+Google OAuth problem; nothing in the client needs changing.
+
+**Diagnose in 10 seconds:**
+```bash
+dig +short cvznuwvwhnujdgfojmsb.supabase.co   # empty  -> paused
+dig +short supabase.co                        # resolves -> your DNS is fine
+curl -s -o /dev/null -w "%{http_code}\n" \
+  https://cvznuwvwhnujdgfojmsb.supabase.co/auth/v1/health   # 000 -> unreachable
+```
+Healthy looks like: DNS returns Cloudflare IPs, the health probe returns **401**
+(alive, just wants an apikey), and `functions/v1/analyze` GET returns `{"ok":true}`.
+
+**Fix:** dashboard → *Restore project* (2–5 min). **Prevent:** upgrade the org
+to **Pro ($25/mo)** — Pro projects never auto-pause. This is a live paid app;
+an auto-pause locks every user out with no warning.
+
+Happened 2026-07-24. The raw error text users saw was a second, separate bug —
+fixed in `AuthService.codeForAuthExceptionMessage` (gotrue reports transport
+failures as `AuthRetryableFetchException`, a subclass of `AuthException` whose
+message is raw `error.toString()`, so it bypassed the generic network
+classifier).
+
 ## 12. Hard "do nots"
 
 - ❌ Do **not** make medical claims anywhere in copy, UI, or marketing.
@@ -343,5 +386,5 @@ service role key), so the gateway must not pre-verify (`--no-verify-jwt`).
 
 ---
 
-*Last updated: 2026-06-08. When working on this project, prefer to update
+*Last updated: 2026-07-26 (v1.4.0). When working on this project, prefer to update
 this file over creating new docs for general orientation.*

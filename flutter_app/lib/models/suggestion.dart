@@ -20,6 +20,21 @@ class MealSuggestion {
         reasoningAr: (json['reasoning_ar'] as String?) ?? '',
         bestTimeAr: (json['best_time_ar'] as String?) ?? '',
       );
+
+  /// v1.2: يقرأ غلاف {"suggestions": [...]} ذا الثلاث وجبات، مع قبول
+  /// الشكل القديم (كائن واحد مباشر) من نسخ الخادم الأقدم.
+  static List<MealSuggestion> listFromJson(Map<String, dynamic> json) {
+    final raw = json['suggestions'];
+    if (raw is List) {
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(MealSuggestion.fromJson)
+          .where((s) => s.nameAr.trim().isNotEmpty)
+          .toList();
+    }
+    final single = MealSuggestion.fromJson(json);
+    return single.nameAr.trim().isEmpty ? const [] : [single];
+  }
 }
 
 /// خطة وجبات أسبوعية (٧ أيام).

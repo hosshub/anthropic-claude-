@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/analysis_result.dart';
+import 'app_messages.dart';
 
 /// نفس عنوان دالة Supabase المستخدم في نسخة SwiftUI.
 const String _proxyUrl =
@@ -19,6 +21,7 @@ class AnalyzeService {
   Future<AnalysisResult> analyze(Uint8List imageBytes) async {
     final base64Image = base64Encode(imageBytes);
     final session = Supabase.instance.client.auth.currentSession;
+    final locale = await _currentLocale();
 
     final headers = <String, String>{
       'content-type': 'application/json',
@@ -28,6 +31,7 @@ class AnalyzeService {
     final body = jsonEncode({
       'image_base64': base64Image,
       'media_type': 'image/jpeg',
+      'locale': locale,
     });
 
     final res = await _http
@@ -35,20 +39,25 @@ class AnalyzeService {
         .timeout(const Duration(seconds: 60));
 
     if (res.statusCode == 429) {
-      throw AnalyzeException(
-        _extractError(res.body) ?? 'بلغت الحد اليومي للتحليلات.',
-      );
+      // Server message (if present) is already localized via the edge function;
+      // fall back to the ARB key when it isn't.
+      final serverMsg = _extractError(res.body);
+      if (serverMsg != null) throw AnalyzeException.fromServer(serverMsg);
+      throw AnalyzeException.code(AppMessage.analyzeDailyCapReached);
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      final msg = _extractError(res.body) ??
-          'تعذّر التحليل (${res.statusCode}).';
-      throw AnalyzeException(msg);
+      final serverMsg = _extractError(res.body);
+      if (serverMsg != null) throw AnalyzeException.fromServer(serverMsg);
+      throw AnalyzeException.code(
+        AppMessage.analyzeFailedWithCode,
+        detail: '${res.statusCode}',
+      );
     }
 
     final parsed = jsonDecode(res.body);
     if (parsed is! Map<String, dynamic>) {
-      throw AnalyzeException('استجابة غير متوقعة من الوسيط.');
+      throw AnalyzeException.code(AppMessage.analyzeBadResponse);
     }
     return AnalysisResult.fromJson(parsed);
   }
@@ -58,9 +67,9 @@ class AnalyzeService {
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) {
         final err = decoded['error'];
-        if (err is String) return err;
+        if (err is String) return sanitizeServerMessage(err);
         if (err is Map && err['message'] is String) {
-          return err['message'] as String;
+          return sanitizeServerMessage(err['message'] as String);
         }
       }
     } catch (_) {/* غير قابل للقراءة كـ JSON */}
@@ -68,9 +77,21 @@ class AnalyzeService {
   }
 }
 
-class AnalyzeException implements Exception {
-  final String message;
-  AnalyzeException(this.message);
-  @override
-  String toString() => message;
+/// Thrown by [AnalyzeService]. Carries either a localizable [AppMessage] code
+/// or a passthrough server-emitted message (sanitized + already localized by
+/// the proxy) via the base [AppException.serverMessage].
+class AnalyzeException extends AppException {
+  AnalyzeException.code(super.code, {super.detail});
+
+  AnalyzeException.fromServer(String serverMessage)
+      : super(AppMessage.analyzeBadResponse, serverMessage: serverMessage);
+}
+
+Future<String> _currentLocale() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('app_locale') == 'en' ? 'en' : 'ar';
+  } catch (_) {
+    return 'ar';
+  }
 }

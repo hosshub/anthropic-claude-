@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/enum_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/notification_service.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
@@ -10,9 +12,10 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final svc = context.watch<NotificationService>();
     return Scaffold(
-      appBar: AppBar(title: const Text('الإشعارات')),
+      appBar: AppBar(title: Text(l.notif_title)),
       body: !svc.isReady
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -24,11 +27,11 @@ class NotificationSettingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          'أنواع التذكيرات',
-                          style: TextStyle(
+                          l.notif_kinds_title,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             color: TColors.primary,
                             fontSize: 15,
@@ -45,6 +48,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                                 .setEnabled(kind, v);
                           },
                         ),
+                      _BodyFollowupRow(
+                        enabled: svc.bodyFollowupEnabled,
+                        onToggle: (v) => context
+                            .read<NotificationService>()
+                            .setBodyFollowupEnabled(v),
+                      ),
                     ],
                   ),
                 ),
@@ -52,9 +61,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                 if (svc.permissionGranted)
                   OutlinedButton.icon(
                     onPressed: () =>
-                        context.read<NotificationService>().showTest(),
+                        context.read<NotificationService>().showTest(
+                              l.appTitle,
+                              l.notif_testBody,
+                            ),
                     icon: const Icon(Icons.notifications_active),
-                    label: const Text('أرسل إشعار اختباري'),
+                    label: Text(l.notif_testButton),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: TColors.primary,
                       minimumSize: const Size.fromHeight(48),
@@ -65,12 +77,11 @@ class NotificationSettingsScreen extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 8),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'النصائح تختلف يومياً — التطبيق يتجنّب إعادة آخر ١٠ نصائح '
-                    'لكل وقت حتى لا تشعر بالتكرار.',
-                    style: TextStyle(
+                    l.notif_antiRepeatNote,
+                    style: const TextStyle(
                       color: TColors.textSecondary,
                       fontSize: 12,
                       height: 1.6,
@@ -89,21 +100,22 @@ class _PermissionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (svc.permissionGranted) {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: TColors.zoneGreen.withOpacity(0.10),
+          color: TColors.zoneGreen.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.verified, color: TColors.zoneGreen),
-            SizedBox(width: 10),
+            const Icon(Icons.verified, color: TColors.zoneGreen),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'الإشعارات مفعّلة من النظام.',
-                style: TextStyle(
+                l.notif_grantedBanner,
+                style: const TextStyle(
                   color: TColors.zoneGreen,
                   fontWeight: FontWeight.w600,
                 ),
@@ -116,21 +128,21 @@ class _PermissionBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: TColors.gold.withOpacity(0.10),
+        color: TColors.gold.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: TColors.gold.withOpacity(0.35)),
+        border: Border.all(color: TColors.gold.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.notifications_off, color: TColors.gold),
-              SizedBox(width: 8),
+              const Icon(Icons.notifications_off, color: TColors.gold),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'الإشعارات لم تُفعّل بعد من النظام.',
-                  style: TextStyle(
+                  l.notif_notGrantedTitle,
+                  style: const TextStyle(
                     color: TColors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -139,9 +151,9 @@ class _PermissionBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'لتصلك التذكيرات، نحتاج إذن النظام مرة واحدة.',
-            style: TextStyle(
+          Text(
+            l.notif_notGrantedBody,
+            style: const TextStyle(
               color: TColors.textSecondary,
               fontSize: 13,
               height: 1.55,
@@ -157,7 +169,7 @@ class _PermissionBanner extends StatelessWidget {
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(44),
             ),
-            child: const Text('السماح بالإشعارات'),
+            child: Text(l.notif_allowButton),
           ),
         ],
       ),
@@ -190,18 +202,20 @@ class _ToggleRow extends StatelessWidget {
     }
   }
 
-  String get _timeAr {
+  String _time(AppLocalizations l) {
     final (h, m) = kind.defaultTime;
     final hh = h.toString().padLeft(2, '0');
     final mm = m.toString().padLeft(2, '0');
+    final formatted = '$hh:$mm';
     if (kind == NotifKind.weeklyPrep) {
-      return 'كل سبت $hh:$mm';
+      return l.notif_everySaturdayAt(formatted);
     }
-    return 'يومياً $hh:$mm';
+    return l.notif_dailyAt(formatted);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -210,7 +224,7 @@ class _ToggleRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: TColors.primary.withOpacity(0.12),
+              color: TColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
@@ -222,14 +236,14 @@ class _ToggleRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  kind.labelAr,
+                  notifKindLabel(l, kind),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  _timeAr,
+                  _time(l),
                   style: const TextStyle(
                     color: TColors.textSecondary,
                     fontSize: 11.5,
@@ -240,7 +254,62 @@ class _ToggleRow extends StatelessWidget {
           ),
           Switch.adaptive(
             value: enabled,
-            activeColor: TColors.primary,
+            activeThumbColor: TColors.primary,
+            onChanged: onToggle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BodyFollowupRow extends StatelessWidget {
+  final bool enabled;
+  final ValueChanged<bool> onToggle;
+  const _BodyFollowupRow({required this.enabled, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: TColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(Icons.favorite, color: TColors.primary, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.notif_bodyFollowup_title,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  l.notif_bodyFollowup_subtitle,
+                  style: const TextStyle(
+                    color: TColors.textSecondary,
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: enabled,
+            activeThumbColor: TColors.primary,
             onChanged: onToggle,
           ),
         ],

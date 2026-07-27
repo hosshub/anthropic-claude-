@@ -1,7 +1,7 @@
 name: tayyibat
 description: تطبيق الطيبات — متابعة غذائية واعية (نسخة Flutter).
 publish_to: 'none'
-version: 1.0.0+3
+version: 1.4.0+12
 
 environment:
   sdk: ^3.5.0
@@ -11,8 +11,18 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: any
+  # Pinned to match what flutter_localizations expects on Flutter 3.5.
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
+
+  # Crash reporting is temporarily disabled in v1.0.2 — sentry_flutter
+  # 8.14.2's iOS Swift bridge references SentryBinaryImageCache.image
+  # which the current Sentry-Cocoa pod no longer exposes, breaking
+  # archive on Xcode. Will be re-added in v1.0.3 with sentry_flutter
+  # 9.x (which fixes the bridge). The plumbing in main.dart and
+  # config.dart stays — it short-circuits when no DSN is provided so
+  # is a no-op regardless of whether the package is present.
+  # sentry_flutter: ^9.21.0   # uncomment in v1.0.3
 
   # الواجهة الخلفية
   supabase_flutter: ^2.5.6
@@ -49,10 +59,24 @@ dependencies:
   # رسوم بيانية في Body Intelligence
   fl_chart: ^0.69.0
 
+  # قراءة الخطوات والسعرات المحروقة من Apple Health / Health Connect
+  health: ^13.3.1
+
+  # الاشتراكات والمشتريات داخل التطبيق (RevenueCat)
+  purchases_flutter: ^8.4.0
+
+  # فتح روابط الشروط والخصوصية من شاشة الاشتراك
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  # In-memory SQLite for unit-testing schema migrations and repositories.
+  sqflite_common_ffi: ^2.3.3
+  # Drives the app on a simulator to capture App Store screenshots.
+  integration_test:
+    sdk: flutter
   flutter_launcher_icons: ^0.14.1
 
 flutter:

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>الطيبات — تتبّع غذائك بوعي</title>
-    <meta name="description" content="الطيبات: صوّر وجبتك واعرف مدى توافقها مع نظام الطيبات الغذائي، مع متابعة يومية ودليل كامل وتذكيرات." />
+    <meta name="description" content="الطيبات: صوّر وجبتك واعرف مدى توافقها مع نظام الطيبات الغذائي، مع تحليل للسعرات والعناصر الغذائية، وعدّاد يومي، ودليل وجبات كامل، وتذكيرات." />
     <style>
       :root{
         --green:#0F5132; --green-2:#15795A; --gold:#C9A35B;
@@ -16,21 +16,43 @@
       .wrap{max-width:1040px;margin:0 auto;padding:0 22px}
 
       .hero{background:linear-gradient(160deg,var(--green-2),var(--green));color:#fff;padding:72px 0 84px;text-align:center}
-      .hero img{width:120px;height:120px;border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.25);margin-bottom:22px}
+      .hero img.logo{width:120px;height:120px;border-radius:28px;margin-bottom:22px;
+             box-shadow:0 14px 34px rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.22)}
       .hero h1{font-size:44px;margin-bottom:6px}
       .hero .tag{color:var(--gold);font-size:20px;font-weight:600;margin-bottom:18px}
       .hero p{max-width:560px;margin:0 auto 26px;color:rgba(255,255,255,.92);font-size:17px}
-      .badge{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);
-             color:#fff;padding:12px 22px;border-radius:14px;font-weight:600}
+
+      /* App Store download badge */
+      .store{display:inline-flex;align-items:center;gap:12px;background:#000;color:#fff;
+             padding:12px 22px;border-radius:14px;direction:ltr;transition:transform .15s ease, box-shadow .15s ease;
+             box-shadow:0 8px 22px rgba(0,0,0,.28)}
+      .store:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+      .store svg{width:30px;height:30px;fill:#fff;flex:0 0 auto}
+      .store .txt{display:flex;flex-direction:column;line-height:1.15;text-align:left}
+      .store .txt small{font-size:11px;opacity:.85;font-weight:400}
+      .store .txt b{font-size:19px;font-weight:600}
 
       section{padding:64px 0}
-      h2{color:var(--green);font-size:28px;text-align:center;margin-bottom:36px}
+      h2{color:var(--green);font-size:28px;text-align:center;margin-bottom:12px}
+      .sub{text-align:center;color:var(--muted);max-width:620px;margin:0 auto 36px}
       .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
       .card{background:var(--surface);border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
       .card .ic{width:46px;height:46px;border-radius:12px;background:rgba(15,81,50,.1);color:var(--green);
                display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
       .card h3{font-size:18px;margin-bottom:6px}
       .card p{color:var(--muted);font-size:15px}
+
+      /* Screenshot gallery */
+      .shots{background:linear-gradient(180deg,#fff,#f3efe7)}
+      .shots-rail{display:flex;gap:20px;overflow-x:auto;padding:8px 22px 20px;scroll-snap-type:x mandatory}
+      .shots-rail img{height:560px;border-radius:26px;box-shadow:0 16px 40px rgba(0,0,0,.14);
+                      scroll-snap-align:center;flex:0 0 auto;background:#fff}
+      .shots-rail::-webkit-scrollbar{height:8px}
+      .shots-rail::-webkit-scrollbar-thumb{background:rgba(15,81,50,.25);border-radius:99px}
+
+      .cta{background:linear-gradient(160deg,var(--green-2),var(--green));color:#fff;text-align:center}
+      .cta h2{color:#fff}
+      .cta p{color:rgba(255,255,255,.9);max-width:520px;margin:0 auto 24px}
 
       .disclaimer{background:#fff5f5;border-top:1px solid #f0d6d6;border-bottom:1px solid #f0d6d6}
       .disclaimer .wrap{max-width:760px;text-align:center;color:#7a2a2a}
@@ -40,37 +62,72 @@
       footer a{color:var(--gold)}
       footer .links{margin-bottom:10px}
       footer .links a{margin:0 10px}
+
+      @media(max-width:560px){ .hero h1{font-size:36px} .shots-rail img{height:460px} }
     </style>
   </head>
   <body>
     <header class="hero">
       <div class="wrap">
-        <img src="logo.png" alt="شعار الطيبات" />
+        <img class="logo" src="logo.png" alt="شعار الطيبات" />
         <h1>الطيبات</h1>
         <div class="tag">تتبّع غذائك بوعي</div>
-        <p>صوّر وجبتك فيحلّلها التطبيق ويعرض مدى توافقها مع نظام الطيبات الغذائي — مع متابعة يومية، ودليل كامل، وتذكيرات مرنة، ونصائح.</p>
-        <span class="badge">قريباً على App Store</span>
+        <p>صوّر وجبتك فيحلّلها التطبيق ويعرض التزامها بنظام الطيبات — مع تقدير السعرات والعناصر الغذائية، وعدّاد يومي، ودليل وجبات كامل، وتذكيرات مرنة.</p>
+        <a class="store" href="https://apps.apple.com/ae/app/tayyibat-ai/id6777743474" aria-label="حمّل من App Store">
+          <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span class="txt"><small>Download on the</small><b>App Store</b></span>
+        </a>
       </div>
     </header>
 
     <section>
       <div class="wrap">
         <h2>ماذا يقدّم التطبيق</h2>
+        <p class="sub">من الصورة إلى القرار: تحليل فوري، أرقام غذائية، ودليل يمشي معك خطوة بخطوة.</p>
         <div class="grid">
-          <div class="card"><div class="ic">📸</div><h3>تحليل بالصورة</h3><p>صوّر طبقك واحصل على نسبة الالتزام مع حكم لكل عنصر: طيّب أو خبيث أو مشروط.</p></div>
-          <div class="card"><div class="ic">📊</div><h3>متابعة يومية</h3><p>حلقة الالتزام، عدّاد الأيام المتتالية، وسجلّ وجباتك مع رسوم بيانية أسبوعية وشهرية.</p></div>
-          <div class="card"><div class="ic">📖</div><h3>دليل النظام</h3><p>قوائم المسموح والممنوع وبحث سريع: «هل هذا الطعام مسموح؟».</p></div>
-          <div class="card"><div class="ic">🌙</div><h3>الصيام</h3><p>متتبّع لأيام الإثنين والخميس والأيام البيض مع تذكيرات قبل الصيام.</p></div>
+          <div class="card"><div class="ic">📸</div><h3>تحليل بالصورة</h3><p>صوّر طبقك واحصل على نسبة الالتزام مع حكم لكل عنصر بألوان الإشارات: أخضر أو أصفر أو أحمر.</p></div>
+          <div class="card"><div class="ic">🔥</div><h3>سعرات وعناصر غذائية</h3><p>تقدير للسعرات والماكروز (بروتين/كارب/دهون) والعناصر الدقيقة لكل صنف في الوجبة.</p></div>
+          <div class="card"><div class="ic">🎯</div><h3>عدّاد يومي</h3><p>تابع سعرات يومك مقابل هدف تختاره بنفسك، مع توزّع الماكروز وشريط تقدّم واضح.</p></div>
+          <div class="card"><div class="ic">🍽️</div><h3>دليل وجبات كامل</h3><p>وجبات طيبة جاهزة للفطور والغداء والعشاء والسناك وأيام الصيام، مع المكوّنات وطريقة التحضير.</p></div>
+          <div class="card"><div class="ic">📊</div><h3>سجل وإحصاءات</h3><p>تقويم شهري ملوّن، منحنى التزام ٣٠ يوم، ومتابعة استجابة جسمك بعد كل وجبة.</p></div>
+          <div class="card"><div class="ic">🌙</div><h3>الصيام</h3><p>متتبّع للإثنين والخميس والأيام البيض (١٣/١٤/١٥ هجري) مع تذكيرات.</p></div>
           <div class="card"><div class="ic">🔔</div><h3>تذكيرات ونصائح</h3><p>تذكيرات مرنة ونصائح يومية متنوّعة، كلها اختيارية وقابلة للضبط.</p></div>
-          <div class="card"><div class="ic">🔒</div><h3>خصوصية</h3><p>بياناتك تُخزَّن على جهازك، ولا نبيعها ولا نستخدم أدوات تتبّع.</p></div>
+          <div class="card"><div class="ic">🔒</div><h3>خصوصية أولاً</h3><p>بياناتك تُخزَّن على جهازك، ولا نبيعها ولا نستخدم أدوات تتبّع، وحذف الحساب من داخل التطبيق.</p></div>
         </div>
+      </div>
+    </section>
+
+    <!-- SCREENSHOTS: drop the framed renders into web/screens/ then this rail fills.
+         Files expected: screens/shot-1.png … screens/shot-5.png (9:16, ≥1080px tall). -->
+    <section class="shots">
+      <div class="wrap">
+        <h2>لقطات من التطبيق</h2>
+        <p class="sub">تحليل الوجبة، السجل الملوّن، الدليل الذكي، خطة الأسبوع، والصيام.</p>
+      </div>
+      <div class="shots-rail">
+        <img src="screens/shot-1.png" alt="تحليل الوجبة" loading="lazy" onerror="this.style.display='none'" />
+        <img src="screens/shot-2.png" alt="السجل والتقويم" loading="lazy" onerror="this.style.display='none'" />
+        <img src="screens/shot-3.png" alt="الدليل الذكي" loading="lazy" onerror="this.style.display='none'" />
+        <img src="screens/shot-4.png" alt="خطة الأسبوع" loading="lazy" onerror="this.style.display='none'" />
+        <img src="screens/shot-5.png" alt="الصيام" loading="lazy" onerror="this.style.display='none'" />
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap">
+        <h2>ابدأ رحلتك مع الطيبات</h2>
+        <p>حمّل التطبيق الآن وصوّر أول وجبة لك — واعرف مدى توافقها مع نظام الطيبات في ثوانٍ.</p>
+        <a class="store" href="https://apps.apple.com/ae/app/tayyibat-ai/id6777743474" aria-label="حمّل من App Store">
+          <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span class="txt"><small>Download on the</small><b>App Store</b></span>
+        </a>
       </div>
     </section>
 
     <section class="disclaimer">
       <div class="wrap">
         <h2>تنبيه طبي</h2>
-        <p>هذا التطبيق أداة لتتبّع نظام غذائي تختاره بنفسك. لا يقدّم استشارة طبية ولا يدّعي علاج أي مرض. استشر طبيبك أو أخصائي تغذية قبل اتباع أي نظام غذائي، خاصةً إن كنت تعاني مرضاً مزمناً أو كنت حاملاً أو مرضعاً أو دون 18 عاماً.</p>
+        <p>هذا التطبيق أداة لتتبّع نظام غذائي تختاره بنفسك، والقيم الغذائية فيه تقديرات للوعي العام لا قياسات دقيقة. لا يقدّم استشارة طبية ولا يدّعي علاج أي مرض. استشر طبيبك أو أخصائي تغذية قبل اتباع أي نظام غذائي، خاصةً إن كنت تعاني مرضاً مزمناً أو كنت حاملاً أو مرضعاً أو دون 18 عاماً.</p>
       </div>
     </section>
 
@@ -78,6 +135,7 @@
       <div class="wrap">
         <div class="links">
           <a href="privacy.html">سياسة الخصوصية</a> ·
+          <a href="delete-account.html">حذف الحساب</a> ·
           <a href="mailto:app@tayyibat.ai">الدعم</a>
         </div>
         <div>© 2026 الطيبات — جميع الحقوق محفوظة</div>

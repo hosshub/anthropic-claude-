@@ -22,14 +22,14 @@
   <body>
     <div class="wrap">
       <h1>سياسة الخصوصية — تطبيق الطيبات</h1>
-      <p class="date">آخر تحديث: 2026-05-31</p>
+      <p class="date">آخر تحديث: 2026-07-19</p>
 
       <p>نحترم خصوصيتك. توضّح هذه الصفحة البيانات التي يتعامل معها تطبيق <strong>الطيبات</strong>.</p>
 
       <h2>البيانات التي نتعامل معها</h2>
       <ul>
         <li><strong>الحساب وتسجيل الدخول:</strong> عند إنشاء حساب أو تسجيل الدخول عبر <strong>Google</strong> أو <strong>Apple</strong> أو البريد الإلكتروني، نستخدم خدمة <strong>Supabase</strong> للمصادقة. نخزّن معرّف حسابك وبريدك الإلكتروني لتسجيل دخولك ولتطبيق حدّ الاستخدام اليومي. لا نطّلع على كلمة مرورك (تُدار عبر مزوّد الدخول أو Supabase).</li>
-        <li><strong>صور الوجبات:</strong> عند طلبك تحليل وجبة، تُرسَل صورتها إلى خادمنا الوسيط (المُستضاف على <strong>Supabase</strong>) ومنه إلى خدمة <strong>Google (Gemini)</strong> لإجراء التحليل، ثم تعود النتيجة إليك. لا نحتفظ بالصور على خوادمنا بعد التحليل.</li>
+        <li><strong>صور الوجبات:</strong> عند طلبك تحليل وجبة، تُرسَل صورتها إلى خادمنا الوسيط (المُستضاف على <strong>Supabase</strong>) ومنه إلى خدمة الذكاء الاصطناعي <strong>Google Gemini</strong> (عبر Generative Language API) لإجراء التحليل، فتعود النتيجة إليك متضمّنةً تصنيف العناصر وتقديرات غذائية (سعرات وماكروز وعناصر دقيقة) تُحسب من الصورة. تُعالَج الصورة آنيّاً ولا نحتفظ بها على خوادمنا بعد التحليل، ولا تُستخدم لتدريب نماذج Google وفق شروط واجهة Gemini للمطوّرين.</li>
         <li><strong>بياناتك على الجهاز:</strong> الاسم والعمر (اختياري) والوجبات ونتائجها وصورها والملخصات اليومية وأيام الصيام — تُخزَّن محلياً على جهازك فقط ولا تُرفع إلى خوادمنا.</li>
         <li><strong>بيانات الاستخدام:</strong> نحتفظ بعدّاد بسيط على خادمنا (معرّف الحساب + التاريخ + عدد التحليلات) لغرض واحد هو تطبيق الحدّ اليومي. لا يتضمّن صورك ولا تفاصيل وجباتك.</li>
       </ul>
@@ -60,13 +60,13 @@
 
       <div class="ltr">
         <h1>Privacy Policy — Tayyibat</h1>
-        <p class="date">Last updated: 2026-05-31</p>
+        <p class="date">Last updated: 2026-07-19</p>
         <p>We respect your privacy. This page explains how the <strong>Tayyibat</strong> app handles data.</p>
 
         <h2>Data we handle</h2>
         <ul>
           <li><strong>Account &amp; sign-in:</strong> when you create an account or sign in with <strong>Google</strong>, <strong>Apple</strong>, or email, we use <strong>Supabase</strong> for authentication. We store your account identifier and email to sign you in and to enforce the daily usage limit. We never see your password (it is handled by the sign-in provider or Supabase).</li>
-          <li><strong>Meal photos:</strong> when you request an analysis, the photo is sent to our backend proxy (hosted on <strong>Supabase</strong>) and on to <strong>Google (Gemini)</strong> for processing, and the result is returned to you. We do not retain photos after processing.</li>
+          <li><strong>Meal photos:</strong> when you request an analysis, the photo is sent to our backend proxy (hosted on <strong>Supabase</strong>) and on to the <strong>Google Gemini</strong> AI service (via the Generative Language API) for processing. The result returned to you includes item classification and nutrition estimates (calories, macros, and micronutrients) computed from the photo. The image is processed transiently and is not retained on our servers after analysis, and is not used to train Google's models per the Gemini developer API terms.</li>
           <li><strong>On-device data:</strong> your name, optional age, meals/results/images, daily summaries, and fasting days are stored only on your device and are not uploaded to our servers.</li>
           <li><strong>Usage data:</strong> we keep a small server-side counter (account id + date + number of analyses) for the sole purpose of enforcing the daily limit. It contains no photos or meal details.</li>
         </ul>

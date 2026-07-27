@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
@@ -11,13 +10,32 @@ import 'package:uuid/uuid.dart';
 import '../models/analysis_result.dart';
 import '../models/body_response.dart';
 import '../models/meal.dart';
+import '../services/score_engine.dart';
 import 'database.dart';
+import 'food_bank_data.dart';
 
 /// مستودع الوجبات: حفظ/قراءة/حذف للوجبات وعناصرها ومتابعات الجسم.
 class MealRepository extends ChangeNotifier {
   final _uuid = const Uuid();
 
-  Future<Database> get _db => TayyibatDatabase.open();
+  /// حاقن لقاعدة البيانات — يسمح للاختبارات بتمرير قاعدة في الذاكرة.
+  final Future<Database> Function() _opener;
+
+  MealRepository({Future<Database> Function()? dbOpener})
+      : _opener = dbOpener ?? TayyibatDatabase.open;
+
+  Future<Database> get _db => _opener();
+
+  /// عدّاد تغييرات — يزيد مع كل notifyListeners حتى تستطيع الشاشات
+  /// إبطال نتائج FutureBuilder المخزّنة عند تغيّر البيانات فقط.
+  int _revision = 0;
+  int get revision => _revision;
+
+  @override
+  void notifyListeners() {
+    _revision++;
+    super.notifyListeners();
+  }
 
   Future<Directory> _mealsDir() async {
     final docs = await getApplicationDocumentsDirectory();
@@ -31,26 +49,33 @@ class MealRepository extends ChangeNotifier {
   // -------------------------------------------------------------------------
 
   /// يحفظ نتيجة تحليل كوجبة جديدة. يكتب الصورة على القرص ويُعيد الوجبة المُخزّنة.
+  /// [persistImage] تتيح للاختبارات تخطي path_provider والقرص.
   Future<Meal> saveFromAnalysis(
     AnalysisResult result,
-    Uint8List imageBytes,
-  ) async {
+    Uint8List imageBytes, {
+    bool persistImage = true,
+  }) async {
     final id = _uuid.v4();
     final capturedAt = DateTime.now();
-    final dir = await _mealsDir();
-    final imagePath = p.join(dir.path, '$id.jpg');
-    try {
-      await File(imagePath).writeAsBytes(imageBytes, flush: true);
-    } catch (_) {
-      // إن فشلت الكتابة لأي سبب، نواصل ونحفظ الصف بدون صورة.
+    String? imagePath;
+    if (persistImage) {
+      final dir = await _mealsDir();
+      imagePath = p.join(dir.path, '$id.jpg');
+      try {
+        await File(imagePath).writeAsBytes(imageBytes, flush: true);
+      } catch (_) {
+        // إن فشلت الكتابة لأي سبب، نواصل ونحفظ الصف بدون صورة.
+      }
     }
+    final storedPath =
+        imagePath != null && await File(imagePath).exists() ? imagePath : null;
 
     final db = await _db;
     await db.transaction((tx) async {
       await tx.insert('meals', {
         'id': id,
         'captured_at': capturedAt.millisecondsSinceEpoch,
-        'image_path': await File(imagePath).exists() ? imagePath : null,
+        'image_path': storedPath,
         'overall_score': result.overallScore,
         'score_label_ar': result.scoreLabelAr,
         'score_explanation_ar': result.scoreExplanationAr,
@@ -72,6 +97,11 @@ class MealRepository extends ChangeNotifier {
           'estimated_portion': item.estimatedPortion,
           'rule_violated': item.ruleViolated,
           'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
         });
       }
     });
@@ -80,7 +110,7 @@ class MealRepository extends ChangeNotifier {
     return Meal(
       id: id,
       capturedAt: capturedAt,
-      imagePath: await File(imagePath).exists() ? imagePath : null,
+      imagePath: storedPath,
       overallScore: result.overallScore,
       scoreLabelAr: result.scoreLabelAr,
       scoreExplanationAr: result.scoreExplanationAr,
@@ -116,6 +146,41 @@ class MealRepository extends ChangeNotifier {
       orderBy: 'captured_at DESC',
     );
     return _hydrate(rows);
+  }
+
+  /// أوقات التقاط الوجبات الأخيرة (الأحدث أولاً) — تكفي لحساب سلسلة
+  /// التسجيل بلا تحميل الوجبات كاملة.
+  Future<List<DateTime>> recentCaptureTimes({int limit = 400}) async {
+    final db = await _db;
+    final rows = await db.query(
+      'meals',
+      columns: ['captured_at'],
+      orderBy: 'captured_at DESC',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        DateTime.fromMillisecondsSinceEpoch(r['captured_at'] as int),
+    ];
+  }
+
+  /// أوقات تحليلات الذكاء الاصطناعي وحدها (source='ai') — وهي وحدها ما
+  /// يُحتسب على الرصيد المجاني. تسجيل بنك الطعام وإعادة التسجيل مجانيان بلا
+  /// حدود، فلا يجوز أن يستهلكا حصّة التحليل.
+  Future<List<DateTime>> recentAiScanTimes({int limit = 400}) async {
+    final db = await _db;
+    final rows = await db.query(
+      'meals',
+      columns: ['captured_at'],
+      where: 'source = ?',
+      whereArgs: const ['ai'],
+      orderBy: 'captured_at DESC',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        DateTime.fromMillisecondsSinceEpoch(r['captured_at'] as int),
+    ];
   }
 
   Future<Meal?> load(String id) async {
@@ -167,8 +232,221 @@ class MealRepository extends ChangeNotifier {
         warnings: _decodeStringList(r['warnings']),
         items: itemsByMeal[id] ?? const [],
         bodyResponse: responsesByMeal[id],
+        wasEdited: (r['was_edited'] as int? ?? 0) != 0,
+        source: (r['source'] as String?) ?? 'ai',
       );
     }).toList();
+  }
+
+  // -------------------------------------------------------------------------
+  // التسجيل من بنك الطعام (v1.3)
+  // -------------------------------------------------------------------------
+
+  /// يسجّل صنفاً من بنك الطعام كوجبة الآن — بلا صورة ولا تحليل ذكاء اصطناعي.
+  /// النتيجة تُحسب من منطقة الصنف عبر محرّك النقاط، والتغذية تُضرب في [portions].
+  Future<Meal> logFromFoodBank(FoodBankItem item, {int portions = 1}) async {
+    final p = portions.clamp(1, 10);
+    final foodItem = FoodItem(
+      nameAr: item.nameAr,
+      confidence: 1.0,
+      estimatedPortion: item.portionAr,
+      verdict: switch (item.zone) {
+        FoodZone.green => 'tayyib',
+        FoodZone.yellow => 'conditional',
+        FoodZone.red => 'khabith',
+      },
+      zoneRaw: item.zone.name,
+      category: item.categoryLabelAr,
+      reasoningAr: item.noteAr ?? '',
+      caloriesKcal: item.caloriesKcal * p,
+      proteinG: item.proteinG * p,
+      carbsG: item.carbsG * p,
+      fatG: item.fatG * p,
+    );
+    final score = recomputeScore([foodItem]);
+    final id = _uuid.v4();
+    final capturedAt = DateTime.now();
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.insert('meals', {
+        'id': id,
+        'captured_at': capturedAt.millisecondsSinceEpoch,
+        'image_path': null,
+        'overall_score': score,
+        'score_label_ar': item.nameAr,
+        'score_explanation_ar': '',
+        'suggestions': jsonEncode(<String>[]),
+        'warnings': jsonEncode(<String>[]),
+        'was_edited': 0,
+        'source': 'food_bank',
+      });
+      await tx.insert('food_items', {
+        'id': _uuid.v4(),
+        'meal_id': id,
+        'name_ar': foodItem.nameAr,
+        'verdict': foodItem.verdict,
+        'zone': foodItem.zoneRaw,
+        'caution_ar': null,
+        'category': foodItem.category,
+        'reasoning': foodItem.reasoningAr,
+        'confidence': 1.0,
+        'estimated_portion': foodItem.estimatedPortion,
+        'rule_violated': null,
+        'item_order': 0,
+        'calories_kcal': foodItem.caloriesKcal,
+        'protein_g': foodItem.proteinG,
+        'carbs_g': foodItem.carbsG,
+        'fat_g': foodItem.fatG,
+        'micros': null,
+      });
+    });
+    notifyListeners();
+    return Meal(
+      id: id,
+      capturedAt: capturedAt,
+      imagePath: null,
+      overallScore: score,
+      scoreLabelAr: item.nameAr,
+      scoreExplanationAr: '',
+      suggestions: const [],
+      warnings: const [],
+      items: [foodItem],
+      source: 'food_bank',
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // إعادة تسجيل وجبة (v1.2.1)
+  // -------------------------------------------------------------------------
+
+  /// يسجّل وجبة سابقة من جديد الآن — نسخة كاملة للعناصر والنتيجة بلا
+  /// استهلاك تحليل ذكاء اصطناعي. متابعة الجسم لا تُنسخ (شعور جديد لوجبة
+  /// جديدة)، والصورة تُنسخ ملفاً مستقلاً حتى لا يكسرها حذف الأصل.
+  /// قرار منتج مقصود: لا يُجدول تذكير "كيف شعرت؟" لإعادة التسجيل —
+  /// المستخدم يعرف هذه الوجبة أصلاً، والتذكير يخص التحليلات الجديدة.
+  Future<Meal?> relogMeal(String mealId) async {
+    final original = await load(mealId);
+    if (original == null) return null;
+
+    final id = _uuid.v4();
+    final capturedAt = DateTime.now();
+    String? imagePath;
+    final sourcePath = original.imagePath;
+    if (sourcePath != null) {
+      try {
+        final dir = await _mealsDir();
+        final target = p.join(dir.path, '$id.jpg');
+        await File(sourcePath).copy(target);
+        imagePath = target;
+      } catch (_) {
+        // بلا صورة أفضل من فشل التسجيل كله.
+      }
+    }
+
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.insert('meals', {
+        'id': id,
+        'captured_at': capturedAt.millisecondsSinceEpoch,
+        'image_path': imagePath,
+        'overall_score': original.overallScore,
+        'score_label_ar': original.scoreLabelAr,
+        'score_explanation_ar': original.scoreExplanationAr,
+        'suggestions': jsonEncode(original.suggestions),
+        'warnings': jsonEncode(original.warnings),
+        'was_edited': original.wasEdited ? 1 : 0,
+        'source': original.source,
+      });
+      for (var i = 0; i < original.items.length; i++) {
+        final item = original.items[i];
+        await tx.insert('food_items', {
+          'id': _uuid.v4(),
+          'meal_id': id,
+          'name_ar': item.nameAr,
+          'verdict': item.verdict,
+          'zone': item.zoneRaw,
+          'caution_ar': item.cautionAr,
+          'category': item.category,
+          'reasoning': item.reasoningAr,
+          'confidence': item.confidence,
+          'estimated_portion': item.estimatedPortion,
+          'rule_violated': item.ruleViolated,
+          'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
+        });
+      }
+    });
+
+    notifyListeners();
+    return Meal(
+      id: id,
+      capturedAt: capturedAt,
+      imagePath: imagePath,
+      overallScore: original.overallScore,
+      scoreLabelAr: original.scoreLabelAr,
+      scoreExplanationAr: original.scoreExplanationAr,
+      suggestions: original.suggestions,
+      warnings: original.warnings,
+      items: original.items,
+      wasEdited: original.wasEdited,
+      source: original.source,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // تعديل العناصر (v1.2)
+  // -------------------------------------------------------------------------
+
+  /// يستبدل عناصر الوجبة بعد تعديل المستخدم، ويحدّث النتيجة والتسمية،
+  /// ويعلّم الوجبة كمُعدَّلة. الشرح القديم يُمسح لأنه قد يشير لعناصر أُزيلت.
+  Future<void> updateMealItems(
+    String mealId,
+    List<FoodItem> items, {
+    required int score,
+    required String label,
+  }) async {
+    final db = await _db;
+    await db.transaction((tx) async {
+      await tx.delete('food_items', where: 'meal_id = ?', whereArgs: [mealId]);
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i];
+        await tx.insert('food_items', {
+          'id': _uuid.v4(),
+          'meal_id': mealId,
+          'name_ar': item.nameAr,
+          'verdict': item.verdict,
+          'zone': item.zoneRaw,
+          'caution_ar': item.cautionAr,
+          'category': item.category,
+          'reasoning': item.reasoningAr,
+          'confidence': item.confidence,
+          'estimated_portion': item.estimatedPortion,
+          'rule_violated': item.ruleViolated,
+          'item_order': i,
+          'calories_kcal': item.caloriesKcal,
+          'protein_g': item.proteinG,
+          'carbs_g': item.carbsG,
+          'fat_g': item.fatG,
+          'micros': item.micros.isEmpty ? null : jsonEncode(item.micros),
+        });
+      }
+      await tx.update(
+        'meals',
+        {
+          'overall_score': score,
+          'score_label_ar': label,
+          'score_explanation_ar': '',
+          'was_edited': 1,
+        },
+        where: 'id = ?',
+        whereArgs: [mealId],
+      );
+    });
+    notifyListeners();
   }
 
   FoodItem _foodItemFromRow(Map<String, Object?> r) => FoodItem(
@@ -181,6 +459,11 @@ class MealRepository extends ChangeNotifier {
         category: (r['category'] as String?) ?? 'عام',
         reasoningAr: (r['reasoning'] as String?) ?? '',
         ruleViolated: r['rule_violated'] as String?,
+        caloriesKcal: (r['calories_kcal'] as num?)?.round(),
+        proteinG: (r['protein_g'] as num?)?.toDouble(),
+        carbsG: (r['carbs_g'] as num?)?.toDouble(),
+        fatG: (r['fat_g'] as num?)?.toDouble(),
+        micros: _decodeStringList(r['micros']),
       );
 
   List<String> _decodeStringList(Object? raw) {
@@ -302,7 +585,44 @@ class MealRepository extends ChangeNotifier {
   /// يزرع وجبات وهمية موزّعة على آخر ١٤ يوماً مع تنويع المنطقة والدرجات
   /// ومتابعات الجسم — حتى تظهر شاشتا التقويم وBody Intelligence بمحتوى
   /// حقيقي عند التقاط الصور للمتجر. أزل البيانات لاحقاً بـ "حذف الحساب".
-  Future<int> seedDemoData() async {
+  /// [locale] == 'en' يترجم أسماء العناصر والتسميات إلى الإنجليزية حتى
+  /// تُلتقط لقطات المتجر الإنجليزية بمحتوى إنجليزي متّسق مع الواجهة.
+  Future<int> seedDemoData({String locale = 'ar'}) async {
+    const enNames = <String, String>{
+      'بطاطس مسلوقة': 'Boiled potatoes',
+      'بطاطس مشوية': 'Roasted potatoes',
+      'سمن بلدي': 'Ghee',
+      'زبدة طبيعية': 'Natural butter',
+      'زيت زيتون': 'Olive oil',
+      'زيتون': 'Olives',
+      'قهوة': 'Coffee',
+      'شاي': 'Tea',
+      'تمر': 'Dates',
+      'أرز بسمتي': 'Basmati rice',
+      'أرز أبيض': 'White rice',
+      'سمك مشوي': 'Grilled fish',
+      'كبدة بلدي': 'Liver',
+      'لحم أحمر': 'Red meat',
+      'ماء': 'Water',
+      'بسكوت مصنّع': 'Processed biscuits',
+    };
+    const enLabels = <String, String>{
+      'ممتاز': 'Excellent',
+      'جيد': 'Good',
+      'متوسط': 'Average',
+      'بعيدة عن نظام الطيبات': 'Off the Tayyibat system',
+    };
+    final en = locale == 'en';
+    String nm(String ar) => en ? (enNames[ar] ?? ar) : ar;
+    String lbl(String ar) => en ? (enLabels[ar] ?? ar) : ar;
+    return _seedDemoData(en: en, nm: nm, lbl: lbl);
+  }
+
+  Future<int> _seedDemoData({
+    required bool en,
+    required String Function(String) nm,
+    required String Function(String) lbl,
+  }) async {
     final db = await _db;
     final now = DateTime.now();
     DateTime daysAgo(int d, int hour, int minute) {
@@ -461,6 +781,27 @@ class MealRepository extends ChangeNotifier {
       ),
     ];
 
+    // تقديرات تغذية للبيانات التجريبية حتى تعرض شاشة اليوم عدّاد السعرات
+    // في لقطات المتجر. (kcal، بروتين، كارب، دهون)
+    const demoNutrition = <String, List<num>>{
+      'بطاطس مسلوقة': [140, 3, 31, 0.2],
+      'بطاطس مشوية': [160, 3.5, 33, 1],
+      'سمن بلدي': [110, 0, 0, 12],
+      'زبدة طبيعية': [100, 0.1, 0, 11],
+      'زيت زيتون': [120, 0, 0, 13.5],
+      'زيتون': [45, 0.3, 1.5, 4.5],
+      'قهوة': [5, 0.3, 0.5, 0],
+      'شاي': [30, 0, 7.5, 0],
+      'تمر': [90, 0.7, 24, 0.1],
+      'أرز بسمتي': [210, 4.5, 45, 0.5],
+      'أرز أبيض': [205, 4.2, 44, 0.4],
+      'سمك مشوي': [180, 26, 0, 8],
+      'كبدة بلدي': [190, 27, 4, 6],
+      'لحم أحمر': [250, 26, 0, 16],
+      'ماء': [0, 0, 0, 0],
+      'بسكوت مصنّع': [240, 3, 32, 11],
+    };
+
     var inserted = 0;
     await db.transaction((tx) async {
       for (final meal in samples) {
@@ -470,30 +811,37 @@ class MealRepository extends ChangeNotifier {
           'captured_at': meal.capturedAt.millisecondsSinceEpoch,
           'image_path': null,
           'overall_score': meal.score,
-          'score_label_ar': meal.label,
-          'score_explanation_ar': meal.explanation,
+          'score_label_ar': lbl(meal.label),
+          'score_explanation_ar': en ? '' : meal.explanation,
           'suggestions': jsonEncode(<String>[]),
           'warnings': jsonEncode(<String>[]),
         });
         for (var i = 0; i < meal.items.length; i++) {
           final item = meal.items[i];
+          final n = demoNutrition[item.nameAr];
           await tx.insert('food_items', {
             'id': _uuid.v4(),
             'meal_id': mealId,
-            'name_ar': item.nameAr,
+            'name_ar': nm(item.nameAr),
             'verdict': item.zoneRaw == 'green'
                 ? 'tayyib'
                 : item.zoneRaw == 'red'
                     ? 'khabith'
                     : 'conditional',
             'zone': item.zoneRaw,
-            'caution_ar': item.zoneRaw == 'yellow' ? item.reasoning : null,
+            'caution_ar':
+                (!en && item.zoneRaw == 'yellow') ? item.reasoning : null,
             'category': item.category,
-            'reasoning': item.reasoning,
+            'reasoning': en ? '' : item.reasoning,
             'confidence': 0.92,
-            'estimated_portion': 'متوسطة',
+            'estimated_portion': en ? 'medium portion' : 'متوسطة',
             'rule_violated': null,
             'item_order': i,
+            'calories_kcal': n?[0].round(),
+            'protein_g': n?[1].toDouble(),
+            'carbs_g': n?[2].toDouble(),
+            'fat_g': n?[3].toDouble(),
+            'micros': null,
           });
         }
         final br = meal.bodyResponse;

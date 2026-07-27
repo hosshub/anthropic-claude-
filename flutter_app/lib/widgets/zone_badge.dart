@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/enum_labels.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/analysis_result.dart';
 import '../theme/theme.dart';
 
@@ -23,30 +25,40 @@ class ZoneBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = _color();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(40),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+    final l = AppLocalizations.of(context)!;
+    final label = foodZoneLabel(l, zone);
+    return Semantics(
+      // VoiceOver / TalkBack reads the zone label and merges the colored
+      // dot into the same node so the badge is a single accessibility unit.
+      label: label,
+      container: true,
+      child: ExcludeSemantics(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: c.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(40),
           ),
-          const SizedBox(width: 6),
-          Text(
-            zone.labelAr,
-            style: TextStyle(
-              color: c,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: c,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

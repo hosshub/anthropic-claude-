@@ -5,28 +5,48 @@ import 'package:provider/provider.dart';
 
 import '../../data/meal_repository.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/analysis_result.dart';
 import '../../models/meal.dart';
-import '../../services/auth_service.dart';
+import '../../services/calorie_math.dart';
+import '../../services/health_service.dart';
+import '../../services/nutrition_goal_service.dart';
+import '../../services/profile_service.dart';
+import '../../services/streak.dart';
 import '../../theme/theme.dart';
 import '../../widgets/card_container.dart';
+import '../../widgets/nutrition_summary.dart';
 import '../../widgets/primary_button.dart';
 import '../capture/capture_screen.dart';
+import '../food_bank/food_bank_screen.dart';
 import '../fasting/fasting_screen.dart';
 import '../history/meal_detail_screen.dart';
 import '../suggestions/suggestions_screen.dart';
 import 'when_in_doubt_screen.dart';
 
-class TodayScreen extends StatelessWidget {
+class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
-  String _greeting(BuildContext context, AuthService auth) {
+  @override
+  State<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends State<TodayScreen> {
+  // Cache the day's query per repository generation — rebuilds (greeting,
+  // locale, calorie goal…) must not re-hit SQLite every frame.
+  Future<List<Meal>>? _mealsFuture;
+  Future<int>? _streakFuture;
+  int _cachedRevision = -1;
+  DateTime? _cachedDay;
+
+  String _greeting(BuildContext context, ProfileService profile) {
     final l = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
     final period =
         hour < 12 ? l.today_greetingMorning : l.today_greetingEvening;
-    final email = auth.email;
-    if (email == null || email.isEmpty) return period;
-    return '$period، ${email.split('@').first}';
+    // v1.2: التحية بالاسم المعروض الذي اختاره المستخدم — لا مقطع البريد.
+    final name = profile.greetingName;
+    if (name == null || name.isEmpty) return period;
+    return l.today_greetingWithName(period, name);
   }
 
   DateTime get _dayStart {
@@ -36,19 +56,29 @@ class TodayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthService>();
+    final profile = context.watch<ProfileService>();
     final repo = context.watch<MealRepository>();
     final l = AppLocalizations.of(context)!;
     final dayStart = _dayStart;
     final dayEnd = dayStart.add(const Duration(days: 1));
+    // notifyListeners bumps repo.revision — refresh the cached futures only
+    // when data actually changed (or the calendar day rolled over).
+    if (_cachedRevision != repo.revision ||
+        _cachedDay != dayStart ||
+        _mealsFuture == null) {
+      _cachedRevision = repo.revision;
+      _cachedDay = dayStart;
+      _mealsFuture = repo.loadBetween(dayStart, dayEnd);
+      _streakFuture = repo
+          .recentCaptureTimes()
+          .then((times) => loggedStreak(times));
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l.tab_today),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: TColors.primary,
-        foregroundColor: Colors.white,
+      floatingActionButton: FloatingActionButton.extended(
         tooltip: l.today_whenInDoubtTooltip,
         onPressed: () {
           Navigator.of(context).push(
@@ -58,12 +88,12 @@ class TodayScreen extends StatelessWidget {
             ),
           );
         },
-        child: const Text('🤔', style: TextStyle(fontSize: 24)),
+        icon: const Icon(Icons.help_outline),
+        label: Text(l.today_whenInDoubtTooltip),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Meal>>(
-          key: ValueKey(repo.hashCode),
-          future: repo.loadBetween(dayStart, dayEnd),
+          future: _mealsFuture,
           builder: (context, snap) {
             final meals = snap.data ?? const <Meal>[];
             final loading = snap.connectionState == ConnectionState.waiting;
@@ -74,7 +104,7 @@ class TodayScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    _greeting(context, auth),
+                    _greeting(context, profile),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 20),
@@ -86,6 +116,13 @@ class TodayScreen extends StatelessWidget {
                       loading: loading,
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  _StreakCard(
+                    streakFuture: _streakFuture,
+                    loggedToday: meals.isNotEmpty,
+                  ),
+                  _DailyCaloriesCard(meals: meals),
+                  const _HealthActivityCard(),
                   const SizedBox(height: 20),
                   PrimaryButton(
                     label: l.today_photoYourMeal,
@@ -97,6 +134,21 @@ class TodayScreen extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FoodBankScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.restaurant_menu, size: 18),
+                    label: Text(l.today_logFromBank),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -113,15 +165,7 @@ class TodayScreen extends StatelessWidget {
                           icon: const Icon(Icons.auto_awesome, size: 18),
                           label: Text(l.today_suggestions),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
-                            side: const BorderSide(
-                              color: TColors.primary,
-                              width: 1.2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
                           ),
                         ),
                       ),
@@ -138,15 +182,7 @@ class TodayScreen extends StatelessWidget {
                           icon: const Icon(Icons.brightness_2, size: 18),
                           label: Text(l.today_fasting),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: TColors.primary,
                             minimumSize: const Size.fromHeight(48),
-                            side: const BorderSide(
-                              color: TColors.primary,
-                              width: 1.2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
                           ),
                         ),
                       ),
@@ -194,42 +230,49 @@ class TodayScreen extends StatelessWidget {
     final color = TColors.scoreColor(score);
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 168,
-              height: 168,
-              child: CircularProgressIndicator(
-                value: score / 100,
-                strokeWidth: 11,
-                backgroundColor: color.withOpacity(0.18),
-                color: color,
-                strokeCap: StrokeCap.round,
+        // Single Semantics node — screen readers announce "Today's score,
+        // 78 percent" instead of "78%, Today's score, [progress bar at 78%]".
+        Semantics(
+          label: '${l.today_score}, ${l.common_percentValue(score)}',
+          container: true,
+          excludeSemantics: true,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 168,
+                height: 168,
+                child: CircularProgressIndicator(
+                  value: score / 100,
+                  strokeWidth: 11,
+                  backgroundColor: color.withValues(alpha: 0.18),
+                  color: color,
+                  strokeCap: StrokeCap.round,
+                ),
               ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$score%',
-                  style: TextStyle(
-                    fontSize: 46,
-                    fontWeight: FontWeight.w800,
-                    color: color,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.common_percentValue(score),
+                    style: TextStyle(
+                      fontSize: 46,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l.today_score,
-                  style: const TextStyle(
-                    color: TColors.textSecondary,
-                    fontSize: 13,
+                  const SizedBox(height: 2),
+                  Text(
+                    l.today_score,
+                    style: const TextStyle(
+                      color: TColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
         Text(
@@ -248,6 +291,243 @@ class TodayScreen extends StatelessWidget {
   }
 }
 
+/// عدّاد السعرات اليومي: مجموع سعرات وجبات اليوم مقابل الهدف القابل
+/// للتعديل من الإعدادات، مع صف الماكروز. يظهر فقط عندما تحمل وجبة واحدة
+/// على الأقل أرقام تغذية (وجبات v1.1+).
+class _DailyCaloriesCard extends StatelessWidget {
+  final List<Meal> meals;
+  const _DailyCaloriesCard({required this.meals});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final goalService = context.watch<NutritionGoalService>();
+    final health = context.watch<HealthService>();
+
+    final totals = meals
+        .map((m) => m.nutrition)
+        .whereType<MealNutrition>()
+        .toList();
+    if (totals.isEmpty) return const SizedBox.shrink();
+
+    final consumed = totals.fold<int>(0, (a, n) => a + n.caloriesKcal);
+    final combined = MealNutrition(
+      caloriesKcal: consumed,
+      proteinG: totals.fold(0.0, (a, n) => a + n.proteinG),
+      carbsG: totals.fold(0.0, (a, n) => a + n.carbsG),
+      fatG: totals.fold(0.0, (a, n) => a + n.fatG),
+    );
+    // v1.3: Apple Health offsets the budget — burned calories raise the goal.
+    final burned = health.authorized ? (health.activeEnergyKcal ?? 0) : 0;
+    final goal = adjustedGoal(goal: goalService.goal, burned: burned);
+    final remaining = calorieRemaining(
+      goal: goalService.goal,
+      consumed: consumed,
+      burned: burned,
+    );
+    final progress = (consumed / goal).clamp(0.0, 1.0);
+    final over = remaining < 0;
+    final barColor = over ? TColors.khabith : TColors.gold;
+
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department,
+                  color: TColors.gold, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                l.today_caloriesTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Text(
+                l.today_caloriesOf(consumed, goal),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: TColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Semantics(
+            label:
+                '${l.today_caloriesTitle}: ${l.today_caloriesOf(consumed, goal)}',
+            container: true,
+            excludeSemantics: true,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: barColor.withValues(alpha: 0.15),
+                color: barColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            over
+                ? l.today_caloriesOver(-remaining)
+                : l.today_caloriesRemaining(remaining),
+            style: TextStyle(
+              fontSize: 12,
+              color: over ? TColors.khabith : TColors.textSecondary,
+            ),
+          ),
+          if (burned > 0) ...[
+            const SizedBox(height: 2),
+            Text(
+              l.today_caloriesFromActivity(burned),
+              style: const TextStyle(
+                fontSize: 11,
+                color: TColors.zoneGreen,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          MacroRow(nutrition: combined),
+        ],
+      ),
+    );
+  }
+}
+
+/// شريط سلسلة التسجيل — أيام متتالية بوجبة واحدة على الأقل. يظهر فقط
+/// عندما توجد سلسلة (لا نعاتب مستخدماً جديداً بصفر).
+class _StreakCard extends StatelessWidget {
+  final Future<int>? streakFuture;
+  final bool loggedToday;
+  const _StreakCard({required this.streakFuture, required this.loggedToday});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return FutureBuilder<int>(
+      future: streakFuture,
+      builder: (context, snap) {
+        final streak = snap.data ?? 0;
+        if (streak <= 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: CardContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: TColors.gold.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department,
+                    color: TColors.gold,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${l.today_streakTitle}: ${l.today_streakDays(streak)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                      if (!loggedToday)
+                        Text(
+                          l.today_streakKeepAlive,
+                          style: const TextStyle(
+                            color: TColors.textSecondary,
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// بطاقة نشاط اليوم من Apple Health — خطوات وسعرات محروقة ونوم. تظهر فقط عند
+/// وجود إذن وبيانات.
+class _HealthActivityCard extends StatelessWidget {
+  const _HealthActivityCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final health = context.watch<HealthService>();
+    if (!health.hasData) return const SizedBox.shrink();
+    final steps = health.steps;
+    final burned = health.activeEnergyKcal;
+    final sleep = health.sleepMinutes;
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: CardContainer(
+        child: Row(
+          children: [
+            const Icon(Icons.directions_walk, color: TColors.zoneGreen, size: 22),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                l.health_activityToday,
+                style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Spacer(),
+            if (steps != null) ...[
+              _metric('$steps', l.health_steps),
+              const SizedBox(width: 16),
+            ],
+            if (burned != null) ...[
+              _metric('$burned', l.health_burned, color: TColors.gold),
+              if (sleep != null) const SizedBox(width: 16),
+            ],
+            if (sleep != null)
+              _metric(
+                l.health_sleepValue(sleep ~/ 60, sleep % 60),
+                l.health_sleep,
+                color: TColors.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _metric(String value, String label, {Color color = TColors.primary}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 16, color: color)),
+        Text(label,
+            style: const TextStyle(
+                color: TColors.textSecondary, fontSize: 11)),
+      ],
+    );
+  }
+}
+
 class _MealThumb extends StatelessWidget {
   final Meal meal;
   const _MealThumb({required this.meal});
@@ -255,6 +535,7 @@ class _MealThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = TColors.scoreColor(meal.overallScore);
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       width: 140,
       child: Material(
@@ -309,7 +590,7 @@ class _MealThumb extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${meal.overallScore}%',
+                  l.common_percentValue(meal.overallScore),
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w700,

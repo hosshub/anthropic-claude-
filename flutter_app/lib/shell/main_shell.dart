@@ -33,7 +33,7 @@ class _MainShellState extends State<MainShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
-        indicatorColor: TColors.primary.withOpacity(0.15),
+        indicatorColor: TColors.primary.withValues(alpha: 0.15),
         backgroundColor: TColors.surface,
         destinations: [
           NavigationDestination(

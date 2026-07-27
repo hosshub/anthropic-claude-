@@ -82,3 +82,31 @@ submission/screenshots/
 
 These don't need to be committed to git — they're only needed at upload
 time. Add them to `.gitignore` if you'd like.
+
+---
+
+## v1.2.1 — auto-generated set (simulator)
+
+A reusable harness now captures the store set at **1320×2868** (6.9") for both
+locales straight from the app on a booted simulator — no manual capture.
+
+```bash
+cd flutter_app
+# boot a 6.9" device once, e.g. iPhone 17 Pro Max
+xcrun simctl boot "iPhone 17 Pro Max"
+# Arabic set → submission/screenshots/ar/*.png
+flutter drive \
+  --driver=test_driver/store_screenshots_driver.dart \
+  --target=integration_test/store_screenshots_test.dart \
+  -d <sim-udid> --dart-define=SCREENSHOT=true --dart-define=SHOT_LOCALE=ar
+# English set → submission/screenshots/en/*.png  (SHOT_LOCALE=en)
+```
+
+Captured screens: `01_today`, `02_eating_map`, `03_history`, `04_meal`,
+`05_intelligence`, `06_guidebook`.
+
+**Caveat — `04_meal`:** the demo seed has no meal photo, so the detail hero
+shows the empty-image placeholder at the top. In real use a photo is always
+present. For the store, either retake just this one on a device with a real
+meal, cover the top with a marketing headline overlay, or omit it — the other
+five are complete. (Apple requires a minimum of three.)

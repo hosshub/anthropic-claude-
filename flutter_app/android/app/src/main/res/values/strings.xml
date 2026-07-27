@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher label. Localized in values-ar/ so Arabic-language devices
+         show the Arabic brand name under the icon. -->
+    <string name="app_name">Tayyibat</string>
+</resources>

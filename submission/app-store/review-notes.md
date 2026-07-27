@@ -9,7 +9,9 @@ Review** field. It's only seen by Apple's review team.
 - A traditional email/password flow is also available.
 - Optional test account if Apple prefers email login:
   - Email: `reviewer@tayyibat.ai`
-  - Password: `SetThisBeforeSubmitting!`
+  - Password: **set in Supabase Auth → Users; paste the real value
+    directly into App Store Connect → "Sign-In Information" or into the
+    review reply. DO NOT commit the password to this repo — it is public.**
 
   (Create this account in Supabase Auth → Add user before submitting. The
   reviewer will use it to bypass any first-time onboarding state.)

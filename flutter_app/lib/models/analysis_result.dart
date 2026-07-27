@@ -1,18 +1,8 @@
 /// إشارة المنطقة الثلاثية (تطابق FoodZone في SwiftUI).
+/// Locale-aware labels live in lib/l10n/enum_labels.dart — use those.
 enum FoodZone { green, yellow, red }
 
 extension FoodZoneX on FoodZone {
-  String get labelAr {
-    switch (this) {
-      case FoodZone.green:
-        return 'أخضر';
-      case FoodZone.yellow:
-        return 'أصفر';
-      case FoodZone.red:
-        return 'أحمر';
-    }
-  }
-
   /// قراءة آمنة من نص (مثل FoodZone.from(_:) في SwiftUI).
   static FoodZone? fromString(String? raw) {
     if (raw == null || raw.isEmpty) return null;
@@ -54,6 +44,14 @@ class FoodItem {
   final String reasoningAr;
   final String? ruleViolated;
 
+  // v1.1 nutrition estimates. Null on rows analyzed before the nutrition
+  // schema landed (v1.0.x meals) — the UI hides what it doesn't have.
+  final int? caloriesKcal;
+  final double? proteinG;
+  final double? carbsG;
+  final double? fatG;
+  final List<String> micros;
+
   FoodItem({
     required this.nameAr,
     required this.confidence,
@@ -64,11 +62,45 @@ class FoodItem {
     required this.category,
     required this.reasoningAr,
     this.ruleViolated,
+    this.caloriesKcal,
+    this.proteinG,
+    this.carbsG,
+    this.fatG,
+    this.micros = const [],
   });
 
   /// المنطقة الفعلية: الصريحة من v2 إن وُجدت، وإلا اشتقاق من الحكم.
   FoodZone get zone =>
       FoodZoneX.fromString(zoneRaw) ?? FoodZoneX.fromVerdict(verdict);
+
+  /// نسخة معدّلة — تُستخدم عند تصحيح المستخدم للاسم أو المنطقة (v1.2).
+  /// تغيير المنطقة يزامن verdict القديم حفاظاً على اتساق البيانات.
+  FoodItem copyWith({String? nameAr, FoodZone? newZone}) {
+    final zoneStr = newZone == null ? zoneRaw : newZone.name;
+    final verdictStr = newZone == null
+        ? verdict
+        : switch (newZone) {
+            FoodZone.green => 'tayyib',
+            FoodZone.yellow => 'conditional',
+            FoodZone.red => 'khabith',
+          };
+    return FoodItem(
+      nameAr: nameAr ?? this.nameAr,
+      confidence: confidence,
+      estimatedPortion: estimatedPortion,
+      verdict: verdictStr,
+      zoneRaw: zoneStr,
+      cautionAr: cautionAr,
+      category: category,
+      reasoningAr: reasoningAr,
+      ruleViolated: ruleViolated,
+      caloriesKcal: caloriesKcal,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+      micros: micros,
+    );
+  }
 
   factory FoodItem.fromJson(Map<String, dynamic> json) {
     return FoodItem(
@@ -81,6 +113,54 @@ class FoodItem {
       category: (json['category'] as String?) ?? 'عام',
       reasoningAr: (json['reasoning_ar'] as String?) ?? '',
       ruleViolated: json['rule_violated'] as String?,
+      caloriesKcal: (json['calories_kcal'] as num?)?.round(),
+      proteinG: (json['protein_g'] as num?)?.toDouble(),
+      carbsG: (json['carbs_g'] as num?)?.toDouble(),
+      fatG: (json['fat_g'] as num?)?.toDouble(),
+      micros: ((json['micros_ar'] as List?) ?? const [])
+          .whereType<String>()
+          .where((m) => m.trim().isNotEmpty)
+          .toList(),
+    );
+  }
+}
+
+/// مجاميع التغذية للوجبة كاملة (تقديرات بصرية من النموذج).
+class MealNutrition {
+  final int caloriesKcal;
+  final double proteinG;
+  final double carbsG;
+  final double fatG;
+
+  const MealNutrition({
+    required this.caloriesKcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+  });
+
+  static MealNutrition? fromJson(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    final kcal = (json['calories_kcal'] as num?)?.round();
+    if (kcal == null) return null;
+    return MealNutrition(
+      caloriesKcal: kcal,
+      proteinG: ((json['protein_g'] as num?) ?? 0).toDouble(),
+      carbsG: ((json['carbs_g'] as num?) ?? 0).toDouble(),
+      fatG: ((json['fat_g'] as num?) ?? 0).toDouble(),
+    );
+  }
+
+  /// جمع القيم من العناصر عندما لا يرسل الخادم total_nutrition — أو عندما
+  /// تُقرأ وجبة من قاعدة البيانات (المجاميع لا تُخزَّن، تُشتق دائماً).
+  static MealNutrition? fromItems(List<FoodItem> items) {
+    final withData = items.where((i) => i.caloriesKcal != null).toList();
+    if (withData.isEmpty) return null;
+    return MealNutrition(
+      caloriesKcal: withData.fold(0, (a, i) => a + (i.caloriesKcal ?? 0)),
+      proteinG: withData.fold(0.0, (a, i) => a + (i.proteinG ?? 0)),
+      carbsG: withData.fold(0.0, (a, i) => a + (i.carbsG ?? 0)),
+      fatG: withData.fold(0.0, (a, i) => a + (i.fatG ?? 0)),
     );
   }
 }
@@ -94,6 +174,10 @@ class AnalysisResult {
   final List<String> suggestions;
   final List<String> warnings;
 
+  /// مجاميع التغذية — من الخادم إن وُجدت، وإلا مشتقة من العناصر، وإلا null
+  /// (استجابة قديمة بلا أرقام تغذية).
+  final MealNutrition? nutrition;
+
   AnalysisResult({
     required this.items,
     required this.overallScore,
@@ -101,6 +185,7 @@ class AnalysisResult {
     required this.scoreExplanationAr,
     required this.suggestions,
     required this.warnings,
+    this.nutrition,
   });
 
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
@@ -120,6 +205,10 @@ class AnalysisResult {
       warnings: ((json['warnings'] as List?) ?? const [])
           .whereType<String>()
           .toList(),
+      nutrition: MealNutrition.fromJson(
+            json['total_nutrition'] as Map<String, dynamic>?,
+          ) ??
+          MealNutrition.fromItems(items),
     );
   }
 }
