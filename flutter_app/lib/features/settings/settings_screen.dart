@@ -9,6 +9,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../services/account_service.dart';
 import '../../services/app_messages.dart';
 import '../../services/auth_service.dart';
+import '../../services/entitlement.dart';
 import '../../services/locale_service.dart';
 import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
@@ -586,6 +587,65 @@ class _SubscriptionCard extends StatelessWidget {
                 side: const BorderSide(color: TColors.primary, width: 1.2),
               ),
             ),
+
+          // Gated on a --dart-define rather than kDebugMode: the free tier has
+          // to be walked on a real device, and device testing runs a release
+          // build where kDebugMode is false. Without the flag this whole
+          // branch — and the override itself — is compiled out.
+          if (subs.canOverrideTier) ...[
+            const Divider(height: 28),
+            const Text(
+              'Dev — force tier',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: TColors.gold,
+                fontSize: 12.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Every account is grandfathered until the cutoff passes, so the '
+              'free gates are otherwise unreachable. Masks the real '
+              'entitlement; never present in a production build.',
+              style: TextStyle(
+                color: TColors.textSecondary,
+                fontSize: 11,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SegmentedButton<String>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(value: 'auto', label: Text('Real')),
+                ButtonSegment(value: 'free', label: Text('Free')),
+                ButtonSegment(value: 'premium', label: Text('Premium')),
+              ],
+              selected: {subs.tierOverride?.name ?? 'auto'},
+              onSelectionChanged: (sel) => subs.setTierOverride(
+                switch (sel.first) {
+                  'free' => Tier.free,
+                  'premium' => Tier.premium,
+                  _ => null,
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subs.tierOverride == null
+                  ? 'Following the real entitlement: '
+                      '${subs.isPremium ? 'premium' : 'free'}'
+                      '${subs.isGrandfatheredUser ? ' (grandfathered)' : ''}'
+                  : 'Forced to ${subs.tierOverride!.name}. The server still '
+                      'enforces the real tier, so an AI scan can succeed even '
+                      'when the UI says the quota is spent.',
+              style: const TextStyle(
+                color: TColors.textSecondary,
+                fontSize: 10.5,
+                height: 1.5,
+              ),
+            ),
+          ],
         ],
       ),
     );

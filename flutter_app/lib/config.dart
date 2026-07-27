@@ -17,6 +17,16 @@ class AppConfig {
   ///    وبسرّ JWT مولّد من المفتاح.
   static const bool appleSignInEnabled = true;
 
+  /// يسمح بتجاوز مستوى الاشتراك يدوياً من الإعدادات (للاختبار فقط).
+  ///
+  /// بوابة وقت-ترجمة لا وقت-تشغيل: بناء الإنتاج يُنتَج بلا هذا العَلَم فلا
+  /// يوجد فيه المسار أصلاً. نستعمل dart-define لا kDebugMode لأن الاختبار على
+  /// الجهاز يجري على بناء release حيث kDebugMode = false.
+  ///
+  ///   flutter build ios --release --dart-define=DEBUG_TIER_OVERRIDE=true
+  static const bool tierOverrideAllowed =
+      bool.fromEnvironment('DEBUG_TIER_OVERRIDE');
+
   /// مفتاح RevenueCat العام. آمن للالتزام في المستودع مثل مفتاح Supabase
   /// المنشور: مفاتيح SDK العامة تُشحن داخل كل نسخة من التطبيق ويمكن لأي أحد
   /// استخراجها، وهي لا تمنح إلا ما يمنحه التطبيق نفسه. الأسرار الحقيقية

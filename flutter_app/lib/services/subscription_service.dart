@@ -19,10 +19,16 @@ import 'entitlement.dart';
 class SubscriptionService extends ChangeNotifier {
   static const String entitlementId = 'premium';
   static const String _kLastSuggestionAt = 'free_last_suggestion_at';
+  static const String _kTierOverride = 'debug_tier_override';
 
   /// متى أُنشئ حساب المستخدم الحالي. حاقن حتى تستطيع الاختبارات محاكاة
   /// الدخول والخروج بلا Supabase.
   final DateTime? Function() _accountCreatedAt;
+
+  /// هل هذا البناء يسمح بتجاوز المستوى؟ يُحقن في الاختبارات حتى نتحقق من أن
+  /// بناء الإنتاج يتجاهل أي قيمة مخزّنة.
+  final bool _tierOverrideAllowed;
+  Tier? _tierOverrideValue;
 
   StreamSubscription<AuthState>? _authSub;
   bool _ready = false;
@@ -31,8 +37,12 @@ class SubscriptionService extends ChangeNotifier {
 
   /// الاشتراك في تغيّر الجلسة يتم في المُنشئ لا داخل initialize: تسجيل الخروج
   /// يجب أن يُسقط البريميوم حتى لو لم يُهيّأ RevenueCat أصلاً أو فشل تهيئته.
-  SubscriptionService({DateTime? Function()? accountCreatedAt})
-      : _accountCreatedAt = accountCreatedAt ?? _currentUserCreatedAt {
+  SubscriptionService({
+    DateTime? Function()? accountCreatedAt,
+    bool? tierOverrideAllowed,
+  })  : _accountCreatedAt = accountCreatedAt ?? _currentUserCreatedAt,
+        _tierOverrideAllowed =
+            tierOverrideAllowed ?? AppConfig.tierOverrideAllowed {
     try {
       _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
         syncIdentity();
@@ -52,10 +62,49 @@ class SubscriptionService extends ChangeNotifier {
         paidEraCutoff: paidEraCutoffDefault,
       );
 
-  Tier get tier => resolveTier(
+  /// هل تظهر أداة التجاوز في الإعدادات؟
+  bool get canOverrideTier => _tierOverrideAllowed;
+
+  /// التجاوز الفعّال — دائماً null في بناء الإنتاج مهما كان المخزَّن.
+  Tier? get tierOverride => _tierOverrideAllowed ? _tierOverrideValue : null;
+
+  Tier get tier =>
+      tierOverride ??
+      resolveTier(
         hasActivePurchase: _hasActivePurchase,
         grandfathered: isGrandfatheredUser,
       );
+
+  /// يثبّت المستوى يدوياً (أو يلغي التثبيت بـ null). يحجب المستوى الحقيقي
+  /// ولا يستبدله، فإلغاؤه يعيد الحساب إلى ما يستحقه فعلاً.
+  Future<void> setTierOverride(Tier? tier) async {
+    _tierOverrideValue = tier;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (tier == null) {
+        await prefs.remove(_kTierOverride);
+      } else {
+        await prefs.setString(_kTierOverride, tier.name);
+      }
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// يستعيد التجاوز بعد إعادة التشغيل حتى يمكن تجربة المسار المجاني كاملاً.
+  /// لا يقرأ شيئاً في بناء الإنتاج.
+  Future<void> restoreTierOverride() async {
+    if (!_tierOverrideAllowed) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final name = prefs.getString(_kTierOverride);
+      _tierOverrideValue = switch (name) {
+        'free' => Tier.free,
+        'premium' => Tier.premium,
+        _ => null,
+      };
+    } catch (_) {}
+    notifyListeners();
+  }
 
   bool get isPremium => tier == Tier.premium;
 
@@ -63,6 +112,7 @@ class SubscriptionService extends ChangeNotifier {
   bool get storeAvailable => AppConfig.revenueCatApiKey.isNotEmpty;
 
   Future<void> initialize() async {
+    await restoreTierOverride();
     if (!storeAvailable) {
       _ready = true;
       notifyListeners();
